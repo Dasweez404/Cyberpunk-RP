@@ -2693,6 +2693,10 @@ const ORIGINS = {
           solo:{n:`Nomade sans clan`,d:`Seul(e) sur la route. Personne pour te protéger.`,fac:{}}}},
 };
 let CR = {step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:5};
+function randomName(){
+  const g=Math.random()<.5?`m`:`f`; const f=pickR(NAMES[g]);
+  return Math.random()<.45?`${f} « ${pickR(NAMES.n)} »`:`${f} ${pickR(NAMES.s)}`;
+}
 function showCreate(){ CR={step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:5}; renderCreate(); }
 function renderCreate(){
   let h=``;
@@ -2703,16 +2707,19 @@ function renderCreate(){
     const o=ORIGINS[CR.origin];
     h=`<h2 class="hd">${o.n} — D'où viens-tu ?</h2><div class="sub">Ton passé donne tes premiers alliés (et ennemis).</div>`+
       Object.entries(o.subs).map(([k,s])=>`<button class="btn opt ${CR.sub===k?`sel`:``}" data-s="${k}"><div class="t">${s.n}</div><div class="d">${s.d}</div></button>`).join(``);
+  } else if(CR.step===3){
+    h=`<h2 class="hd">Ton nom de rue</h2><div class="sub">Comment Night City t'appellera-t-elle ?</div>
+    <input class="txt" id="nm" maxlength="24" placeholder="Laisse vide : un nom au hasard" value="${esc(CR.name)}">
+    <button class="btn" id="rnd" style="text-align:center">🎲 Générer un nom</button>`;
   } else {
     const o=ORIGINS[CR.origin];
-    h=`<h2 class="hd">Ton nom de rue</h2><input class="txt" id="nm" maxlength="18" placeholder="Ex : Kira, Jax, Vesper…" value="${esc(CR.name)}">
-    <div class="sec" style="margin-top:10px">Attributs · ${CR.pts} point(s) à répartir</div>
+    h=`<h2 class="hd">Tes attributs</h2><div class="sub">${CR.pts} point(s) à répartir. Tu progresseras ensuite en jouant.</div>
     ${Object.keys(ATTRS).map(k=>{
       const base=3+((o.at||{})[k]||0)+CR.alloc[k];
       return `<div class="attrrow"><div class="nm"><b>${ATTRS[k].n}</b><i>${ATTRS[k].d}</i></div>
         <button class="pm" data-m="${k}">−</button><div class="pips">${Array.from({length:10},(_,i)=>`<div class="pip ${i<base?`on`:``}"></div>`).join(``)}</div><button class="pm" data-p="${k}">+</button></div>`;}).join(``)}`;
   }
-  h+=`<div class="row" style="max-width:none;margin-top:8px">${CR.step>0?`<button class="btn" id="bk" style="text-align:center">‹ Retour</button>`:`<button class="btn" id="bk" style="text-align:center">‹ Titre</button>`}<button class="btn pri" id="nx" ${(CR.step===0&&!CR.origin)||(CR.step===1&&!CR.sub)?`disabled`:``}>${CR.step===2?`Commencer`:`Suivant`}</button></div>`;
+  h+=`<div class="row" style="max-width:none;margin-top:8px">${CR.step>0?`<button class="btn" id="bk" style="text-align:center">‹ Retour</button>`:`<button class="btn" id="bk" style="text-align:center">‹ Titre</button>`}<button class="btn pri" id="nx" ${(CR.step===0&&!CR.origin)||(CR.step===1&&!CR.sub)?`disabled`:``}>${CR.step===3?`Commencer`:`Suivant`}</button></div>`;
   root().innerHTML=`<div class="screen create">${h}</div>`;
   document.querySelectorAll(`[data-o]`).forEach(b=>b.onclick=()=>{CR.origin=b.dataset.o;CR.sub=null;SFX.tap();renderCreate()});
   document.querySelectorAll(`[data-s]`).forEach(b=>b.onclick=()=>{CR.sub=b.dataset.s;SFX.tap();renderCreate()});
@@ -2722,9 +2729,9 @@ function renderCreate(){
   $(`#bk`).onclick=()=>{SFX.tap();if(CR.step===0)showTitle();else{keepName();CR.step--;renderCreate()}};
   $(`#nx`).onclick=()=>{
     SFX.tap();
-    if(CR.step<2){CR.step++;renderCreate();return}
-    keepName(); const nm=(CR.name.trim()||`V.`);
-    if(CR.pts>0 && !confirm(`Il te reste ${CR.pts} point(s) à répartir. Commencer quand même ?`)) return;
+    if(CR.step===2&&CR.pts>0&&!confirm(`Il te reste ${CR.pts} point(s) à répartir. Continuer quand même ?`)) return;
+    if(CR.step<3){CR.step++;renderCreate();return}
+    keepName(); const nm=(CR.name.trim()||randomName());
     const o=ORIGINS[CR.origin], s=o.subs[CR.sub];
     G=newState({name:nm,origin:CR.origin,sub:CR.sub,cred:o.cred,ed:o.ed,at:o.at,alloc:CR.alloc,fac:s.fac,flags:o.flags});
     (o.gear||[]).forEach(g=>G.gear.push(g));
@@ -2737,7 +2744,7 @@ function renderCreate(){
     G.log.unshift({d:dateStr(),m:`${nm} débute sa vie à Night City (${o.n}).`});
     renderGame(); nextCard();
   };
-  if(CR.step===2) setTimeout(()=>{const n=$(`#nm`);if(n&&!n.value)n.focus()},100);
+  if(CR.step===3){ $(`#rnd`).onclick=()=>{SFX.tap();$(`#nm`).value=randomName();CR.name=$(`#nm`).value}; setTimeout(()=>{const n=$(`#nm`);if(n&&!n.value)n.focus()},100); }
 }
 
 /* ---------- écran de jeu ---------- */
