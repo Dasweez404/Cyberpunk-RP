@@ -13,6 +13,7 @@ const store = {
 };
 const CYMAP = {}; CYBER.forEach(c=>CYMAP[c.id]=c);
 const GEARMAP = {}; GEAR.forEach(c=>GEARMAP[c.id]=c);
+CYBER.forEach(c=>{c.h=Math.round(c.h*1.3)});
 const CY = id => CYMAP[id];
 const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 
@@ -86,7 +87,7 @@ function roleTitle(){
 function rankTitle(){ return G.member?RANKS[FAC[G.member].k][G.rank]:null; }
 
 /* ---------- expérience : on progresse en pratiquant ---------- */
-const xpNeed = lv => 4+2*Math.max(0,lv-3);
+const xpNeed = lv => 6+3*Math.max(0,lv-3);
 const MENTOR = {body:`jackie`,ref:`claire`,tech:`vik`,int:`dex`,cool:`rogue`};
 function gainXp(a,amt){
   G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
@@ -118,7 +119,7 @@ function makeLoot(t){
   const pool=[];
   const ed=Math.round((350*t+rnd(0,250))/50)*50;
   pool.push({k:`cash`,ic:`💰`,t:`Prime`,d:`+${money(ed)}`,ap:()=>applyFx({ed})});
-  pool.push({k:`cred`,ic:`★`,t:`Réputation`,d:`+${2+t} Street Cred`,ap:()=>applyFx({cred:2+t})});
+  pool.push({k:`cred`,ic:`★`,t:`Réputation`,d:`+${1+t} Street Cred`,ap:()=>applyFx({cred:1+t})});
   const ats=Object.keys(ATTRS).filter(k=>G.at[k]<9);
   if(ats.length){ const a=(G.lastA&&G.at[G.lastA]<9)?G.lastA:ats[rnd(0,ats.length-1)];
     pool.push({k:`xp`,ic:`📈`,t:`Expérience`,d:`+${3+t} XP · ${ATTRS[a].n}`,ap:()=>gainXp(a,3+t)}); }
@@ -145,7 +146,7 @@ function makeLoot(t){
 function rollInfo(c){
   const tot = A(c.a) + (c.k?skill(c.k):0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
-  const need = dc + 3 - tot;
+  const need = dc + 4 - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
   return {tot,dc,need,chance:n/10};
 }
@@ -156,9 +157,9 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.15*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.hum){ const b=G.hum; G.hum=clamp(G.hum+fx.hum,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
-  if(fx.cred){ const b=G.cred; G.cred=clamp(G.cred+fx.cred,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
+  if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));

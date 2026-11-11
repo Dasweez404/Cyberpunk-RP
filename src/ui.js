@@ -304,7 +304,7 @@ function resolveChoice(ch){
   } else fx=ch.fx;
   const before={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
   applyFx(fx||{});
-  if(info){ gainXp(info.a,info.ok?2:1); G.lastA=info.a; if(info.ok){ const lt=lootTierEd(fx.ed||0); if(lt) G.pendingLoot=Math.max(G.pendingLoot||0,lt); } }
+  if(info){ gainXp(info.a,info.ok?3:1); G.lastA=info.a; if(info.ok){ const lt=lootTierEd(fx.ed||0); if(lt) G.pendingLoot=Math.max(G.pendingLoot||0,lt); } }
   const msg = fx&&fx.msg ? fx.msg : ``;
   G.log.unshift({d:dateStr(),m:msg||ch.t}); if(G.log.length>120)G.log.pop();
   const chips=CHIPS.slice();
@@ -349,6 +349,7 @@ function afterCard(r){
   if(r.retire){ endGame(`retire`); return showEnd(); }
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
+  if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
   const net=tick(STEP); G.stats.cards++;
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
@@ -436,8 +437,8 @@ function openCity(){
    <div class="tiles one">${tile(`gigs`,`📋`,`Tableau des gigs`,`${G.board&&G.board.p===G.stats.cards?G.board.left:GIG_PER_PERIOD} gig(s) dispo cette période · mieux payés`)}</div>
    <div class="sec">Récupérer</div>
    <div class="tiles three">
-    ${tile(`heal`,`➕`,`Clinique`,`+40 Santé · 150 €$`,{dis:G.hp>=100||G.ed<150,rec:G.hp<50})}
-    ${tile(`therapy`,`🧠`,`Thérapie`,`+18 Humanité · 400 €$`,{dis:G.hum>=100||G.ed<400,rec:G.hum<50})}
+    ${tile(`heal`,`➕`,`Clinique`,`+35 Santé · 200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}
+    ${tile(`therapy`,`🧠`,`Thérapie`,`+15 Humanité · 600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}
     ${tile(`rest`,`🛏`,`Repos`,`+15 Santé · +5 Hum.`)}
    </div>
    <div class="log" style="color:var(--dim)">Chaque action fait passer 1 à 2 mois. Revenus et loyer sont décomptés.</div>`);
@@ -445,8 +446,8 @@ function openCity(){
 }
 function doDown(k){
   CHIPS=[];
-  if(k===`heal`){ if(G.ed<150){toast(`Pas assez d'eddies`);return} applyFx({ed:-150,hp:40}); }
-  if(k===`therapy`){ if(G.ed<400){toast(`Pas assez d'eddies`);return} applyFx({ed:-400,hum:18}); }
+  if(k===`heal`){ if(G.ed<200){toast(`Pas assez d'eddies`);return} applyFx({ed:-200,hp:35}); }
+  if(k===`therapy`){ if(G.ed<600){toast(`Pas assez d'eddies`);return} applyFx({ed:-600,hum:15}); }
   if(k===`rest`){ applyFx({hp:15,hum:5}); }
   SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`}[k]});
   updateHud(); toast(CHIPS.map(c=>c.txt).join(` · `)||`Fait`);
@@ -517,7 +518,7 @@ function buyHack(id){
 function openTrain(){
   G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
   const used=G.trainP===G.stats.cards;
-  modal(`S'entraîner`,`<div class="log" style="color:var(--dim)">On progresse <b>en pratiquant</b> : chaque jet réussi (+2 XP) ou raté (+1 XP) fait avancer l'attribut utilisé. L'entraînement ajoute un coup de pouce : <b>1 séance par période</b>, gratuite, 2 mois.</div>
+  modal(`S'entraîner`,`<div class="log" style="color:var(--dim)">On progresse <b>en pratiquant</b> : chaque jet réussi (+3 XP) ou raté (+1 XP) fait avancer l'attribut utilisé. L'entraînement ajoute un coup de pouce : <b>1 séance par période</b>, gratuite, 2 mois.</div>
    <div class="vstat"><span>Séance de cette période</span><b style="color:${used?`var(--m)`:`var(--g)`}">${used?`utilisée`:`disponible`}</b></div>`+
   Object.keys(ATTRS).map(k=>{
     const lv=G.at[k], max=lv>=9, need=xpNeed(lv), x=G.xp[k]||0, m=rel_(MENTOR[k]), bonus=3+(m>=15?2:0);
@@ -534,7 +535,7 @@ function openTrain(){
 }
 const rel_ = id => (G.rel&&G.rel[id])||0;
 const GIG_PER_PERIOD=2;
-const gigPay=g=>Math.round(g.pay*1.7/50)*50, gigCr=g=>Math.ceil(g.cr*1.5);
+const gigPay=g=>Math.round(g.pay*1.7/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function gigBoard(){
   if(!G.board||G.board.p!==G.stats.cards){
     const cs=[],used=new Set();
@@ -557,7 +558,7 @@ function openGigs(){
     const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[]; x.done=true; bd.left--;
     if(ok){ applyFx({ed:gigPay(g),cred:gigCr(g)}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${gigPay(g)} €$).`}); }
     else { applyFx({hp:-g.dm,ed:Math.round(gigPay(g)*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
-    gainXp(g.a,ok?2:1); G.lastA=g.a;
+    gainXp(g.a,ok?3:1); G.lastA=g.a;
     tick(1); updateHud();
     modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${ok?`Choisir ma récompense`:bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
     const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
