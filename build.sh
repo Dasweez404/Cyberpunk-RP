@@ -15,7 +15,7 @@ cat <<'HEAD'
 HEAD
 cat src/style.css
 echo '</style></head><body><div id="root"></div><script>'
-cat src/data.js src/cards.js src/engine.js src/ui.js
+cat src/data.js src/cards.js src/cards2.js src/engine.js src/ui.js
 echo '</script></body></html>'
 } > index.html
 echo "index.html: $(wc -c < index.html) octets"

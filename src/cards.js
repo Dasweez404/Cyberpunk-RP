@@ -34,7 +34,7 @@ card({id:`st_intro`,who:`narr`,tag:`Street Kid · Prologue`,story:true,at:[2070,
 card({id:`st_intro2`,who:`dex`,tag:`Premier contact`,once:true,
   tx:`Un type en lunettes noires t'observe à l'<em>Afterlife</em>. « T'as le regard de ceux qui n'ont plus peur de grand-chose, gamin. Moi, c'est <strong>Dexter DeShawn</strong>. Je peux te trouver des petits boulots. Rien de sale. Enfin, presque. »`,
   ch:[
-    {t:`Accepter ses services`,s:`Contact fixer : Dex`,fx:{flag:[`dex`],cred:3,ed:200,msg:`« Bienvenue dans le jeu. Un conseil : ne te vends jamais, ne t'excuse jamais. »`}},
+    {t:`Accepter ses services`,s:`Contact fixer : Dex`,fx:{flag:[`dex`],rel:{dex:12},cred:3,ed:200,msg:`« Bienvenue dans le jeu. Un conseil : ne te vends jamais, ne t'excuse jamais. »`}},
     {t:`Refuser, tu es indépendant(e)`,s:`SANG-FROID +`,fx:{cred:1,at:{cool:1},msg:`« Fier(e), hein ? Reviens quand tu auras faim. » Il disparaît dans la foule.`}}
   ]});
 card({id:`co_intro`,who:`corpo`,tag:`Corpo · Prologue`,story:true,at:[2070,0],
@@ -77,15 +77,15 @@ card({id:`no_intro2`,who:`panam`,tag:`Convoi sous attaque`,once:true,
 card({id:`dex_gig`,who:`dex`,tag:`Afterlife · Boulot`,w:7,cond:()=>G.cred>=3,
   tx:`« Un client veut qu'un colis arrive à bon port avant l'aube. Il y a du monde sur le trajet, des gars qui n'aiment pas les inconnus. La paie : <strong>1 200 €$</strong>. Tu en es ? »`,
   ch:[
-    {t:`Y aller, plein gaz`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{ed:1200,cred:5,flag:[`dex`],role:{fixer:1},msg:`Livraison parfaite. Dex hoche la tête : « Pas mal. »`},ko:{hp:-20,ed:300,cred:1,msg:`Une embuscade te coûte du sang et la moitié du pognon.`}}},
+    {t:`Y aller, plein gaz`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{ed:1200,cred:5,flag:[`dex`],rel:{dex:6},role:{fixer:1},msg:`Livraison parfaite. Dex hoche la tête : « Pas mal. »`},ko:{hp:-20,ed:300,cred:1,msg:`Une embuscade te coûte du sang et la moitié du pognon.`}}},
     {t:`Passer en douce par les toits`,s:`SANG-FROID · discrétion`,chk:{a:`cool`,k:`stl`,dc:7,ok:{ed:1200,cred:4,at:{cool:1},msg:`Tu traverses Watson comme un fantôme. Le colis arrive sans une égratignure.`},ko:{ed:200,hp:-10,cred:0,msg:`Trop de caméras, trop de gardes. Tu abandonnes le colis.`}}},
     {t:`Refuser poliment`,fx:{cred:0,msg:`« Comme tu veux. Mais les offres comme ça ne reviennent pas souvent. »`}}
   ]});
 card({id:`rogue_drink`,who:`rogue`,tag:`Afterlife`,w:5,cond:()=>G.cred>=18&&yr()>=2071,
   tx:`Elle est là, au bout du bar, fière comme une reine. « Les légendes boivent ici, petit(e). Elles ne parlent pas de leurs exploits : elles les laissent parler. Tu as déjà quelque chose à raconter ? »`,
   ch:[
-    {t:`Lui raconter ton dernier run`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{cred:8,hum:3,msg:`Rogue sourit à demi. « Pas mal. Tu auras un verre à ton nom, si tu survis. »`},ko:{cred:-2,msg:`Elle bâille. « Reviens quand tu auras vraiment quelque chose à dire. »`}}},
-    {t:`Lui offrir un verre`,s:`−200 €$`,req:R.ed(200),fx:{ed:-200,cred:3,hum:2,msg:`Un silence complice. Rogue t'ouvre une porte discrète sur son monde.`}},
+    {t:`Lui raconter ton dernier run`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{cred:8,hum:3,rel:{rogue:10},msg:`Rogue sourit à demi. « Pas mal. Tu auras un verre à ton nom, si tu survis. »`},ko:{cred:-2,msg:`Elle bâille. « Reviens quand tu auras vraiment quelque chose à dire. »`}}},
+    {t:`Lui offrir un verre`,s:`−200 €$`,req:R.ed(200),fx:{ed:-200,cred:3,hum:2,rel:{rogue:8},msg:`Un silence complice. Rogue t'ouvre une porte discrète sur son monde.`}},
     {t:`Passer ton chemin`,fx:{msg:`Tu laisses la reine de l'Afterlife à ses pensées.`}}
   ]});
 card({id:`wakako_escort`,who:`wakako`,tag:`Japantown · Boulot`,w:5,cond:()=>G.cred>=8,
@@ -127,20 +127,20 @@ card({id:`bd_snuff`,who:`judy`,tag:`Braindance`,w:4,cond:()=>G.cred>=6,
   tx:`Un client de Clouds veut du contenu « premium » : une BD snuff, des sensations fortes. Un type te propose <strong>4 000 €$</strong> pour la fournir. Judy est furieuse quand elle l'apprend.`,
   ch:[
     {t:`Fournir la BD`,s:`−Humanité`,fx:{ed:4000,hum:-15,cred:-2,fac:{mox:-12},msg:`L'argent pèse lourd. Tes mains tremblent chaque fois que tu les regardes.`}},
-    {t:`Détruire l'enregistrement`,s:`+Humanité`,fx:{hum:8,cred:3,fac:{mox:8},msg:`Judy te regarde longtemps. « Merci. »`}},
-    {t:`Prévenir les Mox`,fx:{hum:5,cred:2,fac:{mox:12},flag:[`judy`],msg:`Les Mox s'occupent de lui. Tu viens de gagner des amis fidèles.`}}
+    {t:`Détruire l'enregistrement`,s:`+Humanité`,fx:{hum:8,cred:3,fac:{mox:8},rel:{judy:8},msg:`Judy te regarde longtemps. « Merci. »`}},
+    {t:`Prévenir les Mox`,fx:{hum:5,cred:2,fac:{mox:12},flag:[`judy`],rel:{judy:12},msg:`Les Mox s'occupent de lui. Tu viens de gagner des amis fidèles.`}}
   ]});
 card({id:`viktor_deal`,who:`vik`,tag:`Clinique de Vik · Little China`,w:4,once:true,cond:()=>G.cred>=4,
   tx:`« Tu as une tête de gamin qui s'est déjà fait casser. Je fais des prix pour ceux qui reviennent vivants. Mais pas d'imprudence : le chrome, ça se paie… en humanité. »`,
   ch:[
-    {t:`Accepter la tarification Vik`,s:`−15 % chez les ripperdocs`,fx:{flag:[`vik`],cred:2,hum:2,msg:`« Passe quand tu veux. Et ne triche pas avec ton corps. »`}},
-    {t:`Faire réparer un vieux souvenir`,s:`Soin gratuit +25`,fx:{hp:25,hum:3,flag:[`vik`],msg:`Il recoud ton épaule en silence. « Prends soin de toi. »`}}
+    {t:`Accepter la tarification Vik`,s:`−15 % chez les ripperdocs`,fx:{flag:[`vik`],rel:{vik:12},cred:2,hum:2,msg:`« Passe quand tu veux. Et ne triche pas avec ton corps. »`}},
+    {t:`Faire réparer un vieux souvenir`,s:`Soin gratuit +25`,fx:{hp:25,hum:3,flag:[`vik`],rel:{vik:14},msg:`Il recoud ton épaule en silence. « Prends soin de toi. »`}}
   ]});
 card({id:`misty_reading`,who:`misty`,tag:`Esoterica · Tarot`,w:4,
   tx:`Une boutique de cristaux, d'encens et de cartes. Misty bat son jeu : « La Mort n'est jamais loin, mais ce n'est pas toujours une fin. Veux-tu que je lise ton avenir ? »`,
   ch:[
-    {t:`Tirer les cartes`,s:`−100 €$ · Humanité +`,req:R.ed(100),fx:{ed:-100,hum:12,msg:`Un moment étrange de paix. « Tu as encore de la lumière en toi, » dit-elle.`}},
-    {t:`Discuter autour d'un thé`,s:`+Humanité`,fx:{hum:7,cred:1,msg:`Elle te raconte son enfance à Night City. Tu repars apaisé(e).`}},
+    {t:`Tirer les cartes`,s:`−100 €$ · Humanité +`,req:R.ed(100),fx:{ed:-100,hum:12,rel:{misty:12},msg:`Un moment étrange de paix. « Tu as encore de la lumière en toi, » dit-elle.`}},
+    {t:`Discuter autour d'un thé`,s:`+Humanité`,fx:{hum:7,cred:1,rel:{misty:8},msg:`Elle te raconte son enfance à Night City. Tu repars apaisé(e).`}},
     {t:`Passer ton chemin`,fx:{}}
   ]});
 card({id:`fingers_deal`,who:`fingers`,tag:`Ripperdoc · Discount`,w:3,cond:()=>G.cred>=10&&!hasDeckBlock(),
@@ -153,7 +153,7 @@ function hasDeckBlock(){return false}
 card({id:`delamain`,who:`delamain`,tag:`Taxi Delamain`,w:3,cond:()=>G.ed>=100&&!G.flags.delamain,
   tx:`« Bonsoir. Je suis Delamain, votre chauffeur intelligent. La sécurité de votre voyage est ma priorité absolue. Votre destination ? » Une voix polie, presque trop humaine pour une IA de taxi.`,
   ch:[
-    {t:`Discuter avec l'IA`,s:`+Humanité`,fx:{hum:4,flag:[`delamain`],ed:-40,msg:`Delamain philosophe sur la solitude des flottes autonomes. Il te dépose avec un « À très bientôt ».`}},
+    {t:`Discuter avec l'IA`,s:`+Humanité`,fx:{hum:4,flag:[`delamain`],rel:{delamain:12},ed:-40,msg:`Delamain philosophe sur la solitude des flottes autonomes. Il te dépose avec un « À très bientôt ».`}},
     {t:`Lui demander de rouler vite`,s:`−60 €$`,fx:{ed:-60,cred:1,msg:`Il ralentit finalement : « Pour votre sécurité, je maintiens la limite. »`}},
     {t:`Descendre`,fx:{}}
   ]});
@@ -227,8 +227,8 @@ card({id:`old_friend`,who:`fix`,tag:`Un vieil ami`,w:3,cond:()=>G.age>=24,
 card({id:`jackie`,who:`jackie`,tag:`El Coyote Cojo`,w:4,cond:()=>yr()>=2072&&yr()<=2076,
   tx:`Un grand gaillard rieur t'attrape par l'épaule : « Jackie Welles ! Heywood, quoi ! Tu viens manger chez ma mère ? Elle fait le meilleur mole du quartier. » Dans son sourire, il n'y a rien de faux.`,
   ch:[
-    {t:`Dîner chez Mama Welles`,s:`+Humanité`,fx:{hum:10,ed:-40,fac:{valentinos:4},flag:[`jackie`],msg:`Mama Welles remplit ton assiette, te demande si tu manges assez. Tu te sens chez toi.`}},
-    {t:`Boire un verre avec lui`,fx:{hum:5,cred:2,msg:`Un bar enfumé, des histoires de braquages ratés. Jackie rêve d'un grand coup, d'une vie meilleure.`}},
+    {t:`Dîner chez Mama Welles`,s:`+Humanité`,fx:{hum:10,ed:-40,fac:{valentinos:4},flag:[`jackie`],rel:{jackie:12,mama:8},msg:`Mama Welles remplit ton assiette, te demande si tu manges assez. Tu te sens chez toi.`}},
+    {t:`Boire un verre avec lui`,fx:{hum:5,cred:2,rel:{jackie:8},msg:`Un bar enfumé, des histoires de braquages ratés. Jackie rêve d'un grand coup, d'une vie meilleure.`}},
     {t:`Décliner`,fx:{}}
   ]});
 card({id:`sasquatch`,who:`sas`,tag:`Rancho Coronado · Combat`,w:3,cond:()=>A(`body`)>=5,
@@ -240,7 +240,7 @@ card({id:`sasquatch`,who:`sas`,tag:`Rancho Coronado · Combat`,w:3,cond:()=>A(`b
 card({id:`kerry_concert`,who:`kerry`,tag:`Concert de Kerry Eurodyne`,w:3,cond:()=>yr()>=2072,
   tx:`Kerry Eurodyne remplit une salle de Westbrook. Entre deux accords, il crie : « Samurai, c'était nous ! Ne laissons personne décider de nos vies ! » Le public hurle. Quelqu'un te tend un pass backstage.`,
   ch:[
-    {t:`Aller backstage`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{cred:6,hum:4,role:{rocker:2},flag:[`kerry`],msg:`Tu discutes avec la légende. Il te donne un médiator signé.`},ko:{cred:1,msg:`Les gardes te refusent l'entrée. Mais la musique te reste.`}}},
+    {t:`Aller backstage`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{cred:6,hum:4,role:{rocker:2},flag:[`kerry`],rel:{kerry:14},msg:`Tu discutes avec la légende. Il te donne un médiator signé.`},ko:{cred:1,msg:`Les gardes te refusent l'entrée. Mais la musique te reste.`}}},
     {t:`Rester dans le public`,s:`+Humanité`,fx:{hum:8,msg:`Le son fait vibrer ta poitrine. Tu pleures sans savoir pourquoi.`}}
   ]});
 card({id:`johnny_graffiti`,who:`johnny`,tag:`Légende Samurai`,w:3,cond:()=>yr()>=2070,
@@ -546,7 +546,7 @@ const FACREQ = {
 };
 Object.keys(FAC).forEach(id=>{
   const f=FAC[id], L=WHO[f.leader]||WHO.fix;
-  card({id:`fj_${id}`,who:f.leader,tag:`Offre · ${f.n}`,w:3,
+  card({id:`fj_${id}`,who:f.leader,tag:`Offre · ${f.n}`,w:5,
     cond:()=>!G.member&&(G.fac[id]||0)>-25&&FACREQ[id]()&&!G.joinedOnce[id],
     tx:`<strong>${L.n}</strong> te regarde d'un œil neuf. « ${f.d} On aurait besoin de gens comme toi. Alors, tu rejoins ${f.n} ? »<br><br><em style="color:var(--dim)">Avantage : ${f.perk}</em>`,
     ch:[

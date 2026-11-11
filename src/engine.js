@@ -31,7 +31,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, rel:{}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -106,6 +106,7 @@ function applyFx(fx){
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{ G.fac[k]=clamp((G.fac[k]||0)+v,-100,100); chip(v>0?`i`:`n`,`${sgn(v)} ${FAC[k].n}`); });
+  if(fx.rel){ G.rel=G.rel||{}; Object.entries(fx.rel).forEach(([k,v])=>{ G.rel[k]=clamp((G.rel[k]||0)+v,-50,100); chip(v>0?`p`:`n`,`${sgn(v)} lien · ${WHO[k].n.split(` `)[0]}`); }); }
   if(fx.role) Object.entries(fx.role).forEach(([k,v])=>G.role[k]=(G.role[k]||0)+v);
   if(fx.flag) fx.flag.forEach(f=>G.flags[f]=true);
   if(fx.unflag) fx.unflag.forEach(f=>delete G.flags[f]);
@@ -144,6 +145,7 @@ const FN = {
     if(f.k===`trauma`){G.hp=100;chip(`p`,`Soins gratuits`)}
     SFX.ok(); },
   betray(){ const old=G.member; const nw=FAC[old].foes[0]; G.fac[old]=-70; joinFac(nw); },
+  seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
   facLoyal(){ G.fac[G.member]=clamp((G.fac[G.member]||0)+12,-100,100); }
 };
 
@@ -231,6 +233,7 @@ function doConquer(d,opt){
 }
 
 /* ---------- fins & score ---------- */
+const relSum = () => Object.values(G.rel||{}).reduce((a,v)=>a+Math.max(0,v),0);
 function computeScore(kind){
   const years = yr()-START_YEAR;
   const attrSum = Object.keys(G.at).reduce((a,k)=>a+G.at[k],0);
@@ -248,10 +251,11 @@ function computeScore(kind){
     [`Attributs (${attrSum})`, attrSum*25],
     [`Chrome installé (${G.cyber.length})`, G.cyber.length*80],
     [`Missions de faction (${G.stats.jobs})`, G.stats.jobs*60],
+    [`Relations (${relSum()})`, relSum()*14],
     [`Légende & style`, legend+fame],
   ];
   let base = lines.reduce((a,l)=>a+l[1],0);
-  const mult = {retire:1.3,quit:1.15,blaze:G.cred>=30?1.2:0.9,flatline:.6,mercy:.6,psycho:.5,debt:.5}[kind]||1;
+  const mult = ENDS[kind].m || ({retire:1.3,quit:1.15,blaze:G.cred>=30?1.2:0.9,flatline:.6,mercy:.6,psycho:.5,debt:.5}[kind]||1);
   return {lines, base, mult, total:Math.round(base*mult)};
 }
 function endGame(kind){

@@ -113,7 +113,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -402,9 +402,15 @@ function openProfile(){
   <div class="sec">Chrome · réduction dégâts ${Math.round(mitigation()*100)}%</div>${cy}
   ${hk?`<div class="sec">Quickhacks</div><div class="log">${hk}</div>`:``}
   <div class="sec">Équipement</div>${gear}
+  ${relBlock()}
   <div class="sec">Statistiques</div><div class="log">Cartes jouées : ${G.stats.cards} · Gigs : ${G.stats.gigs} · Missions de faction : ${G.stats.jobs}</div>`);
 }
 
+function relBlock(){
+  const rs=Object.entries(G.rel||{}).filter(([k,v])=>v!==0).sort((a,b)=>b[1]-a[1]);
+  if(!rs.length) return ``;
+  return `<div class="sec">Relations</div>`+rs.map(([k,v])=>{const w=WHO[k];return `<div class="item"><div class="in"><b style="color:${w.c}">${esc(w.n)}${G.flags[`lover_`+k]?` ♥`:``}</b><small>${esc(w.r)}</small><div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};left:${v>=0?0:0}%;width:${Math.abs(v)}%"></i></div></div><b style="color:${v>=0?`var(--g)`:`var(--m)`}">${v}</b></div>`}).join(``);
+}
 /* ----- VILLE ----- */
 function openCity(){
   const owned=ownedList().length;
@@ -582,7 +588,7 @@ function showEnd(){
   const title = legendTitle(k);
   root().innerHTML=`<div class="screen end">
     <div class="mono" style="color:var(--dim);letter-spacing:.3em">${esc(G.name)} · ${G.age} ans · ${yr()}</div>
-    <h1 class="hd glitch" data-t="${e.t}" style="color:${k===`retire`||k===`blaze`||k===`quit`?`var(--y)`:`var(--m)`}">${e.t}</h1>
+    <h1 class="hd glitch" data-t="${e.t}" style="color:${k===`retire`||k===`blaze`||k===`quit`||e.good?`var(--y)`:`var(--m)`}">${e.t}</h1>
     <div class="ep">« ${e.e} »</div>
     <div class="hd" style="color:var(--c);letter-spacing:.25em">${title}</div>
     ${G.newBest?`<div class="newbest hd">★ NOUVEAU RECORD ★</div>`:``}
@@ -590,7 +596,7 @@ function showEnd(){
     <div class="brk">${s.lines.map(l=>`<div><span>${esc(l[0])}</span><b>${l[1].toLocaleString(`fr`)}</b></div>`).join(``)}<div><span>Sous-total</span><b>${Math.round(s.base).toLocaleString(`fr`)}</b></div><div><span>Multiplicateur de fin</span><b style="color:var(--y)">×${s.mult}</b></div></div>
     <div class="stack"><button class="btn pri" id="again">Nouvelle vie</button><button class="btn" id="home">Titre</button><button class="btn" id="share">Copier mon score</button></div></div>`;
   let n=0; const tgt=s.total, step=Math.max(1,Math.round(tgt/60)); const iv=setInterval(()=>{ n=Math.min(tgt,n+step); $(`#sc`).textContent=n.toLocaleString(`fr`); if(n>=tgt)clearInterval(iv); },20);
-  if(k===`retire`||k===`blaze`||k===`quit`) SFX.ok(); else { SFX.ko(); flash(`#ff2a6d`); }
+  if(k===`retire`||k===`blaze`||k===`quit`||e.good) SFX.ok(); else { SFX.ko(); flash(`#ff2a6d`); }
   $(`#again`).onclick=()=>{SFX.tap();showCreate()}; $(`#home`).onclick=()=>{SFX.tap();showTitle()};
   $(`#share`).onclick=()=>{ const t=`NIGHT CITY LEGEND — ${G.name} (${roleTitle()}) : ${tgt.toLocaleString(`fr`)} pts · ${e.t} à ${G.age} ans`; try{navigator.clipboard.writeText(t);toast(`Copié !`)}catch(_){toast(t)} };
 }
