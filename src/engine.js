@@ -117,6 +117,15 @@ function roleTitle(){
 }
 function rankTitle(){ return G.member?(isLeader()?LEADER[FAC[G.member].k]:RANKS[FAC[G.member].k][G.rank]):null; }
 let CERE=[]; const cere=o=>CERE.push(o);
+function promoInfo(){
+  if(!G.member) return null;
+  const f=FAC[G.member], k=RANKS[f.k];
+  if(isLeader()) return {leader:true,title:LEADER[f.k]};
+  const rep=G.fac[G.member]||0;
+  if(G.rank>=3){ const ok=G.jobs>=LEAD_NEED.jobs&&rep>=LEAD_NEED.rep&&G.cred>=LEAD_NEED.cred; return {lead:true,next:`${LEADER[f.k]} (prendre la tête)`,jobs:[G.jobs,LEAD_NEED.jobs],rep:[rep,LEAD_NEED.rep],cred:[G.cred,LEAD_NEED.cred],ready:ok}; }
+  const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank];
+  return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],ready:G.jobs>=jn&&rep>=rn};
+}
 function addEcho(id,delay){ G.echo=G.echo||[]; G.echo.push({id,at:G.stats.cards+delay}); }
 function echoTick(){ G.echo=(G.echo||[]).filter(x=>{ if(G.stats.cards>=x.at){ if(!G.queue.includes(x.id)) G.queue.push(x.id); return false; } return true; }); }
 
@@ -275,14 +284,14 @@ const FN = {
   defendWin(){ if(G.mine) G.mine.power++; if(G.tmp&&G.tmp.d){G.hold=G.hold||{};G.hold[G.tmp.d]=clamp(holdOf(G.tmp.d)+20,0,100);} chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
-  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
+  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
   promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
     if(G.member===`maelstrom`){G.hum=clamp(G.hum-6,0,100);chip(`n`,`−6 Humanité`)}
     if(f.k===`trauma`){G.hp=100;chip(`p`,`Soins gratuits`)}
     if(G.rank>=2) G.flags.duty=true;
-    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
+    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,(G.rank<3?`🎯 Prochain grade : ${RANKS[f.k][G.rank+1]} — ${JOB_NEED[G.rank]} missions & réputation ${REP_NEED[G.rank]}`:`🎯 Prochaine étape : prendre la tête (${LEAD_NEED.jobs} missions, rép. ${LEAD_NEED.rep}, Cred ${LEAD_NEED.cred})`),G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
     SFX.ok(); },
   betray(){ const old=G.member; const nw=FAC[old].foes[0]; const r=leaveFac(old,`betray`); G.fac[old]=-70; cere({k:`betray`,c:`#ff2a6d`,ic:`🗡`,kick:`TRAHISON`,t:`Tu trahis ${FAC[old].n}`,sub:`Tu perds ton rang de ${r.old}`,lines:[`💀 Un contrat est mis sur ta tête`,`📉 Réputation chez ${FAC[old].n} : −70`,`⚖ ${BLOCS[BLOC[old]].n} te tourne le dos`,`👥 Tes anciens frères te chercheront`]}); joinFac(nw); },
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },

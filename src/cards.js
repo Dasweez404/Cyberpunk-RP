@@ -92,22 +92,22 @@ card({id:`rogue_drink`,who:`rogue`,tag:`Afterlife`,w:5,cond:()=>G.cred>=18&&yr()
 card({id:`wakako_escort`,who:`wakako`,tag:`Japantown · Boulot`,w:5,cond:()=>G.cred>=8,
   tx:`« Un client de Charter Hill veut traverser Japantown sans que les Tyger Claws lui sautent dessus. Escorte-le jusqu'au bout de Westbrook, intact. <strong>1 500 €$</strong> si tu y arrives. »`,
   ch:[
-    {t:`Escorter en voiture`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:8,ok:{ed:1500,cred:5,fac:{tygers:-3},msg:`Le client est livré sans une rayure. Wakako te remercie d'un geste sec.`},ko:{hp:-22,ed:200,cred:1,fac:{tygers:-8},msg:`Les Tyger Claws vous coincent à un carrefour. Tu t'en sors, pas le client.`}}},
-    {t:`Négocier avec les Tyger Claws`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{ed:1500,cred:6,fac:{tygers:6},msg:`Tu parles avec le lieutenant. On vous laisse passer. Wakako lève un sourcil, impressionnée.`},ko:{hp:-15,ed:0,cred:-1,fac:{tygers:-6},msg:`« Vous n'avez rien à faire sur notre territoire ! » Un coup de crosse pour t'apprendre le respect.`}}},
+    {t:`Escorter en voiture`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:8,ok:{rel:{wakako:8},ed:1500,cred:5,fac:{tygers:-3},msg:`Le client est livré sans une rayure. Wakako te remercie d'un geste sec.`},ko:{hp:-22,ed:200,cred:1,fac:{tygers:-8},msg:`Les Tyger Claws vous coincent à un carrefour. Tu t'en sors, pas le client.`}}},
+    {t:`Négocier avec les Tyger Claws`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{rel:{wakako:8},ed:1500,cred:6,fac:{tygers:6},msg:`Tu parles avec le lieutenant. On vous laisse passer. Wakako lève un sourcil, impressionnée.`},ko:{hp:-15,ed:0,cred:-1,fac:{tygers:-6},msg:`« Vous n'avez rien à faire sur notre territoire ! » Un coup de crosse pour t'apprendre le respect.`}}},
     {t:`Décliner`,fx:{}}
   ]});
 card({id:`regina_theft`,who:`regina`,tag:`Vol de véhicule`,w:5,cond:()=>G.cred>=6,
   tx:`« Une Rayfield sur le parking du Corpo Plaza. Mon client la veut, avec moteur, sans traceur. Tu as une heure avant que la sécurité ne passe. »`,
   ch:[
-    {t:`Hacker le véhicule`,s:`Cyberdeck + INT`,req:R.deck(),chk:{a:`int`,k:`hck`,dc:7,ok:{ed:1800,cred:5,role:{net:1},msg:`Les verrous cèdent. La voiture ronronne. Regina applaudit.`},ko:{hp:-12,ed:0,msg:`L'alarme s'emballe. Tu fuis à pied, humilié(e).`}}},
-    {t:`Crocheter à l'ancienne`,s:`TECHNIQUE`,chk:{a:`tech`,dc:7,ok:{ed:1800,cred:4,role:{tech:1},msg:`Un clic, un fil, une étincelle. Le moteur démarre. Tu es déjà loin.`},ko:{hp:-14,cred:-1,msg:`La sécurité te tombe dessus. Tu fuis avec une dent en moins.`}}},
+    {t:`Hacker le véhicule`,s:`Cyberdeck + INT`,req:R.deck(),chk:{a:`int`,k:`hck`,dc:7,ok:{rel:{regina:8},ed:1800,cred:5,role:{net:1},msg:`Les verrous cèdent. La voiture ronronne. Regina applaudit.`},ko:{hp:-12,ed:0,msg:`L'alarme s'emballe. Tu fuis à pied, humilié(e).`}}},
+    {t:`Crocheter à l'ancienne`,s:`TECHNIQUE`,chk:{a:`tech`,dc:7,ok:{rel:{regina:8},ed:1800,cred:4,role:{tech:1},msg:`Un clic, un fil, une étincelle. Le moteur démarre. Tu es déjà loin.`},ko:{hp:-14,cred:-1,msg:`La sécurité te tombe dessus. Tu fuis avec une dent en moins.`}}},
     {t:`Passer`,fx:{}}
   ]});
 card({id:`padre_barrio`,who:`padre`,tag:`Heywood · Boulot`,w:4,cond:()=>G.cred>=5,
   tx:`« Mon neveu a des ennuis avec un petit gang de 6th Street. Il ne veut pas la guerre, juste récupérer ce qu'on lui doit : <strong>800 €$</strong>. Tu peux faire ça gentiment, ou pas. »`,
   ch:[
-    {t:`Discuter avec eux`,s:`SANG-FROID`,chk:{a:`cool`,dc:6,ok:{ed:800,cred:4,fac:{valentinos:5},msg:`La dette est payée, tout le monde garde ses dents. Padre te serre la main.`},ko:{hp:-12,ed:100,msg:`« Dégage ! » Ils te jettent hors du quartier. Tu repars sans un sou.`}}},
-    {t:`Frapper d'abord`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:7,ok:{ed:800,cred:6,fac:{valentinos:3,sixth:-6},msg:`Le message est reçu, fort et clair. La dette est payée avec les intérêts.`},ko:{hp:-22,cred:1,fac:{sixth:-6},msg:`Ils sont plus nombreux que prévu. Tu t'enfuis, humilié(e).`}}},
+    {t:`Discuter avec eux`,s:`SANG-FROID`,chk:{a:`cool`,dc:6,ok:{rel:{padre:8},ed:800,cred:4,fac:{valentinos:5},msg:`La dette est payée, tout le monde garde ses dents. Padre te serre la main.`},ko:{hp:-12,ed:100,msg:`« Dégage ! » Ils te jettent hors du quartier. Tu repars sans un sou.`}}},
+    {t:`Frapper d'abord`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:7,ok:{rel:{padre:8},ed:800,cred:6,fac:{valentinos:3,sixth:-6},msg:`Le message est reçu, fort et clair. La dette est payée avec les intérêts.`},ko:{hp:-22,cred:1,fac:{sixth:-6},msg:`Ils sont plus nombreux que prévu. Tu t'enfuis, humilié(e).`}}},
     {t:`Refuser`,fx:{}}
   ]});
 card({id:`courier`,who:`fix`,tag:`Livraison`,w:6,
@@ -566,7 +566,7 @@ Object.keys(FAC).forEach(id=>{
       {t:`Refuser cette fois`,s:`Rep −`,fx:{fac:{[id]:-8},cred:-1}}
     ]});
 });
-card({id:`fac_promo`,who:`narr`,tag:`Promotion`,w:50,cond:()=>G.member&&G.rank<3&&G.jobs>=(G.rank+1)*2,
+card({id:`fac_promo`,who:`narr`,tag:`Promotion`,w:50,cond:()=>{const p=promoInfo();return G.member&&!isLeader()&&G.rank<3&&p&&p.ready},
   tx:()=>`Après plusieurs missions réussies, <strong>${FAC[G.member].n}</strong> reconnaît ta valeur. Tu es sur le point de devenir <em>${RANKS[FAC[G.member].k][G.rank+1]}</em>.`,
   ch:[{t:`Accepter la promotion`,s:`Rang supérieur · plus de devoirs`,heavy:`Monter en grade te donne du pouvoir, mais la famille attendra sa part et tes ennemis te verront.`,fx:{fn:`promote`,msg:`Un nouveau titre, un nouveau salaire. Ta famille te félicite.`}},
       {t:`Décliner, tu préfères rester discret(e)`,fx:{hum:3}}]});

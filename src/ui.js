@@ -212,7 +212,7 @@ function renderGame(){
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
       <div class="blocs" id="blocs"></div>
-      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><span class="role" id="hrole"></span></div>
+      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
     </div>
     <div class="stage" id="stage"></div>
     <div class="choices" id="choices"></div>
@@ -226,6 +226,7 @@ function renderGame(){
     </nav></div>`;
   document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,city:openCity,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
+  $(`#hrole`).onclick=()=>{SFX.tap();G.member?openEmpire(`fac`):openProfile()};
   updateHud(true);
 }
 let lastVals=null, edShown=null;
@@ -485,6 +486,7 @@ function openProfile(){
   const gear=G.gear.map(id=>GEARMAP[id]).map(c=>`<div class="item own"><div class="in"><b>${c.n}</b><small>${c.t} · ${c.d}</small></div></div>`).join(``)||`<div class="log">Aucun équipement notable.</div>`;
   const hk=G.hacks.map(id=>HACKS.find(h=>h.id===id).n).join(` · `);
   modal(esc(G.name),`<div class="item"><div class="in"><b>${titleRole}</b><small>${ORIGINS[G.origin].n} · ${G.age} ans · ${dateStr()}${G.mine?` · Fondateur de ${esc(G.mine.name)}`:``}</small></div></div>
+  ${G.member?rankPanel():``}
   <div class="sec">Attributs (vert = bonus)</div>${rows}
   <div class="sec">Chrome · réduction dégâts ${Math.round(mitigation()*100)}%</div>${cy}
   ${hk?`<div class="sec">Quickhacks</div><div class="log">${hk}</div>`:``}
@@ -722,7 +724,7 @@ function openConquest(d){
 function openFactions(){
   let h=``;
   if(G.mine) h+=`<div class="item own"><div class="in"><b style="color:var(--y)">★ ${esc(G.mine.name)}</b><small>Puissance ${G.mine.power} · ${ownedList().length} quartier(s)</small></div></div>`;
-  if(G.member) h+=`<div class="item own" style="border-color:${FAC[G.member].c}"><div class="in"><b style="color:${FAC[G.member].c}">${FAC[G.member].n} · ${rankTitle()}</b><small>${G.jobs} mission(s) · ${FAC[G.member].perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>`;
+  if(G.member) h+=rankPanel();
   const ids=Object.keys(FAC).sort((a,b)=>((G.member===b)-(G.member===a))||((G.fac[b]||0)-(G.fac[a]||0)));
   h+=ids.map(id=>{
     const f=FAC[id], r=G.fac[id]||0;
@@ -731,11 +733,31 @@ function openFactions(){
   modal(`Empire`,`${empTabs(`fac`)}${h}`,{full:true});
   bindEmp();
   document.querySelectorAll(`[data-fx]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#fd-`+b.dataset.fx);d.hidden=!d.hidden});
+  const am=$(`#askm`); if(am) am.onclick=()=>askMission();
   const lf=$(`#lfac`); if(lf) lf.onclick=()=>{
     const f=FAC[G.member];
     confirmHeavy({heavy:`Tu quittes ${f.n} : tu perds ton rang (${rankTitle()}), ta réputation chute de 35, ${BLOCS[BLOC[G.member]].n} te regardera de travers, et d'anciens frères pourraient te le faire payer.`,t:`Quitter ${f.n}`},()=>{
       const l=leaveFac(G.member,`quit`); cere({k:`leave`,c:`#8a8aa8`,ic:`🚪`,kick:`RUPTURE`,t:`Tu quittes ${l.f.n}`,sub:`Fin de ton rang de ${l.old}`,lines:[`📉 Réputation : −35`,`⚖ ${BLOCS[BLOC[l.f.id||G.lastEx]]?BLOCS[BLOC[G.lastEx]].n:``} se refroidit`,`👥 Tes anciens frères s'en souviendront`]}); closeModal(); updateHud(); showCere(()=>openFactions()); });
   };
+}
+function bar(v,max,col){ const p=Math.max(0,Math.min(100,Math.round(v/max*100))); return `<div class="bigbar"><i style="background:${col};width:${p}%"></i></div>`; }
+function rankPanel(){
+  const f=FAC[G.member], p=promoInfo(), col=f.c;
+  let body=``;
+  if(p.leader) body=`<small>👑 Tu diriges ${f.n}. Garde ton pouvoir : complots et devoirs t'attendent.</small>`;
+  else {
+    const row=(ic,l,a,b)=>`<div class="rk"><span>${ic} ${l}</span><b style="color:${a>=b?`var(--g)`:`var(--t)`}">${Math.min(a,b)}/${b}${a>=b?` ✓`:``}</b></div>${bar(a,b,a>=b?`var(--g)`:col)}`;
+    body=`<small>Prochain grade : <b style="color:${col}">${p.next}</b></small>`+row(`📜`,`Missions`,p.jobs[0],p.jobs[1])+row(`🤝`,`Réputation ${f.n}`,p.rep[0],p.rep[1])+(p.cred?row(`★`,`Street Cred`,p.cred[0],p.cred[1]):``);
+    const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais encore ${p.jobs[1]-p.jobs[0]} mission(s)`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred`);
+    body+=p.ready?`<div class="why" style="color:var(--g);padding:4px 0">✅ Conditions remplies : la promotion t'attend à la prochaine carte.</div>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
+  }
+  const can=G.askP!==G.stats.cards;
+  return `<div class="item own" style="border-color:${col};flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div class="in"><b style="color:${col}">${roleTitle()}</b><small>${f.perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>${body}
+    <button class="btn" id="askm" ${can?``:`disabled`} style="text-align:center">📜 Demander une mission${can?``:` (déjà demandée)`}</button></div>`;
+}
+function askMission(){
+  if(!G.member||G.askP===G.stats.cards) return;
+  G.askP=G.stats.cards; G.queue.unshift(`fjob_${G.member}`); SFX.ok(); toast(`${FAC[G.member].n} te confiera une mission à la prochaine carte`); closeModal();
 }
 /* ----- CONTACTS ----- */
 function openContacts(){

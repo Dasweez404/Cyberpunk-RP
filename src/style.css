@@ -355,3 +355,6 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
   .help{width:50px;font-size:16px}
 }
 @media (max-height:640px){ .choices{max-height:44%} .hud{padding-top:6px} .meter .lb{font-size:9.5px} }
+
+.rk{display:flex;justify-content:space-between;font-size:14px;margin-top:2px}
+#hrole{color:var(--y);text-transform:uppercase;letter-spacing:.08em;font-size:inherit;text-align:right}

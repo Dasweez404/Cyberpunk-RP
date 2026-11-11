@@ -322,3 +322,13 @@ Object.assign(CONTACTS,{
   chino:`Frère d'armes · Valentinos`, nadia:`Netrunneuse · intel Maelstrom`, mika:`Doc de rue · soins discrets`,
   hiro:`Ingénieur Kang Tao · armes`, eli:`Informateur NetWatch`, hands:`Fixer · contrats discrets`
 });
+
+Object.assign(CONTACTS,{
+  wakako:`Fixer de Japantown · contrats discrets`, regina:`Fixer · véhicules & assassinats`, padre:`Fixer du barrio · protection`,
+  muamar:`Fixer · les gros coups`, faraday:`Fixer · Edgerunners`, nancy:`Détective NCPD · intel`, river:`Détective NCPD · protection`
+});
+ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
+/* ---------- conditions de promotion (affichées au joueur) ---------- */
+const JOB_NEED = [2,4,6];     // missions pour passer au rang 1,2,3
+const REP_NEED = [25,45,65];  // réputation dans la faction
+const LEAD_NEED = {jobs:8,rep:70,cred:45}; // pour prendre la tête

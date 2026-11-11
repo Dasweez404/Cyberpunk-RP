@@ -18,7 +18,7 @@ Object.assign(WHO,{
   hiro:{n:`Hiro Sato`,r:`Ingénieur · Kang Tao`,c:`#ffd166`,st:`cap`,sk:30},
   eli:{n:`Eli Okoye`,r:`Agent NetWatch · Informateur`,c:`#05ffa1`,st:`shades`,sk:20},
 });
-const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`];
+const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`,`wakako`,`regina`,`padre`,`muamar`,`faraday`,`nancy`,`river`];
 
 /* ============================ RELATIONS ============================ */
 // Jackie
@@ -167,7 +167,7 @@ Object.keys(ARCS).forEach(id=>{
       {t:b,s:`COOL`,chk:{a:`cool`,dc:8,ok:{ed:1800,cred:7,hum:5,fac:{[id]:10},msg:`Une autre voie, plus fine, plus sage. Les anciens hochent la tête.`},ko:{ed:200,fac:{[id]:-4},msg:`On te reproche ta mollesse.`}}}
     ]});
 });
-card({id:`fac_coup`,who:`fix`,tag:`Prendre la tête`,once:true,w:20,cond:()=>G.member&&G.rank>=3&&G.jobs>=8,
+card({id:`fac_coup`,who:`fix`,tag:`Prendre la tête`,once:true,w:20,cond:()=>{const p=promoInfo();return G.member&&!isLeader()&&G.rank>=3&&p&&p.ready},
   tx:()=>`Tu es le bras droit de ${FAC[G.member].n}. Le chef vieillit, les rivaux se multiplient. Dans les couloirs, on murmure ton nom. Si tu veux la première place, c'est maintenant. Sinon, tu resteras dans l'ombre.`,
   ch:[
     {t:`Prendre le pouvoir par la force`,s:`CORPS · combat`,heavy:`Tu renverses ton chef. Si tu échoues, tu le paieras cher ; si tu réussis, tu porteras la couronne — et ses ennemis.`,chk:{a:`body`,k:`cmb`,dc:10,ok:{cred:12,ed:3000,role:{boss:3},fn:`seizeFaction`,msg:`Un duel, un coup décisif. Le chef s'incline. Tu es désormais à la tête de ${`la famille`}.`},ko:{hp:-50,cred:-3,fac:{},msg:`Ta tentative échoue. Tu survis, mais ta position est fragilisée.`}}},
