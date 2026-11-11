@@ -1461,7 +1461,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -1515,6 +1515,19 @@ function roleTitle(){
 }
 function rankTitle(){ return G.member?RANKS[FAC[G.member].k][G.rank]:null; }
 
+/* ---------- expérience : on progresse en pratiquant ---------- */
+const xpNeed = lv => 4+2*Math.max(0,lv-3);
+const MENTOR = {body:`jackie`,ref:`claire`,tech:`vik`,int:`dex`,cool:`rogue`};
+function gainXp(a,amt){
+  G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
+  if(G.at[a]>=9) return;
+  G.xp[a]+=amt; chip(`i`,`+${amt} XP ${ATTRS[a].n}`);
+  while(G.at[a]<9 && G.xp[a]>=xpNeed(G.at[a])){
+    G.xp[a]-=xpNeed(G.at[a]); G.at[a]++;
+    chip(`p`,`★ ${ATTRS[a].n} ${G.at[a]} !`); G.log.unshift({d:dateStr(),m:`Tu progresses : ${ATTRS[a].n} ${G.at[a]}.`});
+    toast(`${ATTRS[a].n} ${G.at[a]} !`); SFX.ok(); flash(`#fcee0a`); vib([30,40,30]);
+  }
+}
 /* ---------- blocs d'influence (équilibre) ---------- */
 function moveBloc(b,d){
   if(!b||!d) return; G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
@@ -1662,7 +1675,7 @@ function doConquer(d,opt){
   else {
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
-    ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok};
+    ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
   }
   if(ok){
     G.dist[d.id]=`player`; G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
@@ -1842,7 +1855,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -1850,7 +1863,7 @@ function showHow(){
   modal(`Comment jouer`,`<div class="log"><b>1.</b> Chaque carte est un événement. Choisis une réponse (touche simplement un choix, ou les touches 1-2-3).</div>
   <div class="log"><b>2.</b> Surveille ta <b style="color:var(--hp)">Santé</b>, ton <b style="color:var(--hum)">Humanité</b> (trop de chrome = cyberpsychose), ta <b style="color:var(--cred)">Street Cred</b> et tes <b style="color:var(--ed)">€$</b>.</div>
   <div class="log"><b>⚖</b> <b>Équilibre :</b> les 4 barres RUE · CORPOS · LOI · BADLANDS (sous les jauges) doivent rester <b>au milieu</b>. Trop bas, ils te traquent ; trop haut, ils te possèdent — dans les deux cas, ça peut te coûter la vie. Les points sur les barres montrent ce qu'un choix va changer.</div>
-  <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent.</div>
+  <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
   <div class="log"><b>4.</b> Dans <b>VILLE</b> : ripperdoc, marché noir, gigs, soins, entraînement. Dans <b>CARTE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
   <div class="log"><b>6.</b> Survis jusqu'à la retraite (${RETIRE_AGE} ans) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
@@ -2033,6 +2046,7 @@ function resolveChoice(ch){
   } else fx=ch.fx;
   const before={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
   applyFx(fx||{});
+  if(info) gainXp(info.a,info.ok?2:1);
   const msg = fx&&fx.msg ? fx.msg : ``;
   G.log.unshift({d:dateStr(),m:msg||ch.t}); if(G.log.length>120)G.log.pop();
   const chips=CHIPS.slice();
@@ -2114,7 +2128,7 @@ function openProfile(){
   const titleRole=roleTitle();
   const rows=Object.keys(ATTRS).map(k=>{
     const base=G.at[k], tot=A(k);
-    return `<div class="attrrow"><div class="nm"><b>${ATTRS[k].n}</b><i>${ATTRS[k].d}</i></div><div class="pips">${Array.from({length:13},(_,i)=>`<div class="pip ${i<base?`on`:i<tot?`bonus`:``}"></div>`).join(``)}</div><b>${tot}</b></div>`;}).join(``);
+    return `<div class="attrrow"><div class="nm"><b>${ATTRS[k].n}</b><i>${ATTRS[k].d}${G.at[k]<9?` · XP ${(G.xp&&G.xp[k])||0}/${xpNeed(G.at[k])}`:``}</i></div><div class="pips">${Array.from({length:13},(_,i)=>`<div class="pip ${i<base?`on`:i<tot?`bonus`:``}"></div>`).join(``)}</div><b>${tot}</b></div>`;}).join(``);
   const cy=G.cyber.map(id=>CY(id)).map(c=>`<div class="item own"><div class="in"><b>${c.n}</b><small>${SLOTS[c.slot]} · ${c.d}</small></div></div>`).join(``)||`<div class="log">Aucun implant. Chair pure.</div>`;
   const gear=G.gear.map(id=>GEARMAP[id]).map(c=>`<div class="item own"><div class="in"><b>${c.n}</b><small>${c.t} · ${c.d}</small></div></div>`).join(``)||`<div class="log">Aucun équipement notable.</div>`;
   const hk=G.hacks.map(id=>HACKS.find(h=>h.id===id).n).join(` · `);
@@ -2145,7 +2159,7 @@ function openCity(){
     ${tile(`rip`,`🦾`,`Ripperdoc`,`Chrome & implants`)}
     ${tile(`gear`,`🔫`,`Marché noir`,`Armes, armures, véhicules`)}
     ${tile(`hack`,`💾`,`Quickhacks`,hasDeck()?`${G.hacks.length}/${deckSlots()} slots`:`Deck requis`,{dis:!hasDeck()})}
-    ${tile(`train`,`🏋`,`S'entraîner`,`+1 attribut · 2 mois`)}
+    ${tile(`train`,`🏋`,`S'entraîner`,`Gagne de l'XP · gratuit · 2 mois`)}
    </div>
    <div class="sec">Boulots</div>
    <div class="tiles one">${tile(`gigs`,`📋`,`Tableau des gigs`,`${G.board&&G.board.p===G.stats.cards?G.board.left:GIG_PER_PERIOD} gig(s) dispo cette période · mieux payés`)}</div>
@@ -2230,16 +2244,24 @@ function buyHack(id){
   G.ed-=h.p; G.hacks.push(id); G.role.net+=1; SFX.buy(); updateHud(); toast(`${h.n} chargé`); openShop(`hack`);
 }
 function openTrain(){
-  modal(`S'entraîner`,`${statBar()}`+Object.keys(ATTRS).map(k=>{
-    const lv=G.at[k], price=lv*260, max=lv>=9;
-    return `<div class="item"><div class="in"><b>${ATTRS[k].n} ${lv}</b><small>${ATTRS[k].d}</small><div class="pips" style="margin-top:4px">${Array.from({length:10},(_,i)=>`<div class="pip ${i<lv?`on`:``}"></div>`).join(``)}</div></div><button class="buy ${max||G.ed<price?`no`:``}" data-t="${k}" ${max||G.ed<price?`disabled`:``}>${max?`MAX`:money(price)}</button></div>`;
-  }).join(``)+`<div class="log" style="color:var(--dim)">2 mois par session. Maximum de base : 9.</div>`,{back:openCity});
+  G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
+  const used=G.trainP===G.stats.cards;
+  modal(`S'entraîner`,`<div class="log" style="color:var(--dim)">On progresse <b>en pratiquant</b> : chaque jet réussi (+2 XP) ou raté (+1 XP) fait avancer l'attribut utilisé. L'entraînement ajoute un coup de pouce : <b>1 séance par période</b>, gratuite, 2 mois.</div>
+   <div class="vstat"><span>Séance de cette période</span><b style="color:${used?`var(--m)`:`var(--g)`}">${used?`utilisée`:`disponible`}</b></div>`+
+  Object.keys(ATTRS).map(k=>{
+    const lv=G.at[k], max=lv>=9, need=xpNeed(lv), x=G.xp[k]||0, m=rel_(MENTOR[k]), bonus=3+(m>=15?2:0);
+    return `<div class="item"><div class="in"><b>${ATTRS[k].n} ${lv}</b><small>${ATTRS[k].d}${m>=15?` · Mentor : ${WHO[MENTOR[k]].n.split(` `)[0]} (+2 XP)`:``}</small>
+      <div class="bigbar" style="margin-top:6px"><i style="background:var(--y);width:${max?100:Math.round(x/need*100)}%"></i></div><small>${max?`Niveau max`:`${x} / ${need} XP`}</small></div>
+      <button class="buy ${max||used?`no`:``}" data-t="${k}" ${max||used?`disabled`:``}>+${bonus} XP</button></div>`;
+  }).join(``),{back:openCity});
   document.querySelectorAll(`[data-t]`).forEach(b=>b.onclick=()=>{
-    const k=b.dataset.t, price=G.at[k]*260; if(G.ed<price)return;
-    CHIPS=[]; applyFx({ed:-price,at:{[k]:1}}); tick(2); SFX.ok(); updateHud(); G.log.unshift({d:dateStr(),m:`Entraînement : ${ATTRS[k].n}.`}); toast(`${ATTRS[k].n} +1`);
+    const k=b.dataset.t; if(G.trainP===G.stats.cards)return;
+    CHIPS=[]; G.trainP=G.stats.cards; gainXp(k,3+(rel_(MENTOR[k])>=15?2:0)); tick(2); SFX.ok(); updateHud();
+    G.log.unshift({d:dateStr(),m:`Entraînement : ${ATTRS[k].n}.`}); toast(CHIPS.map(c=>c.txt).join(` · `));
     if(checkEnd()){closeModal();return showEnd()} openTrain();
   });
 }
+const rel_ = id => (G.rel&&G.rel[id])||0;
 const GIG_PER_PERIOD=2;
 const gigPay=g=>Math.round(g.pay*1.7/50)*50, gigCr=g=>Math.ceil(g.cr*1.5);
 function gigBoard(){
@@ -2264,6 +2286,7 @@ function openGigs(){
     const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[]; x.done=true; bd.left--;
     if(ok){ applyFx({ed:gigPay(g),cred:gigCr(g)}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${gigPay(g)} €$).`}); }
     else { applyFx({hp:-g.dm,ed:Math.round(gigPay(g)*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
+    gainXp(g.a,ok?2:1);
     tick(1); updateHud();
     modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
     $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };

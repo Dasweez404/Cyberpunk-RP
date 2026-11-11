@@ -31,7 +31,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -85,6 +85,19 @@ function roleTitle(){
 }
 function rankTitle(){ return G.member?RANKS[FAC[G.member].k][G.rank]:null; }
 
+/* ---------- expérience : on progresse en pratiquant ---------- */
+const xpNeed = lv => 4+2*Math.max(0,lv-3);
+const MENTOR = {body:`jackie`,ref:`claire`,tech:`vik`,int:`dex`,cool:`rogue`};
+function gainXp(a,amt){
+  G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
+  if(G.at[a]>=9) return;
+  G.xp[a]+=amt; chip(`i`,`+${amt} XP ${ATTRS[a].n}`);
+  while(G.at[a]<9 && G.xp[a]>=xpNeed(G.at[a])){
+    G.xp[a]-=xpNeed(G.at[a]); G.at[a]++;
+    chip(`p`,`★ ${ATTRS[a].n} ${G.at[a]} !`); G.log.unshift({d:dateStr(),m:`Tu progresses : ${ATTRS[a].n} ${G.at[a]}.`});
+    toast(`${ATTRS[a].n} ${G.at[a]} !`); SFX.ok(); flash(`#fcee0a`); vib([30,40,30]);
+  }
+}
 /* ---------- blocs d'influence (équilibre) ---------- */
 function moveBloc(b,d){
   if(!b||!d) return; G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
@@ -232,7 +245,7 @@ function doConquer(d,opt){
   else {
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
-    ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok};
+    ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
   }
   if(ok){
     G.dist[d.id]=`player`; G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
