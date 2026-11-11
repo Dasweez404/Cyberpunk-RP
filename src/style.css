@@ -455,3 +455,10 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 @media (prefers-reduced-motion:reduce){.ofx{display:none}.portrait{animation:none!important}.amb::after{display:none}}
 .lvlfx{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .lvlfx{background:linear-gradient(180deg,transparent 32%,#000c 50%,transparent 68%)}
+
+/* ---- Empire v2 ---- */
+.fst{flex:none;font-size:10px;letter-spacing:.1em;padding:1px 6px;border:1px solid currentColor;font-weight:700}
+.fst.y{color:var(--y)}.fst.g{color:var(--g)}.fst.m{color:var(--m)}.fst.d{color:var(--dim)}
+.frow b{width:auto;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .rb{flex:0 0 70px}
+#hrole.ready{color:var(--g);animation:blink 1s infinite}

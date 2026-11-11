@@ -17,7 +17,7 @@ cat <<'HEAD'
 HEAD
 cat src/style.css
 echo '</style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>'
-cat src/data.js src/cards.js src/cards2.js src/cards3.js src/cards4.js src/cards5.js src/cards6.js src/cards7.js src/cards8.js src/cards9.js src/engine.js src/ui.js
+cat src/data.js src/cards.js src/cards2.js src/cards3.js src/cards4.js src/cards5.js src/cards6.js src/cards7.js src/cards8.js src/cards9.js src/cards10.js src/engine.js src/ui.js
 echo "if('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(()=>{});"
 echo '</script></body></html>'
 } > index.html

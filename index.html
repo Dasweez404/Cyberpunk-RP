@@ -466,6 +466,13 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 @media (prefers-reduced-motion:reduce){.ofx{display:none}.portrait{animation:none!important}.amb::after{display:none}}
 .lvlfx{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .lvlfx{background:linear-gradient(180deg,transparent 32%,#000c 50%,transparent 68%)}
+
+/* ---- Empire v2 ---- */
+.fst{flex:none;font-size:10px;letter-spacing:.1em;padding:1px 6px;border:1px solid currentColor;font-weight:700}
+.fst.y{color:var(--y)}.fst.g{color:var(--g)}.fst.m{color:var(--m)}.fst.d{color:var(--dim)}
+.frow b{width:auto;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .rb{flex:0 0 70px}
+#hrole.ready{color:var(--g);animation:blink 1s infinite}
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -798,9 +805,10 @@ Object.assign(CONTACTS,{
 });
 ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
 /* ---------- conditions de promotion (affichées au joueur) ---------- */
-const JOB_NEED = [2,3,4];     // missions pour passer au rang 1,2,3
-const REP_NEED = [20,35,50];  // réputation dans la faction
-const LEAD_NEED = {jobs:6,rep:60,cred:40}; // pour prendre la tête
+const JOB_NEED = [1,2,3];     // missions pour passer au rang 1,2,3
+const REP_NEED = [15,30,45];  // réputation dans la faction
+const LEAD_NEED = {jobs:5,rep:55,cred:35};
+const FOUND_NEED = {cred:15,ed:1000}; // pour prendre la tête
 
 const AGING_AGE = 40;
 /* =====================================================================
@@ -1276,13 +1284,13 @@ card({id:`edge_job`,who:`dex`,tag:`Gros coup`,w:7,cond:()=>G.flags.edge,
   ]});
 
 /* ============================ FACTION PROPRE ============================ */
-card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=20&&G.ed>=1500&&!G.mine&&!isLeader(),
+card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=FOUND_NEED.cred&&G.ed>=FOUND_NEED.ed&&!G.mine&&!isLeader(),
   tx:`Tu ne veux plus suivre les ordres de personne. Tu as de l'argent, des alliés, une réputation. Il est temps de bâtir quelque chose à toi : une faction, une famille, un nom que les rues connaîtront.`,
   ch:[
-    {t:`Fonder un gang de rue`,s:`−1 500 €$ · Prestige de rue`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-1500,cred:6,bloc:{rue:10},role:{boss:3}}},
-    {t:`Créer un réseau de fixers`,s:`−1 500 €$ · Revenus passifs`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-1500,cred:5,role:{boss:3,fixer:2}}},
-    {t:`Monter un clan nomade`,s:`−1 500 €$ · Mobilité`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-1500,cred:5,role:{boss:3,nomad:2}}},
-    {t:`Fonder un collectif de netrunners`,s:`−1 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=1500?``:`1500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-1500,cred:5,role:{boss:3,net:2}}},
+    {t:`Fonder un gang de rue`,s:`−1 000 €$ · Prestige de rue`,req:R.ed(1000),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-1000,cred:6,bloc:{rue:10},role:{boss:3}}},
+    {t:`Créer un réseau de fixers`,s:`−1 000 €$ · Revenus passifs`,req:R.ed(1000),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-1000,cred:5,role:{boss:3,fixer:2}}},
+    {t:`Monter un clan nomade`,s:`−1 000 €$ · Mobilité`,req:R.ed(1000),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-1000,cred:5,role:{boss:3,nomad:2}}},
+    {t:`Fonder un collectif de netrunners`,s:`−1 000 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=1000?``:`1000 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-1000,cred:5,role:{boss:3,net:2}}},
     {t:`Plus tard…`,fx:{unonce:`found_faction`}}
   ]});
 card({id:`mine_raid`,who:`narr`,tag:`Ton territoire attaqué`,w:30,cond:()=>G.mine&&ownedList().length>=1&&yr()>=2071,
@@ -2526,6 +2534,43 @@ card({id:`big_chance`,who:`@fixer`,tag:`⚠ Le coup de ta vie`,w:8,cd:10,cond:()
     {t:`Te faire soigner d'abord`,s:`−400 €$ · tu n'auras qu'une part`,req:R.ed(400),fx:{ed:800,hp:30,msg:`Quand tu reviens, il ne reste que des miettes. Mais tu repars sur tes deux jambes.`}}
   ]});
 /* =====================================================================
+   CARTES 10 — conséquences de la diplomatie : représailles, accrochages
+   entre factions, appels et cadeaux d'alliés
+   ===================================================================== */
+const FN_ = id => FAC[id]?FAC[id].n:`eux`;
+card({id:`fac_revenge`,who:`@enemy`,tag:`⚔ Représailles`,w:9,cond:()=>hottest()!==null,
+  tx:()=>{ const fid=(G.grudge&&FAC[G.grudge]&&(G.fac[G.grudge]||0)<=-10)?G.grudge:(hottest()||G.grudge||`maelstrom`); G.tmp={fid}; G.grudge=null;
+    return `<strong>${FN_(fid)}</strong> n'a pas oublié. Une ruelle, trois silhouettes, une voix calme : « Tu nous as coûté cher. On vient chercher ce que tu nous dois — avec les intérêts. » ${(G.fac[fid]||0)<=-60?`<em>C'est la guerre ouverte : ils ne s'arrêteront pas.</em>`:``}`; },
+  ch:[
+    {t:`Te battre`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:9,ok:{cred:5,fn:`revengeWin`,msg:`Tu leur fais regretter le déplacement. Le message est clair : on ne te touche pas sans payer.`},ko:{hp:-30,ed:-400,msg:`Ils te laissent pour mort(e) dans le caniveau, les poches vides.`}}},
+    {t:`Fuir`,s:`RÉFLEXES`,chk:{a:`ref`,dc:8,ok:{msg:`Un mur, un toit, une bouche de métro. Ils te perdent.`},ko:{hp:-18,msg:`Une balle te rattrape avant le coin de la rue.`}}},
+    {t:`Payer le prix du sang`,s:`−1 500 €$ · apaise la faction`,req:R.ed(1500),fx:{ed:-1500,fn:`revengePay`,msg:`Tu paies. Ils comptent les billets devant toi. « On est quittes. Pour cette fois. »`}},
+    {t:`Appeler du renfort`,s:`Ta faction, ta famille ou tes alliés`,req:()=>(G.member||crewOf().length||Object.keys(G.allies||{}).length)?``:`Personne à appeler`,fx:{ed:-300,cred:3,msg:`Tes renforts arrivent avant le premier coup. Les autres reculent sans un mot.`}}
+  ]});
+card({id:`fac_clash`,who:`@enemy`,tag:`⚔ Accrochage`,w:9,cond:()=>G.member&&FAC[G.member].foes.length>0,
+  tx:()=>{ const foes=FAC[G.member].foes, fid=foes[rnd(0,foes.length-1)]; G.tmp={fid};
+    return `Tu portes les couleurs de <strong>${FAC[G.member].n}</strong>, et ça se voit. Une bande de <strong>${FN_(fid)}</strong> te barre la route : « T'es loin de chez toi. » Tes chefs entendront parler de ce que tu fais maintenant.`; },
+  ch:[
+    {t:`Défendre tes couleurs`,s:`RÉFLEXES · combat · compte comme une mission`,chk:{a:`ref`,k:`cmb`,dc:8,ok:{cred:4,fn:`clashWin`,msg:`Tu les mets en déroute. La nouvelle remonte jusqu'aux chefs avant toi.`},ko:{hp:-24,fn:`clashLose`,msg:`Tu te fais corriger devant témoins. Tes chefs n'apprécieront pas.`}}},
+    {t:`Calmer le jeu`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{hum:3,cred:2,msg:`Quelques mots, un regard. Chacun repart de son côté.`},ko:{hp:-10,msg:`Ils prennent ça pour de la faiblesse.`}}},
+    {t:`Baisser les yeux et passer`,s:`Ta faction le saura`,fx:{fn:`clashLose`,msg:`Tu passes ton chemin. Quelqu'un des tiens t'a vu.`}}
+  ]});
+card({id:`ally_call`,who:`@enemy`,tag:`📜 Un allié t'appelle`,w:7,cond:()=>Object.keys(G.allies||{}).length>0,
+  tx:()=>{ const al=Object.keys(G.allies), fid=al[rnd(0,al.length-1)]; G.tmp={fid};
+    return `Un messager de <strong>${FN_(fid)}</strong> : « On a un pacte, toi et nous. Nos ennemis frappent ce soir. On compte sur toi. » Un pacte, à Night City, ce n'est pas du papier.`; },
+  ch:[
+    {t:`Répondre à l'appel`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:8,ok:{ed:1500,cred:4,loot:2,fn:`allyHelp`,msg:`Vous tenez la ligne ensemble. Vos alliés s'en souviendront.`},ko:{hp:-26,fn:`allyHelp`,msg:`Ça tourne mal, mais tu étais là. C'est ce qui compte pour eux.`}}},
+    {t:`Envoyer de l'argent à la place`,s:`−800 €$`,req:R.ed(800),fx:{ed:-800,msg:`Ils prennent l'argent. Ils auraient préféré te voir.`}},
+    {t:`Refuser`,s:`Le pacte est rompu`,heavy:`Refuser l'appel d'un allié rompt le pacte. Ils te le feront payer.`,fx:{fn:`allyBreak`,msg:`Le messager crache par terre. « On saura s'en souvenir. »`}}
+  ]});
+card({id:`ally_gift`,who:`@enemy`,tag:`📜 Un geste d'allié`,w:4,cond:()=>Object.keys(G.allies||{}).length>0,
+  tx:()=>{ const al=Object.keys(G.allies), fid=al[rnd(0,al.length-1)]; G.tmp={fid};
+    return `<strong>${FN_(fid)}</strong> honore le pacte : une mallette, quelques hommes disponibles, et un message : « Entre alliés, on partage. »`; },
+  ch:[
+    {t:`Prendre la mallette`,s:`+Gain`,fx:{ed:900,msg:`Des eddies propres, pour une fois.`}},
+    {t:`Prendre les hommes`,s:`Renforce tes quartiers, ou te soigne`,fx:{fn:`holdAll`,hp:15,msg:`Ils montent la garde quelques semaines. Tu dors mieux.`}}
+  ]});
+/* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
 let G = null;
@@ -2548,7 +2593,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -2559,7 +2604,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, allies:{}, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -2851,6 +2896,12 @@ const FN = {
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
   holdAll(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)+25,0,100)}); chip(`y`,`Quartiers renforcés`); },
   holdLose(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)-25,0,100)}); chip(`n`,`Tes quartiers vacillent`); },
+  revengeWin(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ FAC[id].foes.forEach(x=>{G.fac[x]=clamp((G.fac[x]||0)+4,-100,100)}); chip(`y`,`${FAC[id].n} y réfléchira à deux fois`); } },
+  revengePay(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)+20,-100,100); chip(`i`,`+20 ${FAC[id].n}`); } },
+  clashWin(){ const id=G.tmp&&G.tmp.fid; if(!G.member) return; G.jobs++; G.stats.jobs++; G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); chip(`i`,`+6 ${FAC[G.member].n}`); if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)-8,-100,100); chip(`n`,`−8 ${FAC[id].n}`); } const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); },
+  clashLose(){ if(!G.member) return; G.fac[G.member]=clamp((G.fac[G.member]||0)-6,-100,100); chip(`n`,`−6 ${FAC[G.member].n}`); },
+  allyHelp(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)+10,-100,100); chip(`i`,`+10 ${FAC[id].n}`); } },
+  allyBreak(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]) facBreak(id); },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -2865,6 +2916,7 @@ function tick(months){
   ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
   inc+=crewOf().length*120;
+  inc+=Object.keys(G.allies||{}).length*100;
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
@@ -2906,6 +2958,7 @@ function prepCard(c){
   if(c.who===`@fac`&&G.member){ const f=FAC[G.member]; npc=(Math.random()<.3&&WHO[f.leader])?null:genNpc(f.k,f.c,`${RANKS[f.k][Math.min(3,G.rank+1)]} · ${f.n}`); if(!npc) G.cur.who=f.leader; }
   else if(c.who===`@ex`){ const f=FAC[G.lastEx]; npc=f?genNpc(f.k,f.c,`Ex-frère · ${f.n}`):genNpc(`gang`); }
   else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
+  else if(c.who===`@enemy`){ const f=FAC[G.tmp&&G.tmp.fid]; npc=f?genNpc(f.k,f.c,f.n):genNpc(`gang`); }
   else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`muamar`,`lizzie`,`faraday`]); }
   else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
   else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:/^fl/.test(c.id)?d.n:`Night City`,r:/^fl/.test(c.id)?`${d.w} · ${dateStr()}`:dateStr(),c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
@@ -2931,6 +2984,7 @@ function canConquer(d){
   if(G.dist[d.id]===`player`) return `Déjà à toi`;
   if(d.lock&&!G.flags.dogtown) return `Verrouillé`;
   if(G.member&&G.dist[d.id]===G.member) return `Ta propre faction`;
+  if((G.allies||{})[G.dist[d.id]]) return `Territoire d'un allié : romps le pacte d'abord`;
   const need = d.def*7+ownedList().length*2;
   if(G.cred<need) return `Street Cred ${need} requis`;
   return ``;
@@ -2940,7 +2994,7 @@ function doOperation(d,opt){
   const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
   if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=35; }
   else {
-    const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0)};
+    const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0) - (Object.keys(G.allies||{}).some(a=>FAC[a].foes.includes(prev))?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
     gain = ok ? ({assault:28,hack:24,talk:20}[opt.k]+(roll===10?14:0)) : -8;
@@ -2971,6 +3025,7 @@ function reinforce(d){
 }
 function warTick(){
   G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-60&&ownedList().length&&Math.random()<.35){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
     const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewOf().length/2);
@@ -2980,6 +3035,70 @@ function warTick(){
   });
 }
 
+/* ---------- diplomatie : rejoindre, aider, attaquer, pactiser ---------- */
+function facNeeds(id){
+  const c=v=>({t:`Street Cred ${v}`,ok:G.cred>=v}), at=(a,v)=>({t:`${ATTRS[a].n} ${v}`,ok:A(a)>=v}), or=(t,ok)=>({t,ok});
+  const corp=v=>[or(`Origine Corpo ou Street Cred ${v}`,G.origin===`corpo`||G.cred>=v)];
+  const M={
+    valentinos:[c(5)], maelstrom:[c(6)], tygers:[c(6)], sixth:[c(6)],
+    voodoo:[or(`INTELLECT 5 ou cyberdeck`,hasDeck()||A(`int`)>=5)], animals:[at(`body`,5)], mox:[at(`cool`,4)],
+    aldecaldos:[or(`Origine Nomade ou TECHNIQUE 5`,G.origin===`nomad`||A(`tech`)>=5)], wraiths:[or(`Origine Nomade ou RÉFLEXES 5`,G.origin===`nomad`||A(`ref`)>=5)],
+    barghest:[or(`À partir de 2077`,yr()>=2077),c(15)], ncpd:[c(6),at(`int`,4)],
+    arasaka:corp(18), militech:corp(18), kangtao:corp(18), biotechnica:corp(15),
+    trauma:[or(`TECHNIQUE 5 ou INTELLECT 5`,A(`tech`)>=5||A(`int`)>=5)]
+  };
+  const l=(M[id]||[]).slice(), r=G.fac[id]||0;
+  l.push({t:`Réputation au-dessus de −25 (actuelle : ${r})`,ok:r>-25});
+  if(G.flags[`exfac_`+id]) l.push({t:`Ancien membre : réputation 30 pour être pardonné`,ok:r>=30});
+  return l;
+}
+Object.keys(FACREQ).forEach(k=>{ FACREQ[k]=()=>facNeeds(k).every(x=>x.ok); });
+const canJoin = id => !G.member&&!G.mine&&facNeeds(id).every(x=>x.ok);
+function facStatus(id){
+  const r=G.fac[id]||0;
+  if(G.member===id) return [isLeader()?`CHEF`:`MEMBRE`,`y`];
+  if((G.allies||{})[id]) return [`ALLIÉ`,`g`];
+  if(r<=-60) return [`EN GUERRE`,`m`]; if(r<=-30) return [`HOSTILE`,`m`]; if(r>=40) return [`AMI`,`g`];
+  return [`NEUTRE`,`d`];
+}
+function hottest(){ let best=null,bv=-29; Object.keys(FAC).forEach(k=>{ const r=G.fac[k]||0; if(r<bv){bv=r;best=k} }); return best; }
+const facAttr = f => ({gang:`body`,corp:`cool`,clan:`ref`,ncpd:`int`,mox:`cool`,trauma:`tech`}[f.k]||`cool`);
+const facStr = id => DIST.filter(d=>G.dist[d.id]===id).length;
+function facOdds(id,kind){ const f=FAC[id]; return kind===`favor`?rollInfo({a:facAttr(f),dc:6}):rollInfo({a:`body`,k:`cmb`,dc:7+Math.min(3,facStr(id))}); }
+function facAct(id,kind){
+  CHIPS=[]; const f=FAC[id]; opsLeft(); G.ops.left--;
+  const ri=facOdds(id,kind), roll=rnd(1,10), ok=roll===10||(roll!==1&&roll>=ri.need);
+  const rep=v=>{ G.fac[id]=clamp((G.fac[id]||0)+v,-100,100); chip(v>0?`i`:`n`,`${sgn(v)} ${f.n}`); moveBloc(BLOC[id],v*.4); };
+  gainXp(kind===`favor`?facAttr(f):`body`,ok?3:1);
+  let text=``;
+  if(kind===`favor`){
+    if(ok){ rep(10); applyFx({ed:400,cred:1}); text=`Tu rends un service à ${f.n}. Ils notent ton nom du bon côté du carnet.`; }
+    else { rep(2); applyFx({hp:-10}); text=`Le service tourne mal, mais ils ont vu que tu avais essayé.`; }
+  } else {
+    if(ok){ const loot=1000+rnd(0,8)*100+facStr(id)*300; applyFx({ed:loot,cred:5}); rep(-22); f.foes.forEach(x=>{G.fac[x]=clamp((G.fac[x]||0)+8,-100,100)}); if(f.foes.length) chip(`i`,`Leurs ennemis t'apprécient`); text=`Tu frappes ${f.n} là où ça fait mal et repars avec un butin. Ils ne l'oublieront pas.`; }
+    else { applyFx({hp:-22,cred:-2}); rep(-12); text=`${f.n} t'attendait. Tu repars en sang, et ils savent qui a essayé.`; }
+    G.grudge=id; addEcho(`fac_revenge`,rnd(2,4)); chip(`n`,`⚠ Représailles à prévoir`);
+    G.log.unshift({d:dateStr(),m:`Tu attaques ${f.n}.`});
+  }
+  tick(1);
+  return {ok,info:{roll,...ri,ok},chips:CHIPS.slice(),text};
+}
+function facPact(id){
+  const f=FAC[id]; G.allies=G.allies||{}; G.ed-=1500; G.allies[id]=true; G.fac[id]=clamp((G.fac[id]||0)+10,-100,100);
+  f.foes.forEach(x=>{G.fac[x]=clamp((G.fac[x]||0)-12,-100,100)}); moveBloc(BLOC[id],6);
+  G.log.unshift({d:dateStr(),m:`Pacte scellé avec ${f.n}.`});
+  cere({k:`join`,c:f.c,ic:`📜`,kick:`PACTE`,t:`Alliance avec ${f.n}`,sub:`Un pacte, à Night City, ce n'est pas du papier`,lines:[`💰 Tribut : +100 €$ par période`,`⚔ +2 à tes opérations contre leurs ennemis`,f.foes.length?`📉 Leurs ennemis se méfient : ${f.foes.map(x=>FAC[x]?FAC[x].n:x).join(`, `)}`:`🕊 Ils n'ont pas d'ennemi déclaré`,`⚠ Ils t'appelleront à l'aide. Refuser rompt le pacte.`]});
+}
+function facBreak(id){
+  const f=FAC[id]; if(G.allies) delete G.allies[id]; G.fac[id]=clamp((G.fac[id]||0)-35,-100,100); moveBloc(BLOC[id],-8);
+  G.grudge=id; addEcho(`fac_revenge`,3); G.log.unshift({d:dateStr(),m:`Pacte rompu avec ${f.n}.`});
+  cere({k:`betray`,c:`#ff2a6d`,ic:`💔`,kick:`PACTE ROMPU`,t:`Fin de l'alliance`,sub:f.n,lines:[`📉 Réputation : −35`,`💀 Ils viendront réclamer leur dû`]});
+}
+function claimPromo(){
+  const p=promoInfo(); if(!p||!p.ready) return null;
+  if(G.rank<3){ CHIPS=[]; FN.promote(); return `promo`; }
+  if(!G.queue.includes(`fac_coup`)){ delete G.done.fac_coup; G.queue.unshift(`fac_coup`); } return `coup`;
+}
 /* ---------- fins & score ---------- */
 const relSum = () => Object.values(G.rel||{}).reduce((a,v)=>a+Math.max(0,v),0);
 function computeScore(kind){
@@ -3155,7 +3274,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -3266,7 +3385,7 @@ function renderGame(){
   document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
   $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
-  $(`#hrole`).onclick=()=>{SFX.tap();G.member?openEmpire(`fac`):openProfile()};
+  $(`#hrole`).onclick=()=>{SFX.tap();openEmpire(`fac`)};
   updateHud(true);
 }
 let lastVals=null, edShown=null;
@@ -3291,7 +3410,7 @@ function updateHud(init){
   tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
   $(`#hdate`).textContent=`${dateStr()} · ${G.age} ans`;
-  $(`#hrole`).textContent=roleTitle();
+  { const pi=promoInfo(), hr=$(`#hrole`); hr.textContent=roleTitle()+(pi&&pi.jobs&&!pi.ready?` · ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`:pi&&pi.ready?` ⬆`:``); hr.classList.toggle(`ready`,!!(pi&&pi.ready)); }
   const cb=document.querySelector(`.dock [data-d=city]`); if(cb)cb.classList.toggle(`alert`,G.hp<45||G.hum<45);
   $(`#m-hp`).classList.toggle(`warn`,G.hp<=25);
   $(`#m-hum`).classList.toggle(`warn`,G.hum<=30);
@@ -3555,6 +3674,7 @@ function openProfile(){
   ${relBlock()}
   <div class="sec">Difficulté</div><div class="log">Le monde se durcit avec les années : <b style="color:var(--m)">+${dcBonus()}</b> à la difficulté des jets${G.age>=AGING_AGE?` · ton corps vieillit`:``}. Prix et loyers : ×${infl().toFixed(2)}.</div>
   <div class="sec">Statistiques</div><div class="log">Cartes jouées : ${G.stats.cards} · Gigs : ${G.stats.gigs} · Missions de faction : ${G.stats.jobs}</div>`);
+  bindRank(openProfile);
 }
 
 function relBlock(){
@@ -3569,7 +3689,7 @@ function goAdvice(go){
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);
 }
 /* ----- EMPIRE ----- */
-let EMPTAB=`map`;
+let EMPTAB=`fac`;
 function empTabs(cur){ return `<div class="seg"><button class="${cur===`map`?`on`:``}" data-et="map">🗺 Quartiers</button><button class="${cur===`fac`?`on`:``}" data-et="fac">🛡 Factions</button></div>`; }
 function bindEmp(){ document.querySelectorAll(`[data-et]`).forEach(b=>b.onclick=()=>{SFX.tap();openEmpire(b.dataset.et)}); }
 function openEmpire(tab){ EMPTAB=tab||EMPTAB; (EMPTAB===`fac`?openFactions:openMap)(); }
@@ -3634,23 +3754,74 @@ function openConquest(d){
 
 /* ----- FACTIONS ----- */
 function openFactions(){
-  let h=``;
-  if(G.mine) h+=`<div class="item own"><div class="in"><b style="color:var(--y)">★ ${esc(G.mine.name)}</b><small>Puissance ${G.mine.power} · ${ownedList().length} quartier(s)</small></div></div>`;
+  let h=`<div class="vstat"><span>⚡ Actions d'empire cette période</span><b style="color:${opsLeft()?`var(--g)`:`var(--m)`}">${opsLeft()} / ${OPS_PER}</b></div>`;
   if(G.member) h+=rankPanel();
-  const ids=Object.keys(FAC).sort((a,b)=>((G.member===b)-(G.member===a))||((G.fac[b]||0)-(G.fac[a]||0)));
-  h+=ids.map(id=>{
-    const f=FAC[id], r=G.fac[id]||0;
-    return `<button class="frow" data-fx="${id}"><i style="background:${f.c}"></i><b>${f.n}${G.member===id?` ✓`:``}</b><span class="rb"><u style="background:${r>=0?`var(--g)`:`var(--m)`};left:${r>=0?50:50+r/2}%;width:${Math.abs(r)/2}%"></u></span><em style="color:${r>=0?`var(--g)`:`var(--m)`}">${r}</em></button><div class="fdesc" id="fd-${id}" hidden>${f.d}<br><b>${f.perk}</b></div>`;
+  else if(G.mine) h+=`<div class="item own" style="flex-direction:column;align-items:stretch;gap:8px"><div class="in"><b style="color:var(--y)">👑 ${esc(G.mine.name)}</b><small>Puissance ${G.mine.power} · ${crewOf().length} membre(s) · ${ownedList().length} quartier(s) · ${Object.keys(G.allies||{}).length} pacte(s)</small></div>
+     <div class="row" style="max-width:none"><button class="btn" id="gorec" style="text-align:center">🤝 Recruter</button><button class="btn" id="gomap" style="text-align:center">🗺 Conquérir</button></div></div>`;
+  else { const okc=G.cred>=FOUND_NEED.cred, oke=G.ed>=FOUND_NEED.ed;
+    h+=`<div class="item" style="flex-direction:column;align-items:stretch;gap:8px;border-color:var(--y)"><div class="in"><b style="color:var(--y)">Tu es indépendant(e)</b><small>Rejoins une faction ci-dessous, ou fonde la tienne.</small>
+      <small><span style="color:${okc?`var(--g)`:`var(--m)`}">${okc?`✓`:`✗`} Street Cred ${FOUND_NEED.cred}</span> · <span style="color:${oke?`var(--g)`:`var(--m)`}">${oke?`✓`:`✗`} ${money(FOUND_NEED.ed)}</span></small></div>
+      <button class="btn pri" id="fnd" ${okc&&oke?``:`disabled`}>👑 Fonder ma faction</button></div>`; }
+  const order={y:0,g:1,m:2,d:3};
+  const ids=Object.keys(FAC).sort((a,b)=>(order[facStatus(a)[1]]-order[facStatus(b)[1]])||((G.fac[b]||0)-(G.fac[a]||0)));
+  h+=`<div class="sec">Factions — touche pour agir</div>`+ids.map(id=>{
+    const f=FAC[id], r=G.fac[id]||0, st=facStatus(id);
+    return `<button class="frow" data-fx="${id}"><i style="background:${f.c}"></i><b>${f.n}</b><span class="fst ${st[1]}">${st[0]}</span><span class="rb"><u style="background:${r>=0?`var(--g)`:`var(--m)`};left:${r>=0?50:50+r/2}%;width:${Math.abs(r)/2}%"></u></span><em style="color:${r>=0?`var(--g)`:`var(--m)`}">${r}</em></button>`;
   }).join(``);
   modal(`Empire`,`${empTabs(`fac`)}${h}`,{full:true});
-  bindEmp();
-  document.querySelectorAll(`[data-fx]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#fd-`+b.dataset.fx);d.hidden=!d.hidden});
+  bindEmp(); bindRank(openFactions);
+  document.querySelectorAll(`[data-fx]`).forEach(b=>b.onclick=()=>{SFX.tap();openFaction(b.dataset.fx)});
+  const fd=$(`#fnd`); if(fd) fd.onclick=()=>{SFX.tap();openFound()};
+  const gr=$(`#gorec`); if(gr) gr.onclick=()=>{SFX.tap();openContacts()};
+  const gm=$(`#gomap`); if(gm) gm.onclick=()=>{SFX.tap();openEmpire(`map`)};
+}
+function bindRank(reopen){
   const am=$(`#askm`); if(am) am.onclick=()=>askMission();
+  const cl=$(`#claim`); if(cl) cl.onclick=()=>{ const r=claimPromo(); if(!r) return; SFX.ok(); updateHud(); closeModal(); if(r===`promo`) showCere(()=>reopen()); else toast(`Le moment est venu : la confrontation t'attend à la prochaine carte`); };
   const lf=$(`#lfac`); if(lf) lf.onclick=()=>{
     const f=FAC[G.member];
-    confirmHeavy({heavy:`Tu quittes ${f.n} : tu perds ton rang (${rankTitle()}), ta réputation chute de 35, ${BLOCS[BLOC[G.member]].n} te regardera de travers, et d'anciens frères pourraient te le faire payer.`,t:`Quitter ${f.n}`},()=>{
-      const l=leaveFac(G.member,`quit`); cere({k:`leave`,c:`#8a8aa8`,ic:`🚪`,kick:`RUPTURE`,t:`Tu quittes ${l.f.n}`,sub:`Fin de ton rang de ${l.old}`,lines:[`📉 Réputation : −35`,`⚖ ${BLOCS[BLOC[l.f.id||G.lastEx]]?BLOCS[BLOC[G.lastEx]].n:``} se refroidit`,`👥 Tes anciens frères s'en souviendront`]}); closeModal(); updateHud(); showCere(()=>openFactions()); });
+    confirmHeavy({heavy:`Tu quittes ${f.n} : tu perds ton rang (${rankTitle()}), ta réputation chute de 35, ${BLOCS[BLOC[G.member]].n} te regardera de travers, et d'anciens frères pourraient te le faire payer.`},()=>{
+      const l=leaveFac(G.member,`quit`); cere({k:`leave`,c:`#8a8aa8`,ic:`🚪`,kick:`RUPTURE`,t:`Tu quittes ${l.f.n}`,sub:`Fin de ton rang de ${l.old}`,lines:[`📉 Réputation : −35`,`👥 Tes anciens frères s'en souviendront`]}); closeModal(); updateHud(); showCere(()=>reopen()); });
   };
+}
+function openFaction(id){
+  const f=FAC[id], r=G.fac[id]||0, st=facStatus(id), mine=G.member===id, ally=(G.allies||{})[id], left=opsLeft();
+  const needs=facNeeds(id), terr=DIST.filter(d=>G.dist[d.id]===id).map(d=>d.n);
+  const pct=k=>Math.round(facOdds(id,k).chance*100), bd=p=>`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`;
+  let acts=``;
+  if(mine) acts+=`<div class="log" style="color:var(--dim)">C'est ta faction. Ta progression est dans l'écran précédent.</div>`;
+  else {
+    if(!G.member&&!G.mine) acts+=`<div class="item" style="flex-direction:column;align-items:stretch;gap:6px"><small>${needs.map(n=>`<span style="color:${n.ok?`var(--g)`:`var(--m)`}">${n.ok?`✓`:`✗`} ${n.t}</span>`).join(`<br>`)}</small><button class="btn pri" id="fjoin" ${canJoin(id)?``:`disabled`}>🛡 Rejoindre ${f.n}</button></div>`;
+    else acts+=`<div class="log" style="color:var(--dim)">${G.mine?`Tu diriges ta propre faction : impossible de rejoindre.`:`Quitte d'abord ${FAC[G.member].n} pour rejoindre une autre faction.`}</div>`;
+    acts+=`<button class="btn choice ${left?``:`lock`}" id="ffav"><span class="tt"><b>🤝 Rendre un service</b><small>${left?`+10 réputation · +400 €$ · ${ATTRS[facAttr(f)].n}`:`🔒 Plus d'action cette période`}</small></span>${bd(pct(`favor`))}</button>`;
+    acts+=`<button class="btn choice ${left&&!ally?``:`lock`}" id="fraid"><span class="tt"><b>⚔ Attaquer ${f.n}</b><small>${ally?`🔒 C'est ton allié`:left?`Butin · −22 réputation · représailles assurées`:`🔒 Plus d'action cette période`}</small></span>${bd(pct(`raid`))}</button>`;
+    if(ally) acts+=`<button class="btn choice" id="fbreak"><span class="tt"><b>💔 Rompre le pacte</b><small>−35 réputation · ils se vengeront</small></span></button>`;
+    else { const n=Object.keys(G.allies||{}).length, okp=r>=40&&G.ed>=1500&&n<2;
+      acts+=`<button class="btn choice ${okp?``:`lock`}" id="fpact"><span class="tt"><b>📜 Sceller un pacte</b><small>${okp?`1 500 €$ · tribut, +2 contre leurs ennemis`:`🔒 ${r<40?`Réputation 40 requise (${r})`:n>=2?`2 pactes maximum`:`1 500 €$ requis`}`}</small></span></button>`; }
+  }
+  modal(f.n,`<div class="item" style="border-color:${f.c}"><div class="in"><b style="color:${f.c}">${f.n} <span class="fst ${st[1]}">${st[0]}</span></b><small>${f.d}</small><small style="color:var(--c)">${f.perk}</small>
+     <small>Réputation : <span style="font-weight:700;color:${r>=0?`var(--g)`:`var(--m)`}">${r}</span> · Territoires : ${terr.length?terr.join(`, `):`aucun`}</small><small>Ennemis : ${f.foes.length?f.foes.map(x=>FAC[x]?FAC[x].n:x).join(`, `):`aucun déclaré`}</small></div></div>${acts}`,{back:openFactions});
+  const res=(title,r2,text)=>{ updateHud();
+    modal(title,`<div class="dice"><div class="die ${r2.ok?`ok`:`ko`}"><span>${r2.info.roll}</span></div><div class="info">${r2.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div><div class="rt">${text}</div><div class="chips">${r2.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="fok2">Continuer</button>`);
+    r2.ok?(SFX.ok(),flash(`#05ffa1`)):(SFX.ko(),shake());
+    $(`#fok2`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else openFaction(id); }; };
+  const on=(sel,fn)=>{ const e=$(sel); if(e) e.onclick=fn; };
+  on(`#fjoin`,()=>confirmHeavy({heavy:`Tu prêtes serment à ${f.n}. Ses ennemis deviennent les tiens, et tu ne pourras plus fonder ta propre faction tant que tu portes leurs couleurs.`},()=>{ CHIPS=[]; joinFac(id); applyFx({cred:3}); G.log.unshift({d:dateStr(),m:`Tu rejoins ${f.n}.`}); updateHud(); closeModal(); showCere(()=>openFactions()); }));
+  on(`#ffav`,()=>{ if(!opsLeft()){SFX.ko();return} const r2=facAct(id,`favor`); res(r2.ok?`Service rendu`:`Service raté`,r2,r2.text); });
+  on(`#fraid`,()=>{ if(!opsLeft()||ally){SFX.ko();return} confirmHeavy({heavy:`Attaquer ${f.n} : tu peux gagner gros, mais ils riposteront. À −30 ils deviennent hostiles, à −60 c'est la guerre ouverte sur tes quartiers.`},()=>{ const r2=facAct(id,`raid`); res(r2.ok?`Raid réussi`:`Raid raté`,r2,r2.text); }); });
+  on(`#fpact`,()=>{ if(!(r>=40&&G.ed>=1500&&Object.keys(G.allies||{}).length<2)){SFX.ko();return} facPact(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); });
+  on(`#fbreak`,()=>confirmHeavy({heavy:`Rompre le pacte avec ${f.n} : −35 de réputation, et ils viendront se venger.`},()=>{ facBreak(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); }));
+}
+function openFound(){
+  const T={gang:[`🔪`,`Gang de rue`,`+1 combat · revenus des quartiers +20 %`],fixers:[`📇`,`Réseau de fixers`,`+300 €$ de revenus par période`],nomads:[`🚚`,`Clan nomade`,`+1 conduite`],runners:[`💾`,`Collectif de netrunners`,`+1 hack`]};
+  modal(`Fonder ma faction`,`<div class="log">Coût : <b>${money(FOUND_NEED.ed)}</b>. ${G.member?`<span style="color:var(--m)">Tu devras quitter ${FAC[G.member].n}, avec les conséquences.</span>`:`Tes alliés proches (lien ≥ 40) te suivront d'office.`}</div><div class="tiles">`+
+    Object.entries(T).map(([k,v])=>{ const lock=k===`runners`&&!(hasDeck()||G.flags.hackmentor); return `<button class="tile" data-fk="${k}" ${lock?`disabled`:``}><span class="ti">${v[0]}</span><b>${v[1]}</b><small>${lock?`🔒 Cyberdeck ou formation au hack`:v[2]}</small></button>`; }).join(``)+`</div>`,{back:openFactions});
+  document.querySelectorAll(`[data-fk]`).forEach(b=>b.onclick=()=>{ const kind=b.dataset.fk;
+    confirmHeavy({heavy:`Tu fondes ta propre faction pour ${money(FOUND_NEED.ed)}.${G.member?` Tu quittes ${FAC[G.member].n} et perds ton rang.`:``} Les rivaux testeront ta force.`},()=>{
+      G.ed-=FOUND_NEED.ed; G.role.boss=(G.role.boss||0)+3; CHIPS=[]; applyFx({cred:5});
+      const go=()=>askFactionName(kind,()=>{ updateHud(); openFactions(); });
+      if(G.member){ const l=leaveFac(G.member,`found`); cere({k:`leave`,c:`#8a8aa8`,ic:`🚪`,kick:`RUPTURE`,t:`Tu quittes ${l.f.n}`,sub:`Tu abandonnes ton rang de ${l.old}`,lines:[`📉 Réputation chez ${l.f.n} : −20`,`🏳 Tu repars de zéro à la tête de ta propre faction`]}); closeModal(); showCere(go); } else go();
+    }); });
 }
 function bar(v,max,col){ const p=Math.max(0,Math.min(100,Math.round(v/max*100))); return `<div class="bigbar"><i style="background:${col};width:${p}%"></i></div>`; }
 function rankPanel(){
@@ -3661,7 +3832,7 @@ function rankPanel(){
     const row=(ic,l,a,b)=>`<div class="rk"><span>${ic} ${l}</span><b style="color:${a>=b?`var(--g)`:`var(--t)`}">${Math.min(a,b)}/${b}${a>=b?` ✓`:``}</b></div>${bar(a,b,a>=b?`var(--g)`:col)}`;
     body=`<small>Prochain grade : <b style="color:${col}">${p.next}</b></small>`+row(`📜`,`Missions`,p.jobs[0],p.jobs[1])+row(`🤝`,`Réputation ${f.n}`,p.rep[0],p.rep[1])+(p.cred?row(`★`,`Street Cred`,p.cred[0],p.cred[1]):``);
     const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais encore ${p.jobs[1]-p.jobs[0]} mission(s)`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred`);
-    body+=p.ready?`<div class="why" style="color:var(--g);padding:4px 0">✅ Conditions remplies : la promotion t'attend à la prochaine carte.</div>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
+    body+=p.ready?`<button class="btn pri" id="claim">⬆ ${p.lead?`Prendre la tête maintenant`:`Réclamer ma promotion`}</button>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
   }
   const can=G.stats.cards-(G.askP===undefined?-9:G.askP)>=2;
   return `<div class="item own" style="border-color:${col};flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div class="in"><b style="color:${col}">${roleTitle()}</b><small>${f.perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>${body}

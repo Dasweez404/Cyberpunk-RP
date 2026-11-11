@@ -21,7 +21,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -32,7 +32,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, allies:{}, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -324,6 +324,12 @@ const FN = {
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
   holdAll(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)+25,0,100)}); chip(`y`,`Quartiers renforcés`); },
   holdLose(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)-25,0,100)}); chip(`n`,`Tes quartiers vacillent`); },
+  revengeWin(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ FAC[id].foes.forEach(x=>{G.fac[x]=clamp((G.fac[x]||0)+4,-100,100)}); chip(`y`,`${FAC[id].n} y réfléchira à deux fois`); } },
+  revengePay(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)+20,-100,100); chip(`i`,`+20 ${FAC[id].n}`); } },
+  clashWin(){ const id=G.tmp&&G.tmp.fid; if(!G.member) return; G.jobs++; G.stats.jobs++; G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); chip(`i`,`+6 ${FAC[G.member].n}`); if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)-8,-100,100); chip(`n`,`−8 ${FAC[id].n}`); } const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); },
+  clashLose(){ if(!G.member) return; G.fac[G.member]=clamp((G.fac[G.member]||0)-6,-100,100); chip(`n`,`−6 ${FAC[G.member].n}`); },
+  allyHelp(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)+10,-100,100); chip(`i`,`+10 ${FAC[id].n}`); } },
+  allyBreak(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]) facBreak(id); },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -338,6 +344,7 @@ function tick(months){
   ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
   inc+=crewOf().length*120;
+  inc+=Object.keys(G.allies||{}).length*100;
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
@@ -379,6 +386,7 @@ function prepCard(c){
   if(c.who===`@fac`&&G.member){ const f=FAC[G.member]; npc=(Math.random()<.3&&WHO[f.leader])?null:genNpc(f.k,f.c,`${RANKS[f.k][Math.min(3,G.rank+1)]} · ${f.n}`); if(!npc) G.cur.who=f.leader; }
   else if(c.who===`@ex`){ const f=FAC[G.lastEx]; npc=f?genNpc(f.k,f.c,`Ex-frère · ${f.n}`):genNpc(`gang`); }
   else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
+  else if(c.who===`@enemy`){ const f=FAC[G.tmp&&G.tmp.fid]; npc=f?genNpc(f.k,f.c,f.n):genNpc(`gang`); }
   else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`muamar`,`lizzie`,`faraday`]); }
   else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
   else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:/^fl/.test(c.id)?d.n:`Night City`,r:/^fl/.test(c.id)?`${d.w} · ${dateStr()}`:dateStr(),c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
@@ -404,6 +412,7 @@ function canConquer(d){
   if(G.dist[d.id]===`player`) return `Déjà à toi`;
   if(d.lock&&!G.flags.dogtown) return `Verrouillé`;
   if(G.member&&G.dist[d.id]===G.member) return `Ta propre faction`;
+  if((G.allies||{})[G.dist[d.id]]) return `Territoire d'un allié : romps le pacte d'abord`;
   const need = d.def*7+ownedList().length*2;
   if(G.cred<need) return `Street Cred ${need} requis`;
   return ``;
@@ -413,7 +422,7 @@ function doOperation(d,opt){
   const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
   if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=35; }
   else {
-    const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0)};
+    const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0) - (Object.keys(G.allies||{}).some(a=>FAC[a].foes.includes(prev))?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
     gain = ok ? ({assault:28,hack:24,talk:20}[opt.k]+(roll===10?14:0)) : -8;
@@ -444,6 +453,7 @@ function reinforce(d){
 }
 function warTick(){
   G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-60&&ownedList().length&&Math.random()<.35){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
     const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewOf().length/2);
@@ -453,6 +463,70 @@ function warTick(){
   });
 }
 
+/* ---------- diplomatie : rejoindre, aider, attaquer, pactiser ---------- */
+function facNeeds(id){
+  const c=v=>({t:`Street Cred ${v}`,ok:G.cred>=v}), at=(a,v)=>({t:`${ATTRS[a].n} ${v}`,ok:A(a)>=v}), or=(t,ok)=>({t,ok});
+  const corp=v=>[or(`Origine Corpo ou Street Cred ${v}`,G.origin===`corpo`||G.cred>=v)];
+  const M={
+    valentinos:[c(5)], maelstrom:[c(6)], tygers:[c(6)], sixth:[c(6)],
+    voodoo:[or(`INTELLECT 5 ou cyberdeck`,hasDeck()||A(`int`)>=5)], animals:[at(`body`,5)], mox:[at(`cool`,4)],
+    aldecaldos:[or(`Origine Nomade ou TECHNIQUE 5`,G.origin===`nomad`||A(`tech`)>=5)], wraiths:[or(`Origine Nomade ou RÉFLEXES 5`,G.origin===`nomad`||A(`ref`)>=5)],
+    barghest:[or(`À partir de 2077`,yr()>=2077),c(15)], ncpd:[c(6),at(`int`,4)],
+    arasaka:corp(18), militech:corp(18), kangtao:corp(18), biotechnica:corp(15),
+    trauma:[or(`TECHNIQUE 5 ou INTELLECT 5`,A(`tech`)>=5||A(`int`)>=5)]
+  };
+  const l=(M[id]||[]).slice(), r=G.fac[id]||0;
+  l.push({t:`Réputation au-dessus de −25 (actuelle : ${r})`,ok:r>-25});
+  if(G.flags[`exfac_`+id]) l.push({t:`Ancien membre : réputation 30 pour être pardonné`,ok:r>=30});
+  return l;
+}
+Object.keys(FACREQ).forEach(k=>{ FACREQ[k]=()=>facNeeds(k).every(x=>x.ok); });
+const canJoin = id => !G.member&&!G.mine&&facNeeds(id).every(x=>x.ok);
+function facStatus(id){
+  const r=G.fac[id]||0;
+  if(G.member===id) return [isLeader()?`CHEF`:`MEMBRE`,`y`];
+  if((G.allies||{})[id]) return [`ALLIÉ`,`g`];
+  if(r<=-60) return [`EN GUERRE`,`m`]; if(r<=-30) return [`HOSTILE`,`m`]; if(r>=40) return [`AMI`,`g`];
+  return [`NEUTRE`,`d`];
+}
+function hottest(){ let best=null,bv=-29; Object.keys(FAC).forEach(k=>{ const r=G.fac[k]||0; if(r<bv){bv=r;best=k} }); return best; }
+const facAttr = f => ({gang:`body`,corp:`cool`,clan:`ref`,ncpd:`int`,mox:`cool`,trauma:`tech`}[f.k]||`cool`);
+const facStr = id => DIST.filter(d=>G.dist[d.id]===id).length;
+function facOdds(id,kind){ const f=FAC[id]; return kind===`favor`?rollInfo({a:facAttr(f),dc:6}):rollInfo({a:`body`,k:`cmb`,dc:7+Math.min(3,facStr(id))}); }
+function facAct(id,kind){
+  CHIPS=[]; const f=FAC[id]; opsLeft(); G.ops.left--;
+  const ri=facOdds(id,kind), roll=rnd(1,10), ok=roll===10||(roll!==1&&roll>=ri.need);
+  const rep=v=>{ G.fac[id]=clamp((G.fac[id]||0)+v,-100,100); chip(v>0?`i`:`n`,`${sgn(v)} ${f.n}`); moveBloc(BLOC[id],v*.4); };
+  gainXp(kind===`favor`?facAttr(f):`body`,ok?3:1);
+  let text=``;
+  if(kind===`favor`){
+    if(ok){ rep(10); applyFx({ed:400,cred:1}); text=`Tu rends un service à ${f.n}. Ils notent ton nom du bon côté du carnet.`; }
+    else { rep(2); applyFx({hp:-10}); text=`Le service tourne mal, mais ils ont vu que tu avais essayé.`; }
+  } else {
+    if(ok){ const loot=1000+rnd(0,8)*100+facStr(id)*300; applyFx({ed:loot,cred:5}); rep(-22); f.foes.forEach(x=>{G.fac[x]=clamp((G.fac[x]||0)+8,-100,100)}); if(f.foes.length) chip(`i`,`Leurs ennemis t'apprécient`); text=`Tu frappes ${f.n} là où ça fait mal et repars avec un butin. Ils ne l'oublieront pas.`; }
+    else { applyFx({hp:-22,cred:-2}); rep(-12); text=`${f.n} t'attendait. Tu repars en sang, et ils savent qui a essayé.`; }
+    G.grudge=id; addEcho(`fac_revenge`,rnd(2,4)); chip(`n`,`⚠ Représailles à prévoir`);
+    G.log.unshift({d:dateStr(),m:`Tu attaques ${f.n}.`});
+  }
+  tick(1);
+  return {ok,info:{roll,...ri,ok},chips:CHIPS.slice(),text};
+}
+function facPact(id){
+  const f=FAC[id]; G.allies=G.allies||{}; G.ed-=1500; G.allies[id]=true; G.fac[id]=clamp((G.fac[id]||0)+10,-100,100);
+  f.foes.forEach(x=>{G.fac[x]=clamp((G.fac[x]||0)-12,-100,100)}); moveBloc(BLOC[id],6);
+  G.log.unshift({d:dateStr(),m:`Pacte scellé avec ${f.n}.`});
+  cere({k:`join`,c:f.c,ic:`📜`,kick:`PACTE`,t:`Alliance avec ${f.n}`,sub:`Un pacte, à Night City, ce n'est pas du papier`,lines:[`💰 Tribut : +100 €$ par période`,`⚔ +2 à tes opérations contre leurs ennemis`,f.foes.length?`📉 Leurs ennemis se méfient : ${f.foes.map(x=>FAC[x]?FAC[x].n:x).join(`, `)}`:`🕊 Ils n'ont pas d'ennemi déclaré`,`⚠ Ils t'appelleront à l'aide. Refuser rompt le pacte.`]});
+}
+function facBreak(id){
+  const f=FAC[id]; if(G.allies) delete G.allies[id]; G.fac[id]=clamp((G.fac[id]||0)-35,-100,100); moveBloc(BLOC[id],-8);
+  G.grudge=id; addEcho(`fac_revenge`,3); G.log.unshift({d:dateStr(),m:`Pacte rompu avec ${f.n}.`});
+  cere({k:`betray`,c:`#ff2a6d`,ic:`💔`,kick:`PACTE ROMPU`,t:`Fin de l'alliance`,sub:f.n,lines:[`📉 Réputation : −35`,`💀 Ils viendront réclamer leur dû`]});
+}
+function claimPromo(){
+  const p=promoInfo(); if(!p||!p.ready) return null;
+  if(G.rank<3){ CHIPS=[]; FN.promote(); return `promo`; }
+  if(!G.queue.includes(`fac_coup`)){ delete G.done.fac_coup; G.queue.unshift(`fac_coup`); } return `coup`;
+}
 /* ---------- fins & score ---------- */
 const relSum = () => Object.values(G.rel||{}).reduce((a,v)=>a+Math.max(0,v),0);
 function computeScore(kind){

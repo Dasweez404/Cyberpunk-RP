@@ -329,8 +329,9 @@ Object.assign(CONTACTS,{
 });
 ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
 /* ---------- conditions de promotion (affichées au joueur) ---------- */
-const JOB_NEED = [2,3,4];     // missions pour passer au rang 1,2,3
-const REP_NEED = [20,35,50];  // réputation dans la faction
-const LEAD_NEED = {jobs:6,rep:60,cred:40}; // pour prendre la tête
+const JOB_NEED = [1,2,3];     // missions pour passer au rang 1,2,3
+const REP_NEED = [15,30,45];  // réputation dans la faction
+const LEAD_NEED = {jobs:5,rep:55,cred:35};
+const FOUND_NEED = {cred:15,ed:1000}; // pour prendre la tête
 
 const AGING_AGE = 40;
