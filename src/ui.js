@@ -419,7 +419,7 @@ function openCity(){
     ${tile(`train`,`🏋`,`S'entraîner`,`+1 attribut · 2 mois`)}
    </div>
    <div class="sec">Boulots</div>
-   <div class="tiles one">${tile(`gigs`,`📋`,`Tableau des gigs`,`3 offres · eddies & Street Cred · 1 mois`)}</div>
+   <div class="tiles one">${tile(`gigs`,`📋`,`Tableau des gigs`,`${G.board&&G.board.p===G.stats.cards?G.board.left:GIG_PER_PERIOD} gig(s) dispo cette période · mieux payés`)}</div>
    <div class="sec">Récupérer</div>
    <div class="tiles three">
     ${tile(`heal`,`➕`,`Clinique`,`+40 Santé · 150 €$`,{dis:G.hp>=100||G.ed<150,rec:G.hp<50})}
@@ -511,21 +511,33 @@ function openTrain(){
     if(checkEnd()){closeModal();return showEnd()} openTrain();
   });
 }
+const GIG_PER_PERIOD=2;
+const gigPay=g=>Math.round(g.pay*1.7/50)*50, gigCr=g=>Math.ceil(g.cr*1.5);
+function gigBoard(){
+  if(!G.board||G.board.p!==G.stats.cards){
+    const cs=[],used=new Set();
+    while(cs.length<4){ const g=GIGS[rnd(0,Math.min(GIGS.length-1,Math.floor(2+G.cred/12)+2))]; if(!used.has(g.n)){used.add(g.n);cs.push({n:g.n,done:false})} }
+    G.board={p:G.stats.cards,left:GIG_PER_PERIOD,gigs:cs};
+  }
+  return G.board;
+}
 function openGigs(){
-  const cs=[]; const used=new Set();
-  while(cs.length<3){ const g=GIGS[rnd(0,Math.min(GIGS.length-1,Math.floor(2+G.cred/12)+2))]; if(!used.has(g.n)){used.add(g.n);cs.push(g)} }
-  modal(`Tableau des gigs`,`<div class="log" style="color:var(--dim)">Touche un gig pour le tenter (1 mois). Le % est ta chance de réussite.</div>`+cs.map((g,i)=>{
-    const r=rollInfo({a:g.a,k:g.k,dc:g.dc}); const p=Math.round(r.chance*100);
-    return `<button class="btn choice" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(g.pay)} · +${g.cr} Cred · échec : −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
+  const bd=gigBoard();
+  modal(`Tableau des gigs`,`<div class="vstat"><span>Gigs restants cette période</span><b style="color:${bd.left?`var(--g)`:`var(--m)`}">${bd.left} / ${GIG_PER_PERIOD}</b></div>
+   <div class="log" style="color:var(--dim)">Le tableau se renouvelle à la prochaine carte (~5 mois). Choisis bien : les gigs sont mieux payés mais limités.</div>`+
+   bd.gigs.map((x,i)=>{
+    const g=GIGS.find(y=>y.n===x.n); const r=rollInfo({a:g.a,k:g.k,dc:g.dc}); const p=Math.round(r.chance*100); const off=x.done||!bd.left;
+    return `<button class="btn choice ${off?`lock`:``}" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}${x.done?` ✓`:``}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(gigPay(g))} · +${gigCr(g)} Cred · échec : −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
   }).join(``),{back:openCity});
   document.querySelectorAll(`[data-gi]`).forEach(b=>b.onclick=()=>{
-    const g=cs[+b.dataset.gi], r=rollInfo({a:g.a,k:g.k,dc:g.dc}), roll=rnd(1,10);
-    const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[];
-    if(ok){ applyFx({ed:g.pay,cred:g.cr}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${g.pay} €$).`}); }
-    else { applyFx({hp:-g.dm,ed:Math.round(g.pay*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
+    const x=bd.gigs[+b.dataset.gi]; if(x.done||!bd.left){SFX.ko();return}
+    const g=GIGS.find(y=>y.n===x.n), r=rollInfo({a:g.a,k:g.k,dc:g.dc}), roll=rnd(1,10);
+    const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[]; x.done=true; bd.left--;
+    if(ok){ applyFx({ed:gigPay(g),cred:gigCr(g)}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${gigPay(g)} €$).`}); }
+    else { applyFx({hp:-g.dm,ed:Math.round(gigPay(g)*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
     tick(1); updateHud();
-    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">Retour à la ville</button>`);
-    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else openCity(); };
+    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
+    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
   });
 }
 
