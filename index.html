@@ -369,6 +369,7 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 
 .rk{display:flex;justify-content:space-between;font-size:14px;margin-top:2px}
 #hrole{color:var(--y);text-transform:uppercase;letter-spacing:.08em;font-size:inherit;text-align:right}
+.dock{grid-template-columns:repeat(4,1fr)}
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -2339,6 +2340,90 @@ card({id:`crew_favor`,who:`narr`,tag:`Ta famille`,w:7,cd:8,cond:()=>G.mine&&crew
     {t:`Refuser`,s:`Ta famille s'en souviendra`,fx:{hum:-3,msg:`Il s'en va sans un mot. Ta famille a vu comment tu traites ses membres.`}}
   ]});
 /* =====================================================================
+   CARTES 9 — l'Afterlife : une halte imposée, tout est un choix.
+   Boutique, contrats et repos sont des cartes avec prix et risques.
+   ===================================================================== */
+const effTxt = o => [
+  ...Object.entries(o.at||{}).map(([k,v])=>`+${v} ${ATTRS[k].n}`),
+  ...Object.entries(o.k||{}).map(([k,v])=>`+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`,soc:`social`}[k]}`),
+  o.mit?`−${Math.round(o.mit*100)}% dégâts`:``, o.regen?`soin auto`:``, o.deck?`${o.deck} slots hack`:``
+].filter(Boolean).join(` · `);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=rnd(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const NOPE = (t,m) => ({t:t||`Repartir sans rien acheter`,s:`Garde tes eddies`,fx:{msg:m||`Tu ranges ton portefeuille. Ça ne se fait pas tous les jours.`}});
+
+card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>false,
+  tx:()=>{
+    const hurt=G.hp<50, broke=G.ed<300;
+    return `Entre deux coups, tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes, les silhouettes des légendes dans le fond. Tu as une soirée devant toi, pas une de plus.${hurt?` <em>Tu saignes encore. On te regarde de travers.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``} Qu'est-ce que tu fais ?`;
+  },
+  ch:[
+    {t:`Voir le ripperdoc de passage`,s:`Chrome & hacks · achète ou repars`,fx:{next:`shop_chrome`,msg:`Un type en blouse tachée t'attend à une table du fond, une mallette ouverte.`}},
+    {t:`Fouiller le marché noir`,s:`Armes, armures, véhicules, style`,fx:{next:`shop_gear`,msg:`Un vendeur ambulant étale sa marchandise à l'abri des regards.`}},
+    {t:`Chercher un contrat`,s:`Un coup à jouer, des risques à prendre`,fx:{next:`gig_board`,msg:`Un fixer te fait signe. Trois dossiers sur la table.`}},
+    {t:`Te reposer`,s:`Soins · thérapie · fête`,fx:{next:`rest_card`,msg:`Une banquette, une lumière douce. Tu t'écroules presque.`}},
+    {t:`Repartir dans la rue`,s:`Rien aujourd'hui`,fx:{cred:1,msg:`Tu ne restes pas. La nuit t'appelle.`}}
+  ]});
+
+card({id:`shop_chrome`,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
+  tx:()=>`« Je ne reste jamais longtemps au même endroit. J'ai ça aujourd'hui. Tu choisis, tu paies, je te le pose ici même. Aucun remboursement. Et gare à ton humanité, gamin(e). »`,
+  dyn:()=>{
+    const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
+    const aff=pool.find(c=>cyPrice(c)<=G.ed); const rest=pool.filter(c=>c!==aff); const picks=(aff?[aff,...rest]:rest).slice(0,hasDeck()?2:3);
+    const out=picks.map(c=>{ const price=cyPrice(c), cur=G.cyber.find(i=>CY(i).slot===c.slot&&i!==c.id);
+      return {t:c.n,s:`${money(price)} · −${c.h} Humanité · ${effTxt(c)||c.d}${cur?` · remplace ${CY(cur).n}`:``}`,req:()=>G.ed>=price?``:`${money(price)} requis`,
+        fx:{ed:-price,humx:-c.h,cy:c.id,msg:`Une piqûre, un grésillement, une odeur de métal chaud. ${c.d}`}}; });
+    if(hasDeck()){ const hs=shuffle(HACKS.filter(h=>!G.hacks.includes(h.id)&&A(`int`)>=h.int&&G.hacks.length<deckSlots())).slice(0,1);
+      hs.forEach(h=>out.push({t:`Quickhack : ${h.n}`,s:`${money(h.p)} · ${h.d}`,req:()=>G.ed>=h.p?``:`${money(h.p)} requis`,fx:{ed:-h.p,hack:h.id,msg:`Un transfert silencieux. ${h.n} est chargé.`}})); }
+    out.push(NOPE(`Refuser et repartir`,`« Comme tu voudras. Reviens quand tu auras de quoi. »`)); return out;
+  },ch:[]});
+
+card({id:`shop_gear`,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
+  tx:()=>`Un vendeur ambulant ouvre sa valise sous un néon qui grésille : « Armes, armures, bagnoles. Tout est volé, rien n'est tracé. Les prix ? Non négociables. »`,
+  dyn:()=>{
+    const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
+    const aff=pool.find(g=>gearPrice(g)<=G.ed); const ordered=aff?[aff,...pool.filter(g=>g!==aff)]:pool;
+    const seen=new Set(), picks=[]; ordered.forEach(g=>{ if(picks.length<3&&!seen.has(g.t)){ seen.add(g.t); picks.push(g); } });
+    const out=picks.map(g=>{ const price=gearPrice(g), cur=G.gear.find(i=>GEARMAP[i].t===g.t);
+      return {t:g.n,s:`${money(price)} · ${g.t} · ${effTxt(g)||g.d}${cur?` · remplace ${GEARMAP[cur].n}`:``}`,req:()=>G.ed>=price?``:`${money(price)} requis`,fx:{ed:-price,gear:g.id,msg:g.d}}; });
+    out.push(NOPE()); return out;
+  },ch:[]});
+
+card({id:`gig_board`,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
+  tx:()=>`« Voici ce que j'ai sur la table ce soir. Choisis avec soin : certains contrats paient bien, d'autres te mettent en terre. Et si tu es blessé(e)… tu sais ce que ça change. »`,
+  dyn:()=>{
+    const cs=[],used=new Set();
+    while(cs.length<3){ const g=GIGS[rnd(0,Math.min(GIGS.length-1,Math.floor(2+G.cred/12)+2))]; if(!used.has(g.n)){used.add(g.n);cs.push(g);} }
+    const out=cs.map(g=>{ const pay=gigPay(g), cr=gigCr(g), tier=pay>=4000?3:pay>=1800?2:1;
+      return {t:g.n,s:`${g.d} · ${money(pay)} · échec : −${g.dm} Santé`,chk:{a:g.a,k:g.k,dc:g.dc,
+        ok:{ed:pay,cred:cr,loot:tier,msg:`Contrat rempli. Le fixer te paie sans un mot.`},
+        ko:{hp:-g.dm,ed:Math.round(pay*.1),hum:g.dm>=18?-4:0,msg:`Le contrat tourne mal. Tu t'en sors, mais pas indemne.`}}}; });
+    out.push(NOPE(`Refuser tous les contrats`,`« Pas de travail pour toi, alors. »`)); return out;
+  },ch:[]});
+
+card({id:`rest_card`,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
+  tx:()=>`Une banquette au fond de l'Afterlife, un ripperdoc qui dort au comptoir, une odeur de nouilles froides. Ton corps te lâche presque. Tu peux t'offrir un vrai soin, ou simplement fermer les yeux.`,
+  dyn:()=>{
+    const cl=Math.round(200*infl()), th=Math.round(600*infl()), tt=Math.round(1200*infl());
+    const heal=Math.round(35*Math.max(.5,1-Math.max(0,G.age-30)*0.012));
+    const out=[
+      {t:`Passer par la clinique`,s:`${money(cl)} · +${heal} Santé`,req:()=>G.ed>=cl?``:`${money(cl)} requis`,fx:{ed:-cl,hp:heal,msg:`Du fil, des pansements, une piqûre. Tu respires de nouveau.`}},
+      {t:`Une séance de thérapie`,s:`${money(th)} · +15 Humanité`,req:()=>G.ed>=th?``:`${money(th)} requis`,fx:{ed:-th,hum:15,msg:`Des mots simples, un regard humain. Une partie de toi se recolle.`}},
+      {t:`Dormir quelques heures`,s:`Gratuit · +15 Santé · +5 Humanité`,fx:{hp:15,hum:5,msg:`Tu dors d'un sommeil lourd. Les rêves sont étranges, mais tu t'en souviens à peine.`}},
+      {t:`Faire la fête jusqu'à l'aube`,s:`−80 €$ · risqué`,chk:{a:`cool`,dc:6,ok:{ed:-80,hum:12,msg:`Les basses, les corps, les rires. Tu oublies tout ce que tu as fait.`},ko:{ed:-150,hp:-14,hum:-3,msg:`Ça dégénère. Tu rentres plus sale que tu n'es parti(e).`}}}
+    ];
+    if(!G.flags.trauma) out.splice(2,0,{t:`Souscrire à la Trauma Team`,s:`${money(tt)} · seconde vie (pas contre MaxTac)`,req:()=>G.ed>=tt?``:`${money(tt)} requis`,fx:{ed:-tt,flag:[`trauma`],msg:`Un badge, une puce de géolocalisation. Une équipe blindée viendra te chercher si tu tombes.`}});
+    out.push(NOPE(`Repartir sans te reposer`,`Tu repars tel(le) que tu es arrivé(e).`)); return out;
+  },ch:[]});
+
+/* ---------- Le prix d'un mauvais timing ---------- */
+card({id:`big_chance`,who:`@fixer`,tag:`⚠ Le coup de ta vie`,w:8,cd:10,cond:()=>G.hp<55&&G.cred>=8&&!G.flags.q_active,
+  tx:()=>`Un fixer te tire de ton lit : « Un gros coup, ce soir. <strong>6 000 €$</strong> pour dix minutes de boulot. Mais je dois savoir tout de suite. » Tu regardes ton corps : <em>${G.hp} Santé</em>, des bandages qui suintent. Tu risques ta vie si tu y vas.`,
+  ch:[
+    {t:`Y aller malgré tout`,s:`RÉFLEXES · combat · blessé : tout est plus dur`,chk:{a:`ref`,k:`cmb`,dc:9,ok:{ed:6000,cred:9,loot:3,msg:`Tu serres les dents, tu tiens debout. Le coup réussit. Tu t'écroules en sortant.`},ko:{hp:-60,ed:-500,hum:-4,msg:`Ton corps te lâche en plein coup. Tu rampes dehors, à bout.`}}},
+    {t:`Te reposer et laisser passer`,s:`+Santé · tu rates l'occasion`,fx:{hp:30,hum:3,cred:-1,msg:`Tu fermes la porte. Quelqu'un d'autre empoche le gros lot. Mais tu respires encore.`}},
+    {t:`Te faire soigner d'abord`,s:`−400 €$ · tu n'auras qu'une part`,req:R.ed(400),fx:{ed:800,hp:30,msg:`Quand tu reviens, il ne reste que des miettes. Mais tu repars sur tes deux jambes.`}}
+  ]});
+/* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
 let G = null;
@@ -2353,7 +2438,7 @@ const store = {
 };
 const CYMAP = {}; CYBER.forEach(c=>CYMAP[c.id]=c);
 const GEARMAP = {}; GEAR.forEach(c=>GEARMAP[c.id]=c);
-CYBER.forEach(c=>{c.h=Math.round(c.h*1.3)});
+CYBER.forEach(c=>{c.h=Math.round(c.h*1.7)});
 const CY = id => CYMAP[id];
 const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 
@@ -2361,11 +2446,11 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
-  const at = {body:3,ref:3,tech:3,int:3,cool:3};
+  const at = {body:1,ref:1,tech:1,int:1,cool:1};
   Object.entries(o.at||{}).forEach(([k,v])=>at[k]+=v);
   Object.entries(o.alloc||{}).forEach(([k,v])=>at[k]+=v);
   const s = {
@@ -2482,6 +2567,10 @@ function recruitAlly(id){
   else { applyFx({rel:{[id]:-4}}); }
   return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
+function hubTick(){
+  G.sinceHub=(G.sinceHub||0)+1; const need=(G.hp<35||G.ed<0)?3:5;
+  if(G.sinceHub>=need&&!G.flags.q_active&&!G.queue.length){ G.queue.push(`afterlife_hub`); G.sinceHub=0; }
+}
 function addEcho(id,delay){ G.echo=G.echo||[]; G.echo.push({id,at:G.stats.cards+delay}); }
 function echoTick(){ G.echo=(G.echo||[]).filter(x=>{ if(G.stats.cards>=x.at){ if(!G.queue.includes(x.id)) G.queue.push(x.id); return false; } return true; }); }
 
@@ -2542,13 +2631,14 @@ function makeLoot(t){
   return out;
 }
 /* ---------- jets ---------- */
+const woundPen = () => G.hp<20?3:G.hp<40?2:G.hp<60?1:0;
 const dcBonus = () => Math.min(6,Math.floor((G.age-18)/6)) + (G.cred>=70?1:0);
 const infl = () => 1+0.015*(yr()-START_YEAR);
 function rollInfo(c,bonus){
   const kk = c.k||(c.a===`cool`?`soc`:null);
   const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
-  const need = dc + 4 + dcBonus() - tot;
+  const need = dc + 4 + dcBonus() + ((c.a===`body`||c.a===`ref`)?woundPen():0) - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
   return {tot,dc,need,chance:n/10};
 }
@@ -2559,8 +2649,9 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
-  if(fx.hum){ const b=G.hum; G.hum=clamp(G.hum+fx.hum,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
+  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.humx){ const b=G.hum; G.hum=clamp(G.hum+fx.humx,0,100); if(G.hum!==b){ chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.humx<0)SFX.glitch(); } }
+  if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
@@ -2573,7 +2664,8 @@ function applyFx(fx){
   if(fx.flagMark) G.joinedOnce[fx.flagMark]=true;
   if(fx.unonce) delete G.done[fx.unonce];
   if(fx.loot) G.pendingLoot=Math.max(G.pendingLoot||0,fx.loot);
-  if(fx.cy) installCy(fx.cy,true);
+  if(fx.hack&&!G.hacks.includes(fx.hack)){ G.hacks.push(fx.hack); G.role.net+=1; chip(`y`,`Quickhack chargé`); }
+  if(fx.cy){ installCy(fx.cy,true); chip(`y`,`Installé : ${CY(fx.cy).n}`); }
   if(fx.xp) Object.entries(fx.xp).forEach(([k,v])=>gainXp(k,v));
   if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
   if(fx.join) joinFac(fx.join);
@@ -2610,7 +2702,9 @@ function installCy(id,free){
   if(c.slot===`neural`&&c.id!==`plug`){}
 }
 const relv = id => (G.rel&&G.rel[id])||0;
-const visChoices = c => c.ch.map((h,i)=>({h,i})).filter(x=>!x.h.only||x.h.only===G.origin);
+let CUR_CH=null;
+const chOf = c => (CUR_CH&&G.cur&&G.cur.id===c.id)?CUR_CH:c.ch;
+const visChoices = c => chOf(c).map((h,i)=>({h,i})).filter(x=>!x.h.only||x.h.only===G.origin);
 function bestAlly(a){
   if(G.helpP===G.stats.cards) return null;
   const l=(ALLY[a]||[]).filter(i=>relv(i)>=25&&!(G.dead||{})[i]); l.sort((x,y)=>relv(y)-relv(x)); return l[0]||null;
@@ -2629,9 +2723,6 @@ function adviceNow(){
   if(G.hum<45) return {ic:`🧠`,t:`Humanité basse (${G.hum}) : thérapie conseillée.`,go:`therapy`};
   const bs=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
   if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
-  const bd=G.board&&G.board.p===G.stats.cards?G.board.left:2;
-  if(bd>0&&G.hp>=60) return {ic:`📋`,t:`${bd} gig(s) dispo : du cash et de la rep.`,go:`gigs`};
-  if(G.ed>=2500&&!G.gear.some(i=>GEARMAP[i].mit)) return {ic:`🛡`,t:`Tu as de l'argent : pense à une armure.`,go:`gear`};
   return null;
 }
 const FN = {
@@ -2710,9 +2801,11 @@ function prepCard(c){
   if(c.who===`@fac`&&G.member){ const f=FAC[G.member]; npc=(Math.random()<.3&&WHO[f.leader])?null:genNpc(f.k,f.c,`${RANKS[f.k][Math.min(3,G.rank+1)]} · ${f.n}`); if(!npc) G.cur.who=f.leader; }
   else if(c.who===`@ex`){ const f=FAC[G.lastEx]; npc=f?genNpc(f.k,f.c,`Ex-frère · ${f.n}`):genNpc(`gang`); }
   else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
+  else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`muamar`,`lizzie`,`faraday`]); }
   else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
   else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:d.n,r:`${d.w} · ${dateStr()}`,c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
   if(npc) G.cur.npc=npc;
+  CUR_CH=c.dyn?c.dyn():null;
 }
 
 /* ---------- guerre de territoire ---------- */
@@ -2962,7 +3055,7 @@ function showHow(){
   <div class="log"><b>2.</b> Surveille ta <b style="color:var(--hp)">Santé</b>, ton <b style="color:var(--hum)">Humanité</b> (trop de chrome = cyberpsychose), ta <b style="color:var(--cred)">Street Cred</b> et tes <b style="color:var(--ed)">€$</b>.</div>
   <div class="log"><b>⚖</b> <b>Équilibre :</b> les 4 barres RUE · CORPOS · LOI · BADLANDS (sous les jauges) doivent rester <b>au milieu</b>. Trop bas, ils te traquent ; trop haut, ils te possèdent — dans les deux cas, ça peut te coûter la vie. Les points sur les barres montrent ce qu'un choix va changer.</div>
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
-  <div class="log"><b>4.</b> Dans <b>VILLE</b> : ripperdoc, marché noir, gigs, soins, entraînement. Dans <b>CARTE</b> : conquiers des quartiers.</div>
+  <div class="log"><b>4.</b> Toutes les ~5 cartes, une halte à l'<b>Afterlife</b> (🍸) : tu choisis boutique, contrat ou repos — mais pas le moment. Pas assez d'argent ? L'option est verrouillée. Blessé, tu es moins efficace. <b>EMPIRE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
   <div class="log"><b>6.</b> Survis jusqu'à la retraite (dès ${RETIRE_AGE} ans, à toi de décider de continuer) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
 }
@@ -2983,12 +3076,12 @@ const ORIGINS = {
           wraiths:{n:`Wraiths`,d:`Pillards de la route. Vitesse et violence.`,fac:{wraiths:20,aldecaldos:-8}},
           solo:{n:`Nomade sans clan`,d:`Seul(e) sur la route. Personne pour te protéger.`,fac:{}}}},
 };
-let CR = {step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:5};
+let CR = {step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:15};
 function randomName(){
   const g=Math.random()<.5?`m`:`f`; const f=pickR(NAMES[g]);
   return Math.random()<.45?`${f} « ${pickR(NAMES.n)} »`:`${f} ${pickR(NAMES.s)}`;
 }
-function showCreate(){ CR={step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:5}; renderCreate(); }
+function showCreate(){ CR={step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:15}; renderCreate(); }
 function renderCreate(){
   let h=``;
   if(CR.step===0){
@@ -3004,9 +3097,9 @@ function renderCreate(){
     <button class="btn" id="rnd" style="text-align:center">🎲 Générer un nom</button>`;
   } else {
     const o=ORIGINS[CR.origin];
-    h=`<h2 class="hd">Tes attributs</h2><div class="sub">${CR.pts} point(s) à répartir. Tu progresseras ensuite en jouant.</div>
+    h=`<h2 class="hd">Tes attributs</h2><div class="sub">Chaque attribut part de 1. ${CR.pts} point(s) à répartir (max 8). Tu progresseras ensuite en jouant.</div><button class="btn" id="rndat" style="text-align:center">🎲 Répartir au hasard</button>
     ${Object.keys(ATTRS).map(k=>{
-      const base=3+((o.at||{})[k]||0)+CR.alloc[k];
+      const base=1+((o.at||{})[k]||0)+CR.alloc[k];
       return `<div class="attrrow"><div class="nm"><b>${ATTRS[k].n}</b><i>${ATTRS[k].d}</i></div>
         <button class="pm" data-m="${k}">−</button><div class="pips">${Array.from({length:10},(_,i)=>`<div class="pip ${i<base?`on`:``}"></div>`).join(``)}</div><button class="pm" data-p="${k}">+</button></div>`;}).join(``)}`;
   }
@@ -3014,8 +3107,9 @@ function renderCreate(){
   root().innerHTML=`<div class="screen create">${h}</div>`;
   document.querySelectorAll(`[data-o]`).forEach(b=>b.onclick=()=>{CR.origin=b.dataset.o;CR.sub=null;SFX.tap();renderCreate()});
   document.querySelectorAll(`[data-s]`).forEach(b=>b.onclick=()=>{CR.sub=b.dataset.s;SFX.tap();renderCreate()});
-  document.querySelectorAll(`[data-p]`).forEach(b=>b.onclick=()=>{const k=b.dataset.p;const base=3+((ORIGINS[CR.origin].at||{})[k]||0)+CR.alloc[k];if(CR.pts>0&&base<8){CR.alloc[k]++;CR.pts--;SFX.tap();keepName();renderCreate()}});
+  document.querySelectorAll(`[data-p]`).forEach(b=>b.onclick=()=>{const k=b.dataset.p;const base=1+((ORIGINS[CR.origin].at||{})[k]||0)+CR.alloc[k];if(CR.pts>0&&base<8){CR.alloc[k]++;CR.pts--;SFX.tap();keepName();renderCreate()}});
   document.querySelectorAll(`[data-m]`).forEach(b=>b.onclick=()=>{const k=b.dataset.m;if(CR.alloc[k]>0){CR.alloc[k]--;CR.pts++;SFX.tap();keepName();renderCreate()}});
+  const ra=$(`#rndat`); if(ra) ra.onclick=()=>{ SFX.tap(); Object.keys(CR.alloc).forEach(k=>CR.alloc[k]=0); CR.pts=15; const ks=Object.keys(CR.alloc); let guard=400; while(CR.pts>0&&guard-->0){ const k=ks[Math.floor(Math.random()*5)]; const base=1+((ORIGINS[CR.origin].at||{})[k]||0)+CR.alloc[k]; if(base<8){ CR.alloc[k]++; CR.pts--; } } renderCreate(); };
   function keepName(){const n=$(`#nm`);if(n)CR.name=n.value}
   $(`#bk`).onclick=()=>{SFX.tap();if(CR.step===0)showTitle();else{keepName();CR.step--;renderCreate()}};
   $(`#nx`).onclick=()=>{
@@ -3049,20 +3143,20 @@ function renderGame(){
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
       <div class="blocs" id="blocs"></div>
-      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
+      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hhub">🍸 <b id="hhn">5</b></button><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
     </div>
     <div class="stage" id="stage"></div>
     <div class="choices" id="choices"></div>
     <div id="advice"></div>
     <nav class="dock">
       <button data-d="prof">${ICON.user}Profil</button>
-      <button data-d="city">${ICON.city}Ville</button>
       <button data-d="empire">${ICON.map}Empire</button>
       <button data-d="contacts">${ICON.users}Contacts</button>
       <button data-d="more">${ICON.more}Plus</button>
     </nav></div>`;
-  document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,city:openCity,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
+  document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
+  $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
   $(`#hrole`).onclick=()=>{SFX.tap();G.member?openEmpire(`fac`):openProfile()};
   updateHud(true);
 }
@@ -3089,6 +3183,7 @@ function updateHud(init){
     });
   }
   renderBlocs();
+  $(`#hhn`).textContent=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));
   const nc=REL_NAMES.filter(i=>relv(i)>=5&&!(G.dead||{})[i]).length; $(`#hbn`).textContent=nc;
   const ad=adviceNow(), urgent=ad&&[`heal`,`therapy`,`empire`].includes(ad.go);
   $(`#advice`).innerHTML=urgent?`<button class="adv" id="advb">${ad.ic} ${ad.t} <b>›</b></button>`:``;
@@ -3118,7 +3213,7 @@ function previewDots(ch){
 
 /* ---------- boucle ---------- */
 function nextOrResume(resume){
-  if(resume&&G.cur&&byId[G.cur.id]) { showCardView(); return; }
+  if(resume&&G.cur&&byId[G.cur.id]) { const cc=byId[G.cur.id]; CUR_CH=cc.dyn?cc.dyn():null; showCardView(); return; }
   nextCard();
 }
 function save(){ store.set(`ncl_save`,G); }
@@ -3142,9 +3237,9 @@ function showCardView(){
   chs.querySelectorAll(`.choice`).forEach(b=>{
     const i=+b.dataset.i;
     b.onclick=()=>pick(i);
-    b.onmouseenter=b.onfocus=()=>previewDots(c.ch[i]);
+    b.onmouseenter=b.onfocus=()=>previewDots(chOf(c)[i]);
     b.onmouseleave=b.onblur=()=>previewDots(null);
-    b.addEventListener(`touchstart`,()=>previewDots(c.ch[i]),{passive:true});
+    b.addEventListener(`touchstart`,()=>previewDots(chOf(c)[i]),{passive:true});
   });
   revealText($(`.card .tx`)); showTip();
   SFX.swoosh();
@@ -3154,7 +3249,7 @@ function revealText(el){
   const words=[]; const walk=n=>{ n.childNodes.forEach(ch=>{ if(ch.nodeType===3){ const frag=document.createDocumentFragment(); ch.textContent.split(/(\s+)/).forEach(t=>{ if(!t) return; if(/^\s+$/.test(t)){ frag.appendChild(document.createTextNode(t)); return; } const s=document.createElement(`span`); s.className=`w`; s.textContent=t; words.push(s); frag.appendChild(s); }); ch.replaceWith(frag); } else if(ch.nodeType===1) walk(ch); }); };
   walk(el); const step=Math.min(28,700/Math.max(1,words.length)); words.forEach((s,i)=>s.style.animationDelay=(i*step)+`ms`);
 }
-const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🧭 VILLE : boutique & repos · EMPIRE : quartiers · CONTACTS : tes alliés.`];
+const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🍸 L'Afterlife revient régulièrement (compteur 🍸) : boutique, contrat ou repos. EMPIRE : quartiers · CONTACTS : tes alliés.`];
 function showTip(){
   const seen=store.get(`ncl_tips`)||0; if(seen>=TIPS.length||G.stats.cards>=TIPS.length*2+2||G.stats.cards%2) return;
   const i=seen; store.set(`ncl_tips`,seen+1);
@@ -3163,7 +3258,7 @@ function showTip(){
 let picking=false;
 function pick(i,dir,al,ok){
   if(picking||G.over)return;
-  const c=byId[G.cur.id], ch=c.ch[i];
+  const c=byId[G.cur.id], ch=chOf(c)[i];
   if(ch.req&&ch.req()) { SFX.ko(); shake(); return; }
   if(ch.heavy&&!ok) return confirmHeavy(ch,()=>pick(i,dir,al,true));
   picking=true; SFX.tap(); vib(15); previewDots(null);
@@ -3231,7 +3326,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -3344,7 +3439,8 @@ function statBar(){
   return `<div class="vstat"><span style="color:var(--hp)">♥ ${G.hp}</span><span style="color:var(--hum)">◐ ${G.hum}</span><span style="color:var(--y)">★ ${G.cred}</span><b style="color:var(--ed)">${money(G.ed)}</b></div>`;
 }
 function goAdvice(go){
-  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
+  if(go===`empire`) return openEmpire(`map`);
+  toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);
 }
 function openCity(){
   const ad=adviceNow();

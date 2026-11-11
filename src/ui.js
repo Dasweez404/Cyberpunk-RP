@@ -125,7 +125,7 @@ function showHow(){
   <div class="log"><b>2.</b> Surveille ta <b style="color:var(--hp)">Santé</b>, ton <b style="color:var(--hum)">Humanité</b> (trop de chrome = cyberpsychose), ta <b style="color:var(--cred)">Street Cred</b> et tes <b style="color:var(--ed)">€$</b>.</div>
   <div class="log"><b>⚖</b> <b>Équilibre :</b> les 4 barres RUE · CORPOS · LOI · BADLANDS (sous les jauges) doivent rester <b>au milieu</b>. Trop bas, ils te traquent ; trop haut, ils te possèdent — dans les deux cas, ça peut te coûter la vie. Les points sur les barres montrent ce qu'un choix va changer.</div>
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
-  <div class="log"><b>4.</b> Dans <b>VILLE</b> : ripperdoc, marché noir, gigs, soins, entraînement. Dans <b>CARTE</b> : conquiers des quartiers.</div>
+  <div class="log"><b>4.</b> Toutes les ~5 cartes, une halte à l'<b>Afterlife</b> (🍸) : tu choisis boutique, contrat ou repos — mais pas le moment. Pas assez d'argent ? L'option est verrouillée. Blessé, tu es moins efficace. <b>EMPIRE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
   <div class="log"><b>6.</b> Survis jusqu'à la retraite (dès ${RETIRE_AGE} ans, à toi de décider de continuer) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
 }
@@ -146,12 +146,12 @@ const ORIGINS = {
           wraiths:{n:`Wraiths`,d:`Pillards de la route. Vitesse et violence.`,fac:{wraiths:20,aldecaldos:-8}},
           solo:{n:`Nomade sans clan`,d:`Seul(e) sur la route. Personne pour te protéger.`,fac:{}}}},
 };
-let CR = {step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:5};
+let CR = {step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:15};
 function randomName(){
   const g=Math.random()<.5?`m`:`f`; const f=pickR(NAMES[g]);
   return Math.random()<.45?`${f} « ${pickR(NAMES.n)} »`:`${f} ${pickR(NAMES.s)}`;
 }
-function showCreate(){ CR={step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:5}; renderCreate(); }
+function showCreate(){ CR={step:0,origin:null,sub:null,name:``,alloc:{body:0,ref:0,tech:0,int:0,cool:0},pts:15}; renderCreate(); }
 function renderCreate(){
   let h=``;
   if(CR.step===0){
@@ -167,9 +167,9 @@ function renderCreate(){
     <button class="btn" id="rnd" style="text-align:center">🎲 Générer un nom</button>`;
   } else {
     const o=ORIGINS[CR.origin];
-    h=`<h2 class="hd">Tes attributs</h2><div class="sub">${CR.pts} point(s) à répartir. Tu progresseras ensuite en jouant.</div>
+    h=`<h2 class="hd">Tes attributs</h2><div class="sub">Chaque attribut part de 1. ${CR.pts} point(s) à répartir (max 8). Tu progresseras ensuite en jouant.</div><button class="btn" id="rndat" style="text-align:center">🎲 Répartir au hasard</button>
     ${Object.keys(ATTRS).map(k=>{
-      const base=3+((o.at||{})[k]||0)+CR.alloc[k];
+      const base=1+((o.at||{})[k]||0)+CR.alloc[k];
       return `<div class="attrrow"><div class="nm"><b>${ATTRS[k].n}</b><i>${ATTRS[k].d}</i></div>
         <button class="pm" data-m="${k}">−</button><div class="pips">${Array.from({length:10},(_,i)=>`<div class="pip ${i<base?`on`:``}"></div>`).join(``)}</div><button class="pm" data-p="${k}">+</button></div>`;}).join(``)}`;
   }
@@ -177,8 +177,9 @@ function renderCreate(){
   root().innerHTML=`<div class="screen create">${h}</div>`;
   document.querySelectorAll(`[data-o]`).forEach(b=>b.onclick=()=>{CR.origin=b.dataset.o;CR.sub=null;SFX.tap();renderCreate()});
   document.querySelectorAll(`[data-s]`).forEach(b=>b.onclick=()=>{CR.sub=b.dataset.s;SFX.tap();renderCreate()});
-  document.querySelectorAll(`[data-p]`).forEach(b=>b.onclick=()=>{const k=b.dataset.p;const base=3+((ORIGINS[CR.origin].at||{})[k]||0)+CR.alloc[k];if(CR.pts>0&&base<8){CR.alloc[k]++;CR.pts--;SFX.tap();keepName();renderCreate()}});
+  document.querySelectorAll(`[data-p]`).forEach(b=>b.onclick=()=>{const k=b.dataset.p;const base=1+((ORIGINS[CR.origin].at||{})[k]||0)+CR.alloc[k];if(CR.pts>0&&base<8){CR.alloc[k]++;CR.pts--;SFX.tap();keepName();renderCreate()}});
   document.querySelectorAll(`[data-m]`).forEach(b=>b.onclick=()=>{const k=b.dataset.m;if(CR.alloc[k]>0){CR.alloc[k]--;CR.pts++;SFX.tap();keepName();renderCreate()}});
+  const ra=$(`#rndat`); if(ra) ra.onclick=()=>{ SFX.tap(); Object.keys(CR.alloc).forEach(k=>CR.alloc[k]=0); CR.pts=15; const ks=Object.keys(CR.alloc); let guard=400; while(CR.pts>0&&guard-->0){ const k=ks[Math.floor(Math.random()*5)]; const base=1+((ORIGINS[CR.origin].at||{})[k]||0)+CR.alloc[k]; if(base<8){ CR.alloc[k]++; CR.pts--; } } renderCreate(); };
   function keepName(){const n=$(`#nm`);if(n)CR.name=n.value}
   $(`#bk`).onclick=()=>{SFX.tap();if(CR.step===0)showTitle();else{keepName();CR.step--;renderCreate()}};
   $(`#nx`).onclick=()=>{
@@ -212,20 +213,20 @@ function renderGame(){
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
       <div class="blocs" id="blocs"></div>
-      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
+      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hhub">🍸 <b id="hhn">5</b></button><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
     </div>
     <div class="stage" id="stage"></div>
     <div class="choices" id="choices"></div>
     <div id="advice"></div>
     <nav class="dock">
       <button data-d="prof">${ICON.user}Profil</button>
-      <button data-d="city">${ICON.city}Ville</button>
       <button data-d="empire">${ICON.map}Empire</button>
       <button data-d="contacts">${ICON.users}Contacts</button>
       <button data-d="more">${ICON.more}Plus</button>
     </nav></div>`;
-  document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,city:openCity,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
+  document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
+  $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
   $(`#hrole`).onclick=()=>{SFX.tap();G.member?openEmpire(`fac`):openProfile()};
   updateHud(true);
 }
@@ -252,6 +253,7 @@ function updateHud(init){
     });
   }
   renderBlocs();
+  $(`#hhn`).textContent=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));
   const nc=REL_NAMES.filter(i=>relv(i)>=5&&!(G.dead||{})[i]).length; $(`#hbn`).textContent=nc;
   const ad=adviceNow(), urgent=ad&&[`heal`,`therapy`,`empire`].includes(ad.go);
   $(`#advice`).innerHTML=urgent?`<button class="adv" id="advb">${ad.ic} ${ad.t} <b>›</b></button>`:``;
@@ -281,7 +283,7 @@ function previewDots(ch){
 
 /* ---------- boucle ---------- */
 function nextOrResume(resume){
-  if(resume&&G.cur&&byId[G.cur.id]) { showCardView(); return; }
+  if(resume&&G.cur&&byId[G.cur.id]) { const cc=byId[G.cur.id]; CUR_CH=cc.dyn?cc.dyn():null; showCardView(); return; }
   nextCard();
 }
 function save(){ store.set(`ncl_save`,G); }
@@ -305,9 +307,9 @@ function showCardView(){
   chs.querySelectorAll(`.choice`).forEach(b=>{
     const i=+b.dataset.i;
     b.onclick=()=>pick(i);
-    b.onmouseenter=b.onfocus=()=>previewDots(c.ch[i]);
+    b.onmouseenter=b.onfocus=()=>previewDots(chOf(c)[i]);
     b.onmouseleave=b.onblur=()=>previewDots(null);
-    b.addEventListener(`touchstart`,()=>previewDots(c.ch[i]),{passive:true});
+    b.addEventListener(`touchstart`,()=>previewDots(chOf(c)[i]),{passive:true});
   });
   revealText($(`.card .tx`)); showTip();
   SFX.swoosh();
@@ -317,7 +319,7 @@ function revealText(el){
   const words=[]; const walk=n=>{ n.childNodes.forEach(ch=>{ if(ch.nodeType===3){ const frag=document.createDocumentFragment(); ch.textContent.split(/(\s+)/).forEach(t=>{ if(!t) return; if(/^\s+$/.test(t)){ frag.appendChild(document.createTextNode(t)); return; } const s=document.createElement(`span`); s.className=`w`; s.textContent=t; words.push(s); frag.appendChild(s); }); ch.replaceWith(frag); } else if(ch.nodeType===1) walk(ch); }); };
   walk(el); const step=Math.min(28,700/Math.max(1,words.length)); words.forEach((s,i)=>s.style.animationDelay=(i*step)+`ms`);
 }
-const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🧭 VILLE : boutique & repos · EMPIRE : quartiers · CONTACTS : tes alliés.`];
+const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🍸 L'Afterlife revient régulièrement (compteur 🍸) : boutique, contrat ou repos. EMPIRE : quartiers · CONTACTS : tes alliés.`];
 function showTip(){
   const seen=store.get(`ncl_tips`)||0; if(seen>=TIPS.length||G.stats.cards>=TIPS.length*2+2||G.stats.cards%2) return;
   const i=seen; store.set(`ncl_tips`,seen+1);
@@ -326,7 +328,7 @@ function showTip(){
 let picking=false;
 function pick(i,dir,al,ok){
   if(picking||G.over)return;
-  const c=byId[G.cur.id], ch=c.ch[i];
+  const c=byId[G.cur.id], ch=chOf(c)[i];
   if(ch.req&&ch.req()) { SFX.ko(); shake(); return; }
   if(ch.heavy&&!ok) return confirmHeavy(ch,()=>pick(i,dir,al,true));
   picking=true; SFX.tap(); vib(15); previewDots(null);
@@ -394,7 +396,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -507,7 +509,8 @@ function statBar(){
   return `<div class="vstat"><span style="color:var(--hp)">♥ ${G.hp}</span><span style="color:var(--hum)">◐ ${G.hum}</span><span style="color:var(--y)">★ ${G.cred}</span><b style="color:var(--ed)">${money(G.ed)}</b></div>`;
 }
 function goAdvice(go){
-  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
+  if(go===`empire`) return openEmpire(`map`);
+  toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);
 }
 function openCity(){
   const ad=adviceNow();

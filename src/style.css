@@ -358,3 +358,4 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 
 .rk{display:flex;justify-content:space-between;font-size:14px;margin-top:2px}
 #hrole{color:var(--y);text-transform:uppercase;letter-spacing:.08em;font-size:inherit;text-align:right}
+.dock{grid-template-columns:repeat(4,1fr)}
