@@ -13,13 +13,13 @@ const NOPE = (t,m) => ({t:t||`Repartir sans rien acheter`,s:`Garde tes eddies`,f
 card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>false,
   tx:()=>{
     const hurt=G.hp<50, broke=G.ed<300;
-    return `Entre deux coups, tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes, les silhouettes des légendes dans le fond. Tu as une soirée devant toi, pas une de plus.${hurt?` <em>Tu saignes encore. On te regarde de travers.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``} Qu'est-ce que tu fais ?`;
+    return `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as une soirée, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`;
   },
   ch:[
-    {t:`Voir le ripperdoc de passage`,s:`Chrome & hacks · achète ou repars`,fx:{next:`shop_chrome`,msg:`Un type en blouse tachée t'attend à une table du fond, une mallette ouverte.`}},
-    {t:`Fouiller le marché noir`,s:`Armes, armures, véhicules, style`,fx:{next:`shop_gear`,msg:`Un vendeur ambulant étale sa marchandise à l'abri des regards.`}},
-    {t:`Chercher un contrat`,s:`Un coup à jouer, des risques à prendre`,fx:{next:`gig_board`,msg:`Un fixer te fait signe. Trois dossiers sur la table.`}},
-    {t:`Te reposer`,s:`Soins · thérapie · fête`,fx:{next:`rest_card`,msg:`Une banquette, une lumière douce. Tu t'écroules presque.`}},
+    {t:`Voir le ripperdoc de passage`,s:`Chrome & hacks · achète ou repars`,fx:{next:`shop_chrome`,nav:true}},
+    {t:`Fouiller le marché noir`,s:`Armes, armures, véhicules, style`,fx:{next:`shop_gear`,nav:true}},
+    {t:`Chercher un contrat`,s:`Un coup à jouer, des risques à prendre`,fx:{next:`gig_board`,nav:true}},
+    {t:`Te reposer`,s:`Soins · thérapie · fête`,fx:{next:`rest_card`,nav:true}},
     {t:`Repartir dans la rue`,s:`Rien aujourd'hui`,fx:{cred:1,msg:`Tu ne restes pas. La nuit t'appelle.`}}
   ]});
 
@@ -48,12 +48,12 @@ card({id:`shop_gear`,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
   },ch:[]});
 
 card({id:`gig_board`,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
-  tx:()=>`« Voici ce que j'ai sur la table ce soir. Choisis avec soin : certains contrats paient bien, d'autres te mettent en terre. Et si tu es blessé(e)… tu sais ce que ça change. »`,
+  tx:()=>`« Trois contrats ce soir. Certains paient bien, d'autres te mettent en terre.${G.hp<60?` Et blessé(e) comme tu es… réfléchis.`:``} »`,
   dyn:()=>{
     const cs=[],used=new Set();
     while(cs.length<3){ const g=GIGS[rnd(0,Math.min(GIGS.length-1,Math.floor(2+G.cred/12)+2))]; if(!used.has(g.n)){used.add(g.n);cs.push(g);} }
     const out=cs.map(g=>{ const pay=gigPay(g), cr=gigCr(g), tier=pay>=4000?3:pay>=1800?2:1;
-      return {t:g.n,s:`${g.d} · ${money(pay)} · échec : −${g.dm} Santé`,chk:{a:g.a,k:g.k,dc:g.dc,
+      return {t:g.n,s:`${money(pay)} · +${cr} Cred · échec : −${g.dm} Santé`,chk:{a:g.a,k:g.k,dc:g.dc,
         ok:{ed:pay,cred:cr,loot:tier,msg:`Contrat rempli. Le fixer te paie sans un mot.`},
         ko:{hp:-g.dm,ed:Math.round(pay*.1),hum:g.dm>=18?-4:0,msg:`Le contrat tourne mal. Tu t'en sors, mais pas indemne.`}}}; });
     out.push(NOPE(`Refuser tous les contrats`,`« Pas de travail pour toi, alors. »`)); return out;

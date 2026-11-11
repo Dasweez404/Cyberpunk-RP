@@ -294,8 +294,8 @@ function relDecay(){
   });
 }
 function adviceNow(){
-  if(G.hp<45) return {ic:`➕`,t:`Santé basse (${G.hp}) : passe à la clinique.`,go:`heal`};
-  if(G.hum<45) return {ic:`🧠`,t:`Humanité basse (${G.hum}) : thérapie conseillée.`,go:`therapy`};
+  if(G.hp<45) return {ic:`➕`,t:`Santé basse (${G.hp}) : blessé, tu es moins efficace. Repose-toi à la prochaine halte 🍸.`,go:`heal`};
+  if(G.hum<45) return {ic:`🧠`,t:`Humanité basse (${G.hum}) : pense à la thérapie à la prochaine halte 🍸.`,go:`therapy`};
   const bs=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
   if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
   return null;
@@ -378,7 +378,7 @@ function prepCard(c){
   else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
   else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`muamar`,`lizzie`,`faraday`]); }
   else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
-  else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:d.n,r:`${d.w} · ${dateStr()}`,c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
+  else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:/^fl/.test(c.id)?d.n:`Night City`,r:/^fl/.test(c.id)?`${d.w} · ${dateStr()}`:dateStr(),c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
   if(npc) G.cur.npc=npc;
   CUR_CH=c.dyn?c.dyn():null;
 }

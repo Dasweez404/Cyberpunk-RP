@@ -75,7 +75,7 @@ card({id:`no_intro2`,who:`panam`,tag:`Convoi sous attaque`,once:true,
   ]});
 
 /* ============================ FIXERS & BOULOTS ============================ */
-card({id:`dex_gig`,who:`@fixer`,tag:`Afterlife · Boulot`,w:7,cond:()=>G.cred>=3,
+card({id:`dex_gig`,who:`dex`,tag:`Afterlife · Boulot`,w:7,cond:()=>G.cred>=3,
   tx:`« Un client veut qu'un colis arrive à bon port avant l'aube. Il y a du monde sur le trajet, des gars qui n'aiment pas les inconnus. La paie : <strong>1 200 €$</strong>. Tu en es ? »`,
   ch:[
     {t:`Y aller, plein gaz`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{ed:1200,cred:5,bloc:{rue:3},flag:[`dex`],rel:{dex:6},role:{fixer:1},msg:`Livraison parfaite. Dex hoche la tête : « Pas mal. »`},ko:{hp:-20,ed:300,cred:1,msg:`Une embuscade te coûte du sang et la moitié du pognon.`}}},
