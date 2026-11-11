@@ -180,10 +180,10 @@ const CYBER = [
   {id:`armor`,n:`Subdermal Armor`,slot:`peau`,p:3800,h:6,mit:.20,d:`Une plaque de kevlar sous la peau. Les balles ricochent.`},
   {id:`biomon`,n:`Biomonitor`,slot:`peau`,p:1200,h:2,regen:6,d:`Surveille ta santé et libère des soins automatiquement.`},
   {id:`camo`,n:`Optical Camo`,slot:`peau`,p:6800,h:8,at:{cool:1},k:{stl:2},d:`Invisible pour quelques secondes. Un rêve pour tout assassin.`},
-  {id:`plug`,n:`Interface neurale (Neural Link)`,slot:`neural`,p:1800,h:4,at:{int:1},d:`Le port d'entrée : sans lui, pas de deck, pas de Net.`},
-  {id:`cyberdeck`,n:`Cyberdeck Raven Microcyber`,slot:`deck`,p:3000,h:6,at:{int:1},k:{hck:1},deck:3,needs:`plug`,d:`Un deck d'entrée de gamme. Pour débuter dans le Net.`},
-  {id:`paraline`,n:`Cyberdeck Militech Paraline`,slot:`deck`,p:9000,h:8,at:{int:2},k:{hck:2},deck:5,needs:`plug`,d:`Militaire. Rapide, brutal, fiable.`},
-  {id:`rippler`,n:`Cyberdeck Tetratronic Rippler`,slot:`deck`,p:16000,h:10,at:{int:3},k:{hck:3},deck:7,needs:`plug`,cred:35,d:`Le deck des légendes du Net. Pour percer le Blackwall en rêve.`},
+  {id:`plug`,n:`Interface neurale (Neural Link)`,slot:`neural`,p:900,h:3,at:{int:1},d:`Le port d'entrée : sans lui, pas de deck, pas de Net.`},
+  {id:`cyberdeck`,n:`Cyberdeck Raven Microcyber`,slot:`deck`,p:1500,h:4,at:{int:1},k:{hck:1},deck:3,d:`Deck d'entrée de gamme, interface neurale incluse. Pour débuter dans le Net.`},
+  {id:`paraline`,n:`Cyberdeck Militech Paraline`,slot:`deck`,p:9000,h:8,at:{int:2},k:{hck:2},deck:5,d:`Militaire. Rapide, brutal, fiable.`},
+  {id:`rippler`,n:`Cyberdeck Tetratronic Rippler`,slot:`deck`,p:16000,h:10,at:{int:3},k:{hck:3},deck:7,cred:35,d:`Le deck des légendes du Net. Pour percer le Blackwall en rêve.`},
 ];
 const HACKS = [
   {id:`ping`,n:`Ping`,p:500,int:3,d:`Révèle la position des ennemis.`},
@@ -244,3 +244,13 @@ const BLOC = {valentinos:`rue`,maelstrom:`rue`,tygers:`rue`,sixth:`rue`,voodoo:`
   arasaka:`corpo`,militech:`corpo`,kangtao:`corpo`,biotechnica:`corpo`,trauma:`corpo`,ncpd:`loi`,barghest:`loi`,aldecaldos:`nomad`,wraiths:`nomad`};
 const BLOCS = {rue:{n:`RUE`,c:`#ff9f1c`,d:`Gangs et rues de Night City`,opp:`loi`},corpo:{n:`CORPOS`,c:`#05ffa1`,d:`Arasaka, Militech, Kang Tao…`,opp:`nomad`},
   loi:{n:`LOI`,c:`#3b8bff`,d:`NCPD, MaxTac, Barghest`,opp:`rue`},nomad:{n:`BADLANDS`,c:`#ff4d6d`,d:`Les clans nomades`,opp:`corpo`}};
+
+/* ---------- alliés qui aident aux jets / infos contacts ---------- */
+const ALLY = {body:[`jackie`,`panam`],ref:[`claire`,`panam`],tech:[`vik`,`claire`],int:[`lucy`,`dex`,`judy`],cool:[`rogue`,`kerry`,`misty`]};
+const CONTACTS = {
+  jackie:`Renfort au combat · refuge à Heywood`, mama:`Refuge · soutien des Valentinos`, judy:`Alliée des Mox · BD & hack`,
+  panam:`Convoi · véhicules · Aldecaldos`, misty:`Humanité · conseils · intuition`, rogue:`Contrats VIP · Afterlife`,
+  kerry:`Concerts · réputation rock`, vik:`Soins · remise chrome`, dex:`Gigs mieux payés`, lucy:`Hacking · netrunning`,
+  delamain:`Transport sûr · fuite`, claire:`Mécanique · conduite`
+};
+const REL_TIERS = [[0,`Inconnu`],[5,`Connaissance`],[20,`Ami`],[40,`Allié`],[65,`Famille`]];

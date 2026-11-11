@@ -40,6 +40,8 @@ const ICON = {
   map:`<svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/></svg>`,
   fac:`<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>`,
   log:`<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg>`,
+  users:`<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20c0-3.8 3-6 6.5-6s6.5 2.2 6.5 6M15 14.2c3.2-.4 6 1.4 6 5.3"/></svg>`,
+  more:`<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`,
   out:`<svg viewBox="0 0 24 24"><path d="M9 4H5v16h4M15 8l5 4-5 4M20 12H9"/></svg>`,
 };
 
@@ -113,7 +115,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -202,19 +204,20 @@ function renderGame(){
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
       <div class="blocs" id="blocs"></div>
-      <div class="sub-hud"><span id="hdate"></span><span class="role" id="hrole"></span></div>
+      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><span class="role" id="hrole"></span></div>
     </div>
     <div class="stage" id="stage"></div>
     <div class="choices" id="choices"></div>
+    <div id="advice"></div>
     <nav class="dock">
       <button data-d="prof">${ICON.user}Profil</button>
       <button data-d="city">${ICON.city}Ville</button>
-      <button data-d="map">${ICON.map}Carte</button>
-      <button data-d="fac">${ICON.fac}Faction</button>
-      <button data-d="log">${ICON.log}Journal</button>
-      <button data-d="out">${ICON.out}Sortir</button>
+      <button data-d="empire">${ICON.map}Empire</button>
+      <button data-d="contacts">${ICON.users}Contacts</button>
+      <button data-d="more">${ICON.more}Plus</button>
     </nav></div>`;
-  document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,city:openCity,map:openMap,fac:openFactions,log:openLog,out:openExit})[b.dataset.d]()});
+  document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,city:openCity,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
+  $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
   updateHud(true);
 }
 let lastVals=null;
@@ -235,6 +238,10 @@ function updateHud(init){
     });
   }
   renderBlocs();
+  const nc=REL_NAMES.filter(i=>relv(i)>=5&&!(G.dead||{})[i]).length; $(`#hbn`).textContent=nc;
+  const ad=adviceNow(), urgent=ad&&[`heal`,`therapy`,`empire`].includes(ad.go);
+  $(`#advice`).innerHTML=urgent?`<button class="adv" id="advb">${ad.ic} ${ad.t} <b>›</b></button>`:``;
+  const ab=$(`#advb`); if(ab) ab.onclick=()=>{SFX.tap();goAdvice(ad.go)};
   lastVals=v;
 }
 function renderBlocs(){
@@ -272,8 +279,10 @@ function showCardView(){
   chs.innerHTML=c.ch.map((h,i)=>{
     const lock=h.req?h.req():``; let badge=``;
     if(h.chk){ const r=rollInfo(h.chk); const p=Math.round(r.chance*100); badge=`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`; }
-    return `<button class="btn choice ${lock?`lock`:``}" data-i="${i}"><span class="k">${i+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>`;
+    let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(WHO[al].n)}">📞<small>${esc(WHO[al].n.split(` `)[0])}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
+    return `<div class="crow"><button class="btn choice ${lock?`lock`:``}" data-i="${i}"><span class="k">${i+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
   }).join(``);
+  chs.querySelectorAll(`.help`).forEach(b=>b.onclick=()=>pick(+b.dataset.h,0,b.dataset.al));
   chs.querySelectorAll(`.choice`).forEach(b=>{
     const i=+b.dataset.i;
     b.onclick=()=>pick(i);
@@ -284,7 +293,7 @@ function showCardView(){
   SFX.swoosh();
 }
 let picking=false;
-function pick(i,dir){
+function pick(i,dir,al){
   if(picking||G.over)return;
   const c=byId[G.cur.id], ch=c.ch[i];
   if(ch.req&&ch.req()) { SFX.ko(); shake(); return; }
@@ -292,12 +301,13 @@ function pick(i,dir){
   const card=$(`#card`);
   if(card){ const d=dir||(i===0?-1:1); card.style.setProperty(`--ox`,(d*120)+`px`); card.style.setProperty(`--or`,(d*10)+`deg`); card.classList.add(`out`); }
   $(`#choices`).innerHTML=``;
-  setTimeout(()=>resolveChoice(ch),260);
+  setTimeout(()=>resolveChoice(ch,al),260);
 }
-function resolveChoice(ch){
+function resolveChoice(ch,al){
   CHIPS=[]; let fx, info=null;
+  if(al){ G.helpP=G.stats.cards; chip(`y`,`📞 ${WHO[al].n.split(` `)[0]} t'aide (+3)`); applyFx({rel:{[al]:2}}); }
   if(ch.chk){
-    const c=ch.chk, r=rollInfo(c), roll=rnd(1,10);
+    const c=ch.chk, r=rollInfo(c,al?3:0), roll=rnd(1,10);
     const ok = roll===10 || (roll!==1 && roll>=r.need);
     fx = ok?c.ok:c.ko; info={roll,ok,a:c.a,...r};
     if(ok)G.stats.fights+=0;
@@ -350,7 +360,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
-  const net=tick(STEP); G.stats.cards++;
+  const net=tick(STEP); G.stats.cards++; relDecay();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -423,25 +433,32 @@ const CITYSTATE = {shop:{cy:`all`,gear:`all`}};
 function statBar(){
   return `<div class="vstat"><span style="color:var(--hp)">♥ ${G.hp}</span><span style="color:var(--hum)">◐ ${G.hum}</span><span style="color:var(--y)">★ ${G.cred}</span><b style="color:var(--ed)">${money(G.ed)}</b></div>`;
 }
+function goAdvice(go){
+  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,train:openTrain,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
+}
 function openCity(){
-  const tile=(k,ic,t,d,o={})=>`<button class="tile ${o.rec?`rec`:``}" data-c="${k}" ${o.dis?`disabled`:``}><span class="ti">${ic}</span><b>${t}</b><small>${d}</small>${o.rec?`<em>Conseillé</em>`:``}</button>`;
+  const ad=adviceNow();
+  const big=(k,ic,t,d,rec)=>`<button class="tile big ${rec?`rec`:``}" data-c="${k}"><span class="ti">${ic}</span><b>${t}</b><small>${d}</small>${rec?`<em>!</em>`:``}</button>`;
   modal(`Ville · ${dateStr()}`,`${statBar()}
-   <div class="sec">Boutiques</div>
-   <div class="tiles">
-    ${tile(`rip`,`🦾`,`Ripperdoc`,`Chrome & implants`)}
-    ${tile(`gear`,`🔫`,`Marché noir`,`Armes, armures, véhicules`)}
-    ${tile(`hack`,`💾`,`Quickhacks`,hasDeck()?`${G.hacks.length}/${deckSlots()} slots`:`Deck requis`,{dis:!hasDeck()})}
-    ${tile(`train`,`🏋`,`S'entraîner`,`Gagne de l'XP · gratuit · 2 mois`)}
-   </div>
-   <div class="sec">Boulots</div>
-   <div class="tiles one">${tile(`gigs`,`📋`,`Tableau des gigs`,`${G.board&&G.board.p===G.stats.cards?G.board.left:GIG_PER_PERIOD} gig(s) dispo cette période · mieux payés`)}</div>
-   <div class="sec">Récupérer</div>
-   <div class="tiles three">
-    ${tile(`heal`,`➕`,`Clinique`,`+35 Santé · 200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}
-    ${tile(`therapy`,`🧠`,`Thérapie`,`+15 Humanité · 600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}
-    ${tile(`rest`,`🛏`,`Repos`,`+15 Santé · +5 Hum.`)}
-   </div>
-   <div class="log" style="color:var(--dim)">Chaque action fait passer 1 à 2 mois. Revenus et loyer sont décomptés.</div>`);
+   ${ad?`<button class="adv inl" id="advc">${ad.ic} ${ad.t} <b>›</b></button>`:``}
+   <div class="tiles one">
+    ${big(`shop`,`🛒`,`Boutique`,`Chrome · Armes · Hacks`)}
+    ${big(`work`,`💼`,`Boulot`,`Gigs · Entraînement`,(G.board&&G.board.p===G.stats.cards?G.board.left:2)>0&&G.hp>=60)}
+    ${big(`rest`,`❤`,`Repos`,`Soins · Thérapie · Dormir`,G.hp<50||G.hum<50)}
+   </div>`);
+  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();openCitySub(b.dataset.c)});
+  const ac=$(`#advc`); if(ac) ac.onclick=()=>{SFX.tap();goAdvice(ad.go)};
+}
+function openCitySub(k){
+  const tile=(c,ic,t,d,o={})=>`<button class="tile ${o.rec?`rec`:``}" data-c="${c}" ${o.dis?`disabled`:``}><span class="ti">${ic}</span><b>${t}</b><small>${d}</small>${o.rec?`<em>Conseillé</em>`:``}</button>`;
+  const left=G.board&&G.board.p===G.stats.cards?G.board.left:GIG_PER_PERIOD;
+  const body={
+    shop:`<div class="tiles">${tile(`rip`,`🦾`,`Chrome`,`Implants`)}${tile(`gear`,`🔫`,`Équipement`,`Armes · armures`)}${tile(`hack`,`💾`,`Hacks`,hasDeck()?`${G.hacks.length}/${deckSlots()}`:`Deck requis`,{dis:!hasDeck()})}</div>`,
+    work:`<div class="tiles">${tile(`gigs`,`📋`,`Gigs`,`${left} dispo`,{dis:!left})}${tile(`train`,`📈`,`Entraînement`,G.trainP===G.stats.cards?`Fait`:`Gratuit`,{dis:G.trainP===G.stats.cards})}</div>`,
+    rest:`<div class="tiles three">${tile(`heal`,`➕`,`Clinique`,`200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}${tile(`therapy`,`🧠`,`Thérapie`,`600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}${tile(`rest`,`🛏`,`Dormir`,`Gratuit`)}</div>`
+  }[k];
+  const title={shop:`Boutique`,work:`Boulot`,rest:`Repos`}[k];
+  modal(title,`${statBar()}${body}`,{back:openCity});
   document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();({rip:()=>openShop(`cy`),gear:()=>openShop(`gear`),hack:()=>openShop(`hack`),gigs:openGigs,train:openTrain,heal:()=>doDown(`heal`),therapy:()=>doDown(`therapy`),rest:()=>doDown(`rest`)})[b.dataset.c]()});
 }
 function doDown(k){
@@ -452,7 +469,7 @@ function doDown(k){
   SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`}[k]});
   updateHud(); toast(CHIPS.map(c=>c.txt).join(` · `)||`Fait`);
   if(checkEnd()){ closeModal(); return showEnd(); }
-  openCity();
+  openCitySub(`rest`);
 }
 function shopHeader(){ return `${statBar()}`; }
 function openShop(kind){
@@ -489,7 +506,7 @@ function openShop(kind){
         rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${h.n}</b><small>${h.d}</small></div>${own?`<b class="own-t">CHARGÉ</b>`:`<button class="buy ${G.ed>=h.p&&!lock?``:`no`}" data-h="${h.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(h.p)}</button>`}</div>`); }); }
   }
   const sc=$(`#mb`)?$(`#mb`).scrollTop:0;
-  modal({cy:`Ripperdoc`,gear:`Marché noir`,hack:`Quickhacks`}[kind],`<div class="sticky">${statBar()}${chips}${G.flags.vik&&kind===`cy`?`<div class="log" style="color:var(--g)">Remise Vik −15 %</div>`:``}</div>`+rows.join(``),{back:openCity});
+  modal({cy:`Ripperdoc`,gear:`Marché noir`,hack:`Quickhacks`}[kind],`<div class="sticky">${statBar()}${chips}${G.flags.vik&&kind===`cy`?`<div class="log" style="color:var(--g)">Remise Vik −15 %</div>`:``}</div>`+rows.join(``),{back:()=>openCitySub(`shop`)});
   if($(`#mb`)) $(`#mb`).scrollTop=sc;
   document.querySelectorAll(`[data-f]`).forEach(b=>b.onclick=()=>{CITYSTATE.shop[kind]=b.dataset.f;SFX.tap();$(`#mb`).scrollTop=0;openShop(kind)});
   document.querySelectorAll(`[data-b]`).forEach(b=>b.onclick=()=>buyCy(b.dataset.b));
@@ -525,7 +542,7 @@ function openTrain(){
     return `<div class="item"><div class="in"><b>${ATTRS[k].n} ${lv}</b><small>${ATTRS[k].d}${m>=15?` · Mentor : ${WHO[MENTOR[k]].n.split(` `)[0]} (+2 XP)`:``}</small>
       <div class="bigbar" style="margin-top:6px"><i style="background:var(--y);width:${max?100:Math.round(x/need*100)}%"></i></div><small>${max?`Niveau max`:`${x} / ${need} XP`}</small></div>
       <button class="buy ${max||used?`no`:``}" data-t="${k}" ${max||used?`disabled`:``}>+${bonus} XP</button></div>`;
-  }).join(``),{back:openCity});
+  }).join(``),{back:()=>openCitySub(`work`)});
   document.querySelectorAll(`[data-t]`).forEach(b=>b.onclick=()=>{
     const k=b.dataset.t; if(G.trainP===G.stats.cards)return;
     CHIPS=[]; G.trainP=G.stats.cards; gainXp(k,3+(rel_(MENTOR[k])>=15?2:0)); tick(2); SFX.ok(); updateHud();
@@ -535,7 +552,7 @@ function openTrain(){
 }
 const rel_ = id => (G.rel&&G.rel[id])||0;
 const GIG_PER_PERIOD=2;
-const gigPay=g=>Math.round(g.pay*1.7/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function gigBoard(){
   if(!G.board||G.board.p!==G.stats.cards){
     const cs=[],used=new Set();
@@ -551,7 +568,7 @@ function openGigs(){
    bd.gigs.map((x,i)=>{
     const g=GIGS.find(y=>y.n===x.n); const r=rollInfo({a:g.a,k:g.k,dc:g.dc}); const p=Math.round(r.chance*100); const off=x.done||!bd.left;
     return `<button class="btn choice ${off?`lock`:``}" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}${x.done?` ✓`:``}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(gigPay(g))} · +${gigCr(g)} Cred · échec : −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
-  }).join(``),{back:openCity});
+  }).join(``),{back:()=>openCitySub(`work`)});
   document.querySelectorAll(`[data-gi]`).forEach(b=>b.onclick=()=>{
     const x=bd.gigs[+b.dataset.gi]; if(x.done||!bd.left){SFX.ko();return}
     const g=GIGS.find(y=>y.n===x.n), r=rollInfo({a:g.a,k:g.k,dc:g.dc}), roll=rnd(1,10);
@@ -561,11 +578,16 @@ function openGigs(){
     gainXp(g.a,ok?3:1); G.lastA=g.a;
     tick(1); updateHud();
     modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${ok?`Choisir ma récompense`:bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
-    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:()=>openCitySub(`work`))(); };
     $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,back); else back(); };
   });
 }
 
+/* ----- EMPIRE ----- */
+let EMPTAB=`map`;
+function empTabs(cur){ return `<div class="seg"><button class="${cur===`map`?`on`:``}" data-et="map">🗺 Quartiers</button><button class="${cur===`fac`?`on`:``}" data-et="fac">🛡 Factions</button></div>`; }
+function bindEmp(){ document.querySelectorAll(`[data-et]`).forEach(b=>b.onclick=()=>{SFX.tap();openEmpire(b.dataset.et)}); }
+function openEmpire(tab){ EMPTAB=tab||EMPTAB; (EMPTAB===`fac`?openFactions:openMap)(); }
 /* ----- CARTE ----- */
 function ownerColor(o){ return o===`player`?`#fcee0a`:o===`neutral`?`#3a3a55`:(FAC[o]?FAC[o].c:`#555`); }
 function ownerName(o){ return o===`player`?(G.mine?G.mine.name:`Toi`):o===`neutral`?`Neutre / corporatif`:(FAC[o]?FAC[o].n:o); }
@@ -584,16 +606,16 @@ function openMap(keep){
   const cnt={}; DIST.forEach(d=>{cnt[G.dist[d.id]]=(cnt[G.dist[d.id]]||0)+1});
   const leg=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(o=>`<button class="fc ${hl===o?`on`:``}" data-l="${o}" style="border-color:${ownerColor(o)}"><i style="background:${ownerColor(o)}"></i>${ownerName(o)} ${cnt[o]}</button>`).join(``);
   const sc=$(`#mb`)?$(`#mb`).scrollTop:0;
-  modal(`Carte de Night City`,`<div class="sticky" style="padding-bottom:0">${statBar()}</div>
+  modal(`Empire`,`${empTabs(`map`)}
    <svg class="map" viewBox="0 0 400 395">${rects}</svg>
-   <div class="sec">Filtrer par propriétaire</div><div class="fchips wrap">${leg}</div>
-   <div class="log" style="color:var(--dim)">Tes quartiers : ${ownedList().length} · ● = niveau de défense. Touche un quartier.</div>
+   <div class="fchips wrap">${leg}</div>
    <div class="mappanel" id="mpanel"></div>`,{full:true});
   if($(`#mb`)) $(`#mb`).scrollTop=sc;
+  bindEmp();
   document.querySelectorAll(`.map g`).forEach(g=>g.onclick=()=>{SFX.tap();MAPSEL=g.dataset.d;openMap(true)});
   document.querySelectorAll(`[data-l]`).forEach(b=>b.onclick=()=>{MAPHL=MAPHL===b.dataset.l?null:b.dataset.l;SFX.tap();openMap(true)});
   if(MAPSEL) renderDistrictPanel(MAPSEL);
-  else $(`#mpanel`).innerHTML=`<div class="log" style="text-align:center;color:var(--dim)">Choisis un quartier sur la carte ↑</div>`;
+  else $(`#mpanel`).innerHTML=`<div class="log" style="text-align:center;color:var(--dim)">👆 Touche un quartier</div>`;
 }
 function renderDistrictPanel(id){
   const d=DMAP[id], o=G.dist[id], why=canConquer(d);
@@ -620,17 +642,45 @@ function openConquest(d){
 /* ----- FACTIONS ----- */
 function openFactions(){
   let h=``;
-  if(G.mine) h+=`<div class="item own"><div class="in"><b style="color:var(--y)">${esc(G.mine.name)}</b><small>Ta faction · ${{gang:`Gang de rue`,fixers:`Réseau de fixers`,nomads:`Clan nomade`,runners:`Collectif de netrunners`}[G.mine.type]} · Puissance ${G.mine.power} · ${ownedList().length} quartier(s)</small></div></div>`;
-  if(G.member) h+=`<div class="item own" style="border-color:${FAC[G.member].c}"><div class="in"><b style="color:${FAC[G.member].c}">${FAC[G.member].n} — ${rankTitle()}</b><small>Missions accomplies : ${G.jobs} · ${FAC[G.member].perk}</small></div><button class="btn" style="width:auto;padding:8px 12px" id="lfac">Quitter</button></div>`;
-  h+=`<div class="sec">Réputation</div>`+Object.keys(FAC).map(id=>{
+  if(G.mine) h+=`<div class="item own"><div class="in"><b style="color:var(--y)">★ ${esc(G.mine.name)}</b><small>Puissance ${G.mine.power} · ${ownedList().length} quartier(s)</small></div></div>`;
+  if(G.member) h+=`<div class="item own" style="border-color:${FAC[G.member].c}"><div class="in"><b style="color:${FAC[G.member].c}">${FAC[G.member].n} · ${rankTitle()}</b><small>${G.jobs} mission(s) · ${FAC[G.member].perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>`;
+  const ids=Object.keys(FAC).sort((a,b)=>((G.member===b)-(G.member===a))||((G.fac[b]||0)-(G.fac[a]||0)));
+  h+=ids.map(id=>{
     const f=FAC[id], r=G.fac[id]||0;
-    return `<div class="item" style="border-color:${f.c}55"><div class="in"><b style="color:${f.c}">${f.n}${G.member===id?` <span class="tagx y">MEMBRE</span>`:``}</b><small>${f.d}</small><div class="bigbar"><i style="background:${r>=0?`var(--g)`:`var(--m)`};left:${r>=0?50:50+r/2}%;width:${Math.abs(r)/2}%"></i></div></div><b style="color:${r>=0?`var(--g)`:`var(--m)`}">${r}</b></div>`;
+    return `<button class="frow" data-fx="${id}"><i style="background:${f.c}"></i><b>${f.n}${G.member===id?` ✓`:``}</b><span class="rb"><u style="background:${r>=0?`var(--g)`:`var(--m)`};left:${r>=0?50:50+r/2}%;width:${Math.abs(r)/2}%"></u></span><em style="color:${r>=0?`var(--g)`:`var(--m)`}">${r}</em></button><div class="fdesc" id="fd-${id}" hidden>${f.d}<br><b>${f.perk}</b></div>`;
   }).join(``);
-  modal(`Factions`,h);
+  modal(`Empire`,`${empTabs(`fac`)}${h}`,{full:true});
+  bindEmp();
+  document.querySelectorAll(`[data-fx]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#fd-`+b.dataset.fx);d.hidden=!d.hidden});
   const lf=$(`#lfac`); if(lf) lf.onclick=()=>{
     if(!confirm(`Quitter ${FAC[G.member].n} ? Ils ne l'oublieront pas.`))return;
     G.fac[G.member]=(G.fac[G.member]||0)-35; G.joinedOnce[G.member]=true; G.log.unshift({d:dateStr(),m:`Tu quittes ${FAC[G.member].n}.`}); G.member=null; G.rank=0; G.jobs=0; updateHud(); SFX.ko(); openFactions();
   };
+}
+/* ----- CONTACTS ----- */
+function openContacts(){
+  const rows=REL_NAMES.map(id=>{
+    const w=WHO[id], v=relv(id), dead=(G.dead||{})[id], known=v!==0||dead;
+    const idle=G.stats.cards-((G.relT&&G.relT[id])||0);
+    const next=REL_TIERS.find(t=>t[0]>v);
+    const ally=Object.keys(ALLY).filter(a=>ALLY[a].includes(id)).map(a=>ATTRS[a].n);
+    return `<button class="ccard ${known?``:`unk`} ${dead?`dead`:``}" data-ct="${id}">
+      <div class="cp">${known?portrait(id):`<div class="qm">?</div>`}</div>
+      <div class="cinfo"><b style="color:${known?w.c:`var(--dim)`}">${dead?`† `:``}${known?esc(w.n):`Inconnu(e)`}${G.flags[`lover_`+id]?` ♥`:``}</b>
+      <small>${dead?`Mort(e)`:known?relTier(v)+` · `+v:`Pas encore rencontré(e)`}</small>
+      <div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};width:${Math.max(0,Math.abs(v))}%"></i></div></div>
+      <div class="cdet" id="cd-${id}" hidden>${esc(w.r)}<br>🎁 ${esc(CONTACTS[id])}${ally.length&&!dead?`<br>📞 Aide aux jets : ${ally.join(`, `)} (lien ≥ 25)`:``}${next&&!dead&&known?`<br>Prochain palier : ${next[1]} (${next[0]})`:``}${known&&!dead&&v>=10&&idle>=7?`<br><span style="color:var(--m)">⚠ Sans nouvelles depuis ${idle} périodes : il/elle s'éloigne</span>`:``}</div></button>`;
+  }).join(``);
+  modal(`Contacts`,`<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
+  document.querySelectorAll(`[data-ct]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#cd-`+b.dataset.ct);d.hidden=!d.hidden});
+}
+function openMore(){
+  modal(`Plus`,`<div class="tiles">
+    <button class="tile" data-m="log"><span class="ti">📓</span><b>Journal</b><small>Historique</small></button>
+    <button class="tile" data-m="how"><span class="ti">❓</span><b>Aide</b><small>Comment jouer</small></button>
+    <button class="tile" data-m="snd"><span class="ti">${muted?`🔇`:`🔊`}</span><b>Son</b><small>${muted?`OFF`:`ON`}</small></button>
+    <button class="tile" data-m="out"><span class="ti">🚪</span><b>Sortir</b><small>Retraite · Dernier run</small></button></div>`);
+  document.querySelectorAll(`[data-m]`).forEach(b=>b.onclick=()=>{SFX.tap();({log:openLog,how:showHow,snd:()=>{muted=!muted;store.set(`ncl_mute`,muted);openMore()},out:openExit})[b.dataset.m]()});
 }
 function openLog(){ modal(`Journal`,G.log.slice(0,40).map(l=>`<div class="log"><b>${l.d}</b>${esc(l.m)}</div>`).join(``)||`<div class="log">Rien à signaler.</div>`); }
 function openExit(){

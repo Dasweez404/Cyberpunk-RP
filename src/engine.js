@@ -21,7 +21,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {friend_danger:12,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -32,13 +32,13 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, pendingLoot:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, relT:{}, dead:{}, pendingLoot:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
   DIST.forEach(d=>s.dist[d.id]=d.o);
   Object.entries(o.fac||{}).forEach(([k,v])=>s.fac[k]=v);
-  (o.flags||[]).forEach(f=>s.flags[f]=true);
+  (o.flags||[]).forEach(f=>s.flags[f]=true); s.flags.basichack=true;
   return s;
 }
 const yr = () => START_YEAR + Math.floor(G.t/12);
@@ -46,7 +46,7 @@ const mo = () => G.t % 12;
 const MONTHS = [`Janv.`,`Févr.`,`Mars`,`Avr.`,`Mai`,`Juin`,`Juil.`,`Août`,`Sept.`,`Oct.`,`Nov.`,`Déc.`];
 const dateStr = () => `${MONTHS[mo()]} ${yr()}`;
 const hasCy = id => G.cyber.includes(id);
-const hasDeck = () => G.cyber.some(i=>CY(i).deck) && hasCy(`plug`);
+const hasDeck = () => G.cyber.some(i=>CY(i).deck);
 const deckSlots = () => G.cyber.reduce((a,i)=>a+(CY(i).deck||0),0);
 function bonusAt(a){
   let v=0;
@@ -60,7 +60,7 @@ function skill(k){
   let v=0;
   G.cyber.forEach(i=>{v+=(CY(i).k||{})[k]||0});
   if(k===`cmb`||k===`drv`){ let best=0; G.gear.forEach(i=>{best=Math.max(best,(GEARMAP[i].k||{})[k]||0)}); v+=best; }
-  if(k===`hck`) v+=Math.floor(G.hacks.length/2);
+  if(k===`hck`){ v+=Math.floor(G.hacks.length/2); if(G.flags.hackmentor) v+=1; }
   if(G.mine){ if(G.mine.type===`runners`&&k===`hck`)v++; if(G.mine.type===`nomads`&&k===`drv`)v++; if(G.mine.type===`gang`&&k===`cmb`)v++; }
   if(G.member===`wraiths`&&k===`drv`)v++;
   return v;
@@ -143,8 +143,8 @@ function makeLoot(t){
   return out;
 }
 /* ---------- jets ---------- */
-function rollInfo(c){
-  const tot = A(c.a) + (c.k?skill(c.k):0);
+function rollInfo(c,bonus){
+  const tot = A(c.a) + (c.k?skill(c.k):0) + (bonus||0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
   const need = dc + 4 - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
@@ -164,13 +164,15 @@ function applyFx(fx){
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));
   if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{ G.fac[k]=clamp((G.fac[k]||0)+v,-100,100); });
-  if(fx.rel){ G.rel=G.rel||{}; Object.entries(fx.rel).forEach(([k,v])=>{ G.rel[k]=clamp((G.rel[k]||0)+v,-50,100); chip(v>0?`p`:`n`,`${sgn(v)} lien · ${WHO[k].n.split(` `)[0]}`); }); }
+  if(fx.rel){ G.rel=G.rel||{}; Object.entries(fx.rel).forEach(([k,v])=>{ G.rel[k]=clamp((G.rel[k]||0)+v,-50,100); G.relT=G.relT||{}; G.relT[k]=G.stats.cards; chip(v>0?`p`:`n`,`${sgn(v)} lien · ${WHO[k].n.split(` `)[0]}`); }); }
   if(fx.role) Object.entries(fx.role).forEach(([k,v])=>G.role[k]=(G.role[k]||0)+v);
   if(fx.flag) fx.flag.forEach(f=>G.flags[f]=true);
   if(fx.unflag) fx.unflag.forEach(f=>delete G.flags[f]);
   if(fx.flagMark) G.joinedOnce[fx.flagMark]=true;
   if(fx.unonce) delete G.done[fx.unonce];
   if(fx.cy) installCy(fx.cy,true);
+  if(fx.xp) Object.entries(fx.xp).forEach(([k,v])=>gainXp(k,v));
+  if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
   if(fx.found) G.pendingFound = fx.found;
@@ -190,7 +192,35 @@ function installCy(id,free){
   G.cyber.push(id);
   if(c.slot===`neural`&&c.id!==`plug`){}
 }
+const relv = id => (G.rel&&G.rel[id])||0;
+function bestAlly(a){
+  if(G.helpP===G.stats.cards) return null;
+  const l=(ALLY[a]||[]).filter(i=>relv(i)>=25&&!(G.dead||{})[i]); l.sort((x,y)=>relv(y)-relv(x)); return l[0]||null;
+}
+function relTier(v){ let t=REL_TIERS[0][1]; REL_TIERS.forEach(([n,l])=>{if(v>=n)t=l}); return t; }
+function relDecay(){
+  G.relT=G.relT||{};
+  Object.keys(G.rel||{}).forEach(id=>{
+    if(G.rel[id]>=10 && !(G.dead||{})[id] && G.stats.cards-(G.relT[id]||0)>=10){
+      G.rel[id]-=3; G.relT[id]=G.stats.cards; toast(`${WHO[id].n.split(` `)[0]} s'éloigne… (${G.rel[id]})`);
+    }
+  });
+}
+function adviceNow(){
+  if(G.hp<45) return {ic:`➕`,t:`Santé basse (${G.hp}) : passe à la clinique.`,go:`heal`};
+  if(G.hum<45) return {ic:`🧠`,t:`Humanité basse (${G.hum}) : thérapie conseillée.`,go:`therapy`};
+  const bs=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
+  if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
+  const bd=G.board&&G.board.p===G.stats.cards?G.board.left:2;
+  if(bd>0&&G.hp>=60) return {ic:`📋`,t:`${bd} gig(s) dispo : du cash et de la rep.`,go:`gigs`};
+  if(G.trainP!==G.stats.cards) return {ic:`📈`,t:`Séance d'entraînement gratuite disponible.`,go:`train`};
+  if(G.ed>=2500&&!G.gear.some(i=>GEARMAP[i].mit)) return {ic:`🛡`,t:`Tu as de l'argent : pense à une armure.`,go:`gear`};
+  return null;
+}
 const FN = {
+  hackMentor(){ G.flags.hackmentor=true; [`ping`,`shortc`].forEach(h=>{ if(!G.hacks.includes(h)) G.hacks.push(h); }); G.at.int=clamp(G.at.int+1,1,10); chip(`y`,`Hack avancé appris`); chip(`p`,`+1 INTELLECT`); toast(`Tu maîtrises le hacking !`); },
+  allySaved(){ const id=G.tmp&&G.tmp.ally; if(id) { chip(`y`,`${WHO[id].n.split(` `)[0]} est sauvé(e)`); } },
+  allyLost(){ const id=G.tmp&&G.tmp.ally; if(!id) return; G.dead=G.dead||{}; G.dead[id]=true; G.rel[id]=0; chip(`n`,`† ${WHO[id].n.split(` `)[0]} est mort(e)`); G.log.unshift({d:dateStr(),m:`${WHO[id].n} est mort(e).`}); G.hum=clamp(G.hum-10,0,100); chip(`n`,`−10 Humanité`); },
   sellOne(){ if(!G.cyber.length)return; const id=G.cyber[rnd(0,G.cyber.length-1)]; removeCy(id); const v=Math.round(CY(id).p*.5); G.ed+=v; chip(`i`,`+${v} €$`); chip(`n`,`− ${CY(id).n}`); },
   defendWin(){ if(G.mine) G.mine.power++; chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
