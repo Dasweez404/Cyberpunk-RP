@@ -235,6 +235,15 @@ function renderGame(){
   updateHud(true);
 }
 let lastVals=null, edShown=null;
+function tweenNum(el,from,to){
+  if(!el) return; from=Math.round(from); if(from===to){ el.textContent=to; return; }
+  const t0=performance.now(); (function f(t){ const k=Math.min(1,(t-t0)/400); el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(f); })(t0);
+}
+/* ---------- petites mises en scène ---------- */
+function overlayFx(cls,html,ms){ document.querySelectorAll(`.ofx.`+cls).forEach(x=>x.remove()); const e=document.createElement(`div`); e.className=`ofx `+cls; e.innerHTML=html; document.body.appendChild(e); setTimeout(()=>e.remove(),ms); }
+function yearFx(y){ overlayFx(`yearfx`,`<span>${y-1}</span><b>${y}</b>`,1300); beep(220,.25,`sine`,.03,2); }
+function neonFx(txt){ overlayFx(`neonfx`,`<b class="hd">${txt}</b>`,1200); SFX.glitch(); }
+function levelFx(a){ setTimeout(()=>burst(innerWidth/2,innerHeight*.3,[`#fcee0a`,`#fff`,`#05ffa1`],45),60); overlayFx(`lvlfx`,`<span>NIVEAU SUPÉRIEUR</span><b class="hd">${ATTRS[a].n} ${G.at[a]}</b>`,1400); }
 function tweenEd(to){
   const el=$(`#v-ed`); if(!el) return; if(edShown===null||Math.abs(to-edShown)<2){ edShown=to; el.textContent=to.toLocaleString(`fr`); return; }
   const from=edShown, t0=performance.now(); edShown=to;
@@ -242,7 +251,8 @@ function tweenEd(to){
 }
 function updateHud(init){
   const v={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
-  [`hp`,`hum`,`cred`].forEach(k=>{ $(`#b-${k}`).style.width=v[k]+`%`; $(`#v-${k}`).textContent=Math.round(v[k]); });
+  [`hp`,`hum`,`cred`].forEach(k=>{ $(`#b-${k}`).style.width=v[k]+`%`; tweenNum($(`#v-${k}`),lastVals&&!init?lastVals[k]:v[k],Math.round(v[k])); });
+  document.body.classList.toggle(`lowhp`,G.hp<=30);
   tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
   $(`#hdate`).textContent=`${dateStr()} · ${G.age} ans`;
@@ -316,6 +326,7 @@ function showCardView(){
     b.addEventListener(`touchstart`,()=>previewDots(chOf(c)[i]),{passive:true});
   });
   revealText($(`.card .tx`)); showTip();
+  if(c.id===`afterlife_hub`&&G.hubLeft>=2) neonFx(`AFTERLIFE`);
   SFX.swoosh();
 }
 function revealText(el){
@@ -401,10 +412,17 @@ function afterCard(r){
   if(r.retire){ endGame(`retire`); return showEnd(); }
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
-  if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
-  if(net>=600) toast(`Revenus passifs : +${net} €$`);
-  else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
+  const cc=byId[G.cur.id], y0=yr();
+  if(cc&&cc.quick){
+    tick(2);
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
+  } else {
+    if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
+    if(net>=600) toast(`Revenus passifs : +${net} €$`);
+    else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
+  }
+  if(yr()!==y0) yearFx(yr());
   nextCard();
 }
 function askFactionName(kind,done){
@@ -669,6 +687,7 @@ function showEnd(){
   root().innerHTML=`<div class="screen end">
     <div class="mono" style="color:var(--dim);letter-spacing:.3em">${esc(G.name)} · ${G.age} ans · ${yr()}</div>
     <h1 class="hd glitch" data-t="${e.t}" style="color:${k===`retire`||k===`blaze`||k===`quit`||e.good?`var(--y)`:`var(--m)`}">${e.t}</h1>
+    <svg class="ecg ${k===`retire`||k===`quit`||e.good?`alive`:`dead`}" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="${k===`retire`||k===`quit`||e.good?`M0 30 H60 l10 -18 l10 36 l10 -18 H150 l10 -18 l10 36 l10 -18 H240 l10 -18 l10 36 l10 -18 H330 l10 -18 l10 36 l10 -18 H400`:`M0 30 H50 l10 -20 l10 40 l10 -20 H120 l10 -14 l10 28 l10 -14 H190 l8 -6 l8 12 l8 -6 H400`}"/></svg>
     <div class="ep">« ${e.e} »</div>
     <div class="hd" style="color:var(--c);letter-spacing:.25em">${title}</div>
     ${G.newBest?`<div class="newbest hd">★ NOUVEAU RECORD ★</div>`:``}

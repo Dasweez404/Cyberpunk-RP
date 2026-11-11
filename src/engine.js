@@ -143,6 +143,7 @@ function recruitAlly(id){
   return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
 function hubTick(){
+  if(G.inHub) return;
   G.sinceHub=(G.sinceHub||0)+1; const need=(G.hp<35||G.ed<0)?3:5;
   if(G.sinceHub>=need&&!G.flags.q_active&&!G.queue.length){ G.queue.push(`afterlife_hub`); G.sinceHub=0; }
 }
@@ -159,7 +160,7 @@ function gainXp(a,amt){
   while(G.at[a]<9 && G.xp[a]>=xpNeed(G.at[a])){
     G.xp[a]-=xpNeed(G.at[a]); G.at[a]++;
     chip(`p`,`★ ${ATTRS[a].n} ${G.at[a]} !`); G.log.unshift({d:dateStr(),m:`Tu progresses : ${ATTRS[a].n} ${G.at[a]}.`});
-    toast(`${ATTRS[a].n} ${G.at[a]} !`); SFX.ok(); flash(`#fcee0a`); vib([30,40,30]);
+    toast(`${ATTRS[a].n} ${G.at[a]} !`); SFX.ok(); flash(`#fcee0a`); vib([30,40,30]); if(typeof levelFx===`function`) levelFx(a);
   }
 }
 /* ---------- blocs d'influence (équilibre) ---------- */
@@ -245,6 +246,8 @@ function applyFx(fx){
   if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
+  if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
+  if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; }
   if(fx.found) G.pendingFound = fx.found;
   if(fx.echo) Object.entries(fx.echo).forEach(([id,d])=>addEcho(id,d));
   if(fx.next) (Array.isArray(fx.next)?fx.next:[fx.next]).forEach(n=>G.queue.push(n));

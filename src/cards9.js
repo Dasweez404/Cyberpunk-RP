@@ -12,18 +12,24 @@ const NOPE = (t,m) => ({t:t||`Repartir sans rien acheter`,s:`Garde tes eddies`,f
 
 card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>false,
   tx:()=>{
-    const hurt=G.hp<50, broke=G.ed<300;
-    return `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as une soirée, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`;
+    if(!G.inHub){ G.inHub=true; G.hubLeft=2; G.hubUsed={}; }
+    const hurt=G.hp<50, broke=G.ed<300, first=G.hubLeft>=2;
+    return first
+      ? `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as le temps de faire <strong>deux choses</strong> ce soir, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`
+      : `La nuit avance à l'<strong>Afterlife</strong>. Il te reste <strong>un dernier moment</strong> avant de repartir.`;
   },
-  ch:[
-    {t:`Voir le ripperdoc de passage`,s:`Chrome & hacks · achète ou repars`,fx:{next:`shop_chrome`,nav:true}},
-    {t:`Fouiller le marché noir`,s:`Armes, armures, véhicules, style`,fx:{next:`shop_gear`,nav:true}},
-    {t:`Chercher un contrat`,s:`Un coup à jouer, des risques à prendre`,fx:{next:`gig_board`,nav:true}},
-    {t:`Te reposer`,s:`Soins · thérapie · fête`,fx:{next:`rest_card`,nav:true}},
-    {t:`Repartir dans la rue`,s:`Rien aujourd'hui`,fx:{cred:1,msg:`Tu ne restes pas. La nuit t'appelle.`}}
-  ]});
+  dyn:()=>{
+    const o=(k,t,s,next)=>({t,s,req:()=>G.hubUsed&&G.hubUsed[k]?`Déjà fait ce soir`:``,fx:{next,nav:true,hub:k}});
+    return [
+      o(`chrome`,`Voir le ripperdoc de passage`,`Chrome & hacks · achète ou repars`,`shop_chrome`),
+      o(`gear`,`Fouiller le marché noir`,`Armes, armures, véhicules, style`,`shop_gear`),
+      o(`gig`,`Chercher un contrat`,`Un coup à jouer, des risques à prendre`,`gig_board`),
+      o(`rest`,`Te reposer`,`Soins · thérapie · fête`,`rest_card`),
+      {t:`Repartir dans la rue`,s:G.hubLeft<2?`La soirée est finie`:`Rien aujourd'hui`,fx:{hubEnd:true,nav:true}}
+    ];
+  },ch:[]});
 
-card({id:`shop_chrome`,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
+card({id:`shop_chrome`,quick:true,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
   tx:()=>`« Je ne reste jamais longtemps au même endroit. J'ai ça aujourd'hui. Tu choisis, tu paies, je te le pose ici même. Aucun remboursement. Et gare à ton humanité, gamin(e). »`,
   dyn:()=>{
     const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
@@ -36,7 +42,7 @@ card({id:`shop_chrome`,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
     out.push(NOPE(`Refuser et repartir`,`« Comme tu voudras. Reviens quand tu auras de quoi. »`)); return out;
   },ch:[]});
 
-card({id:`shop_gear`,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
+card({id:`shop_gear`,quick:true,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
   tx:()=>`Un vendeur ambulant ouvre sa valise sous un néon qui grésille : « Armes, armures, bagnoles. Tout est volé, rien n'est tracé. Les prix ? Non négociables. »`,
   dyn:()=>{
     const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
@@ -47,7 +53,7 @@ card({id:`shop_gear`,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
     out.push(NOPE()); return out;
   },ch:[]});
 
-card({id:`gig_board`,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
+card({id:`gig_board`,quick:true,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
   tx:()=>`« Trois contrats ce soir. Certains paient bien, d'autres te mettent en terre.${G.hp<60?` Et blessé(e) comme tu es… réfléchis.`:``} »`,
   dyn:()=>{
     const cs=[],used=new Set();
@@ -59,7 +65,7 @@ card({id:`gig_board`,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
     out.push(NOPE(`Refuser tous les contrats`,`« Pas de travail pour toi, alors. »`)); return out;
   },ch:[]});
 
-card({id:`rest_card`,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
+card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
   tx:()=>`Une banquette au fond de l'Afterlife, un ripperdoc qui dort au comptoir, une odeur de nouilles froides. Ton corps te lâche presque. Tu peux t'offrir un vrai soin, ou simplement fermer les yeux.`,
   dyn:()=>{
     const cl=Math.round(200*infl()), th=Math.round(600*infl()), tt=Math.round(1200*infl());

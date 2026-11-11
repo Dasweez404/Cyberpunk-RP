@@ -402,6 +402,70 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 
 .rain::before{background:repeating-linear-gradient(90deg,rgba(0,240,255,.2) 0 1px,transparent 1px 23px);-webkit-mask:linear-gradient(to bottom,transparent 0 72%,#000 72% 100%) 0 0/100% 90px;mask:linear-gradient(to bottom,transparent 0 72%,#000 72% 100%) 0 0/100% 90px}
 .tip2{margin:0 14px 6px;padding:8px 12px;border:1px solid var(--c);background:#00f0ff10;color:var(--t);font-size:13.5px;text-align:center;animation:tipin 6.5s forwards}
+
+/* =================== v7 : animations =================== */
+.ofx{position:fixed;inset:0;z-index:110;pointer-events:none;display:grid;place-items:center;text-align:center}
+.yearfx{animation:ofade 1.3s forwards;background:linear-gradient(180deg,transparent 30%,#000b 50%,transparent 70%)}
+.yearfx span{display:block;font:600 22px 'Orbitron',sans-serif;color:var(--dim);letter-spacing:.3em;animation:yout .7s forwards}
+.yearfx b{display:block;font:800 64px 'Orbitron',sans-serif;color:var(--y);letter-spacing:.12em;text-shadow:0 0 30px #fcee0a88;animation:yin .9s cubic-bezier(.2,1.4,.3,1) both}
+.yearfx>*{grid-area:1/1}
+@keyframes yout{to{transform:translateY(-46px);opacity:0}}
+@keyframes yin{from{transform:translateY(46px) scale(.8);opacity:0}}
+@keyframes ofade{0%{opacity:0}12%,75%{opacity:1}100%{opacity:0}}
+.neonfx{animation:ofade 1.2s forwards;background:radial-gradient(ellipse at 50% 45%,#ff2a6d30,transparent 60%)}
+.neonfx b{font-size:clamp(34px,11vw,58px);color:#ff2a6d;letter-spacing:.14em;text-shadow:0 0 12px #ff2a6d,0 0 40px #ff2a6d;animation:flick 1.1s steps(1) both;border:2px solid #ff2a6d;padding:8px 18px;box-shadow:0 0 30px #ff2a6d66,inset 0 0 20px #ff2a6d33}
+@keyframes flick{0%{opacity:0}8%{opacity:1}12%{opacity:.2}18%{opacity:1}26%{opacity:.35}32%,100%{opacity:1}}
+.lvlfx{animation:ofade 1.4s forwards}
+.lvlfx span{display:block;font-size:12px;letter-spacing:.5em;color:var(--g)}
+.lvlfx b{display:block;font-size:34px;color:var(--y);text-shadow:0 0 24px #fcee0a99;animation:yin .7s cubic-bezier(.2,1.5,.3,1) both}
+.lvlfx>*{grid-area:auto}
+/* résultat : retournement de carte */
+.cardwrap{perspective:1000px}
+.result{animation:flipin .42s cubic-bezier(.2,.9,.3,1.05);transform-origin:50% 50%;backface-visibility:hidden}
+@keyframes flipin{from{transform:rotateY(-84deg) scale(.96);opacity:.2}to{transform:none;opacity:1}}
+/* dé : claque + onde */
+.die{position:relative}
+.die.ok,.die.ko{animation:slam .45s cubic-bezier(.2,1.6,.3,1)}
+@keyframes slam{0%{transform:rotate(45deg) scale(1.7)}60%{transform:rotate(45deg) scale(.92)}100%{transform:rotate(45deg) scale(1)}}
+.die.ok::after,.die.ko::after{content:'';position:absolute;inset:-2px;border:2px solid currentColor;animation:ring .6s ease-out forwards;pointer-events:none}
+@keyframes ring{to{transform:scale(2.2);opacity:0}}
+/* choix : balayage lumineux à l'appui */
+.choice{overflow:hidden}
+.choice::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,#ffffff22,transparent);transform:skewX(-20deg);pointer-events:none;opacity:0}
+.choice:active::after,.choice:focus-visible::after{opacity:1;animation:sweep .5s ease-out}
+@keyframes sweep{to{left:130%}}
+.choice.exp:not(.lock){animation:chin .4s both,expglow 2.4s ease-in-out infinite .4s}
+@keyframes expglow{50%{box-shadow:0 0 16px #fcee0a55}}
+/* portrait & nom */
+.speaker .nm{animation:slidein .4s both}.speaker .rl{animation:slidein .4s .06s both}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}}
+.portrait:not(.scene){animation:pin .5s, breathe 5s ease-in-out infinite .6s}
+@keyframes breathe{50%{transform:scale(1.035)}}
+/* santé basse : pouls */
+body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 55%,#ff2a6d55 100%);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25}12%{opacity:1}24%{opacity:.4}36%{opacity:.9}}
+/* jauges : reflet au changement */
+.bar i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,#fff8,transparent);transform:translateX(-100%)}
+.meter.bump .bar i::after{animation:shine .7s ease-out}
+@keyframes shine{to{transform:translateX(100%)}}
+/* un AV traverse le ciel */
+.amb::after{content:'';position:absolute;top:22%;left:-12%;width:44px;height:2px;background:linear-gradient(90deg,transparent,#ff2a6d,#fff);box-shadow:0 0 10px #ff2a6d;animation:av 17s linear infinite 4s;opacity:.7}
+@keyframes av{0%{transform:translate3d(0,0,0)}18%{transform:translate3d(125vw,-60px,0)}100%{transform:translate3d(125vw,-60px,0)}}
+/* butin : cartes qui se retournent */
+[data-lo]{animation:lootin .5s cubic-bezier(.2,1.2,.3,1) both!important}
+[data-lo]:nth-child(2){animation-delay:.1s!important}[data-lo]:nth-child(3){animation-delay:.2s!important}
+@keyframes lootin{from{transform:rotateX(-80deg) translateY(20px);opacity:0}}
+/* titre : néon qui grésille */
+.title h1{animation:neon 6s steps(1) infinite}
+@keyframes neon{0%,100%{opacity:1}47%{opacity:1}48%{opacity:.6}49%{opacity:1}73%{opacity:.75}74%{opacity:1}}
+/* ECG de fin */
+.ecg{width:100%;max-width:420px;height:44px}
+.ecg path{fill:none;stroke-width:2;stroke-linejoin:round;stroke-dasharray:900;stroke-dashoffset:900;animation:ecg 2.6s ease-out forwards .3s}
+.ecg.alive path{stroke:var(--g);filter:drop-shadow(0 0 6px var(--g))}.ecg.dead path{stroke:var(--m);filter:drop-shadow(0 0 6px var(--m))}
+@keyframes ecg{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.ofx{display:none}.portrait{animation:none!important}.amb::after{display:none}}
+.lvlfx{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
+.lvlfx{background:linear-gradient(180deg,transparent 32%,#000c 50%,transparent 68%)}
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -1215,10 +1279,10 @@ card({id:`edge_job`,who:`dex`,tag:`Gros coup`,w:7,cond:()=>G.flags.edge,
 card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=20&&G.ed>=1500&&!G.mine&&!isLeader(),
   tx:`Tu ne veux plus suivre les ordres de personne. Tu as de l'argent, des alliés, une réputation. Il est temps de bâtir quelque chose à toi : une faction, une famille, un nom que les rues connaîtront.`,
   ch:[
-    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-1500,cred:6,bloc:{rue:10},role:{boss:3}}},
-    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-1500,cred:5,role:{boss:3,fixer:2}}},
-    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-1500,cred:5,role:{boss:3,nomad:2}}},
-    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=1500?``:`1500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-1500,cred:5,role:{boss:3,net:2}}},
+    {t:`Fonder un gang de rue`,s:`−1 500 €$ · Prestige de rue`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-1500,cred:6,bloc:{rue:10},role:{boss:3}}},
+    {t:`Créer un réseau de fixers`,s:`−1 500 €$ · Revenus passifs`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-1500,cred:5,role:{boss:3,fixer:2}}},
+    {t:`Monter un clan nomade`,s:`−1 500 €$ · Mobilité`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-1500,cred:5,role:{boss:3,nomad:2}}},
+    {t:`Fonder un collectif de netrunners`,s:`−1 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=1500?``:`1500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-1500,cred:5,role:{boss:3,net:2}}},
     {t:`Plus tard…`,fx:{unonce:`found_faction`}}
   ]});
 card({id:`mine_raid`,who:`narr`,tag:`Ton territoire attaqué`,w:30,cond:()=>G.mine&&ownedList().length>=1&&yr()>=2071,
@@ -2385,18 +2449,24 @@ const NOPE = (t,m) => ({t:t||`Repartir sans rien acheter`,s:`Garde tes eddies`,f
 
 card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>false,
   tx:()=>{
-    const hurt=G.hp<50, broke=G.ed<300;
-    return `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as une soirée, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`;
+    if(!G.inHub){ G.inHub=true; G.hubLeft=2; G.hubUsed={}; }
+    const hurt=G.hp<50, broke=G.ed<300, first=G.hubLeft>=2;
+    return first
+      ? `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as le temps de faire <strong>deux choses</strong> ce soir, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`
+      : `La nuit avance à l'<strong>Afterlife</strong>. Il te reste <strong>un dernier moment</strong> avant de repartir.`;
   },
-  ch:[
-    {t:`Voir le ripperdoc de passage`,s:`Chrome & hacks · achète ou repars`,fx:{next:`shop_chrome`,nav:true}},
-    {t:`Fouiller le marché noir`,s:`Armes, armures, véhicules, style`,fx:{next:`shop_gear`,nav:true}},
-    {t:`Chercher un contrat`,s:`Un coup à jouer, des risques à prendre`,fx:{next:`gig_board`,nav:true}},
-    {t:`Te reposer`,s:`Soins · thérapie · fête`,fx:{next:`rest_card`,nav:true}},
-    {t:`Repartir dans la rue`,s:`Rien aujourd'hui`,fx:{cred:1,msg:`Tu ne restes pas. La nuit t'appelle.`}}
-  ]});
+  dyn:()=>{
+    const o=(k,t,s,next)=>({t,s,req:()=>G.hubUsed&&G.hubUsed[k]?`Déjà fait ce soir`:``,fx:{next,nav:true,hub:k}});
+    return [
+      o(`chrome`,`Voir le ripperdoc de passage`,`Chrome & hacks · achète ou repars`,`shop_chrome`),
+      o(`gear`,`Fouiller le marché noir`,`Armes, armures, véhicules, style`,`shop_gear`),
+      o(`gig`,`Chercher un contrat`,`Un coup à jouer, des risques à prendre`,`gig_board`),
+      o(`rest`,`Te reposer`,`Soins · thérapie · fête`,`rest_card`),
+      {t:`Repartir dans la rue`,s:G.hubLeft<2?`La soirée est finie`:`Rien aujourd'hui`,fx:{hubEnd:true,nav:true}}
+    ];
+  },ch:[]});
 
-card({id:`shop_chrome`,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
+card({id:`shop_chrome`,quick:true,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
   tx:()=>`« Je ne reste jamais longtemps au même endroit. J'ai ça aujourd'hui. Tu choisis, tu paies, je te le pose ici même. Aucun remboursement. Et gare à ton humanité, gamin(e). »`,
   dyn:()=>{
     const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
@@ -2409,7 +2479,7 @@ card({id:`shop_chrome`,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
     out.push(NOPE(`Refuser et repartir`,`« Comme tu voudras. Reviens quand tu auras de quoi. »`)); return out;
   },ch:[]});
 
-card({id:`shop_gear`,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
+card({id:`shop_gear`,quick:true,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
   tx:()=>`Un vendeur ambulant ouvre sa valise sous un néon qui grésille : « Armes, armures, bagnoles. Tout est volé, rien n'est tracé. Les prix ? Non négociables. »`,
   dyn:()=>{
     const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
@@ -2420,7 +2490,7 @@ card({id:`shop_gear`,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
     out.push(NOPE()); return out;
   },ch:[]});
 
-card({id:`gig_board`,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
+card({id:`gig_board`,quick:true,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
   tx:()=>`« Trois contrats ce soir. Certains paient bien, d'autres te mettent en terre.${G.hp<60?` Et blessé(e) comme tu es… réfléchis.`:``} »`,
   dyn:()=>{
     const cs=[],used=new Set();
@@ -2432,7 +2502,7 @@ card({id:`gig_board`,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
     out.push(NOPE(`Refuser tous les contrats`,`« Pas de travail pour toi, alors. »`)); return out;
   },ch:[]});
 
-card({id:`rest_card`,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
+card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
   tx:()=>`Une banquette au fond de l'Afterlife, un ripperdoc qui dort au comptoir, une odeur de nouilles froides. Ton corps te lâche presque. Tu peux t'offrir un vrai soin, ou simplement fermer les yeux.`,
   dyn:()=>{
     const cl=Math.round(200*infl()), th=Math.round(600*infl()), tt=Math.round(1200*infl());
@@ -2600,6 +2670,7 @@ function recruitAlly(id){
   return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
 function hubTick(){
+  if(G.inHub) return;
   G.sinceHub=(G.sinceHub||0)+1; const need=(G.hp<35||G.ed<0)?3:5;
   if(G.sinceHub>=need&&!G.flags.q_active&&!G.queue.length){ G.queue.push(`afterlife_hub`); G.sinceHub=0; }
 }
@@ -2616,7 +2687,7 @@ function gainXp(a,amt){
   while(G.at[a]<9 && G.xp[a]>=xpNeed(G.at[a])){
     G.xp[a]-=xpNeed(G.at[a]); G.at[a]++;
     chip(`p`,`★ ${ATTRS[a].n} ${G.at[a]} !`); G.log.unshift({d:dateStr(),m:`Tu progresses : ${ATTRS[a].n} ${G.at[a]}.`});
-    toast(`${ATTRS[a].n} ${G.at[a]} !`); SFX.ok(); flash(`#fcee0a`); vib([30,40,30]);
+    toast(`${ATTRS[a].n} ${G.at[a]} !`); SFX.ok(); flash(`#fcee0a`); vib([30,40,30]); if(typeof levelFx===`function`) levelFx(a);
   }
 }
 /* ---------- blocs d'influence (équilibre) ---------- */
@@ -2702,6 +2773,8 @@ function applyFx(fx){
   if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
+  if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
+  if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; }
   if(fx.found) G.pendingFound = fx.found;
   if(fx.echo) Object.entries(fx.echo).forEach(([id,d])=>addEcho(id,d));
   if(fx.next) (Array.isArray(fx.next)?fx.next:[fx.next]).forEach(n=>G.queue.push(n));
@@ -3197,6 +3270,15 @@ function renderGame(){
   updateHud(true);
 }
 let lastVals=null, edShown=null;
+function tweenNum(el,from,to){
+  if(!el) return; from=Math.round(from); if(from===to){ el.textContent=to; return; }
+  const t0=performance.now(); (function f(t){ const k=Math.min(1,(t-t0)/400); el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(f); })(t0);
+}
+/* ---------- petites mises en scène ---------- */
+function overlayFx(cls,html,ms){ document.querySelectorAll(`.ofx.`+cls).forEach(x=>x.remove()); const e=document.createElement(`div`); e.className=`ofx `+cls; e.innerHTML=html; document.body.appendChild(e); setTimeout(()=>e.remove(),ms); }
+function yearFx(y){ overlayFx(`yearfx`,`<span>${y-1}</span><b>${y}</b>`,1300); beep(220,.25,`sine`,.03,2); }
+function neonFx(txt){ overlayFx(`neonfx`,`<b class="hd">${txt}</b>`,1200); SFX.glitch(); }
+function levelFx(a){ setTimeout(()=>burst(innerWidth/2,innerHeight*.3,[`#fcee0a`,`#fff`,`#05ffa1`],45),60); overlayFx(`lvlfx`,`<span>NIVEAU SUPÉRIEUR</span><b class="hd">${ATTRS[a].n} ${G.at[a]}</b>`,1400); }
 function tweenEd(to){
   const el=$(`#v-ed`); if(!el) return; if(edShown===null||Math.abs(to-edShown)<2){ edShown=to; el.textContent=to.toLocaleString(`fr`); return; }
   const from=edShown, t0=performance.now(); edShown=to;
@@ -3204,7 +3286,8 @@ function tweenEd(to){
 }
 function updateHud(init){
   const v={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
-  [`hp`,`hum`,`cred`].forEach(k=>{ $(`#b-${k}`).style.width=v[k]+`%`; $(`#v-${k}`).textContent=Math.round(v[k]); });
+  [`hp`,`hum`,`cred`].forEach(k=>{ $(`#b-${k}`).style.width=v[k]+`%`; tweenNum($(`#v-${k}`),lastVals&&!init?lastVals[k]:v[k],Math.round(v[k])); });
+  document.body.classList.toggle(`lowhp`,G.hp<=30);
   tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
   $(`#hdate`).textContent=`${dateStr()} · ${G.age} ans`;
@@ -3278,6 +3361,7 @@ function showCardView(){
     b.addEventListener(`touchstart`,()=>previewDots(chOf(c)[i]),{passive:true});
   });
   revealText($(`.card .tx`)); showTip();
+  if(c.id===`afterlife_hub`&&G.hubLeft>=2) neonFx(`AFTERLIFE`);
   SFX.swoosh();
 }
 function revealText(el){
@@ -3363,10 +3447,17 @@ function afterCard(r){
   if(r.retire){ endGame(`retire`); return showEnd(); }
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
-  if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
-  if(net>=600) toast(`Revenus passifs : +${net} €$`);
-  else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
+  const cc=byId[G.cur.id], y0=yr();
+  if(cc&&cc.quick){
+    tick(2);
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
+  } else {
+    if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
+    if(net>=600) toast(`Revenus passifs : +${net} €$`);
+    else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
+  }
+  if(yr()!==y0) yearFx(yr());
   nextCard();
 }
 function askFactionName(kind,done){
@@ -3631,6 +3722,7 @@ function showEnd(){
   root().innerHTML=`<div class="screen end">
     <div class="mono" style="color:var(--dim);letter-spacing:.3em">${esc(G.name)} · ${G.age} ans · ${yr()}</div>
     <h1 class="hd glitch" data-t="${e.t}" style="color:${k===`retire`||k===`blaze`||k===`quit`||e.good?`var(--y)`:`var(--m)`}">${e.t}</h1>
+    <svg class="ecg ${k===`retire`||k===`quit`||e.good?`alive`:`dead`}" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="${k===`retire`||k===`quit`||e.good?`M0 30 H60 l10 -18 l10 36 l10 -18 H150 l10 -18 l10 36 l10 -18 H240 l10 -18 l10 36 l10 -18 H330 l10 -18 l10 36 l10 -18 H400`:`M0 30 H50 l10 -20 l10 40 l10 -20 H120 l10 -14 l10 28 l10 -14 H190 l8 -6 l8 12 l8 -6 H400`}"/></svg>
     <div class="ep">« ${e.e} »</div>
     <div class="hd" style="color:var(--c);letter-spacing:.25em">${title}</div>
     ${G.newBest?`<div class="newbest hd">★ NOUVEAU RECORD ★</div>`:``}
