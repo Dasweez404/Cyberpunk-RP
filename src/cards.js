@@ -159,7 +159,7 @@ card({id:`delamain`,who:`delamain`,tag:`Taxi Delamain`,w:3,cond:()=>G.ed>=100&&!
     {t:`Descendre`,fx:{}}
   ]});
 card({id:`trauma_sub`,who:`doc`,tag:`Trauma Team`,w:4,once:true,cond:()=>G.ed>=1500&&G.cred>=8,
-  tx:`Un représentant de <em>Trauma Team International</em> t'aborde : « Un abonnement Platinum, et si vous tombez, une équipe blindée vous récupère en hélico. Pas de fusillade qui tienne. <strong>1 200 €$</strong>. »`,
+  tx:`Un représentant de <em>Trauma Team International</em> t'aborde : « Un abonnement Platinum, et si vous tombez, une équipe blindée vous récupère en hélico : une <strong>seconde vie</strong>. Sans abonnement, on vient quand même, mais la facture est de 3 000 €$. Seule exception : MaxTac. Si MaxTac tire, personne ne vient. Abonnement : <strong>1 200 €$</strong>. »`,
   ch:[
     {t:`Souscrire à l'abonnement`,s:`Une seconde chance en cas de mort`,req:R.ed(1200),fx:{ed:-1200,flag:[`trauma`],msg:`Contrat signé. Tu portes maintenant une puce de géolocalisation médicale.`}},
     {t:`Refuser, je compte sur mes réflexes`,fx:{cred:1}}
@@ -303,7 +303,7 @@ card({id:`dogtown`,who:`hansen`,tag:`Dogtown · Barghest`,story:true,at:[2077,10
 
 /* ============================ ÉTATS CRITIQUES ============================ */
 card({id:`hum_warn`,who:`doc`,tag:`⚠ Humanité critique`,w:30,cond:()=>G.hum<45&&G.hum>=20,
-  tx:`Tu entends des voix dans le métro. Ta main tremble quand tu la regardes, comme si elle appartenait à un autre. Un doc te dit sans détour : « Tu as trop de chrome, trop peu d'âme. La cyberpsychose te guette. »`,
+  tx:`Tu entends des voix dans le métro. Ta main tremble quand tu la regardes, comme si elle appartenait à un autre. Un doc te dit sans détour : « Tu as trop de chrome, trop peu d'âme. La cyberpsychose te guette. Si tu craques, MaxTac ne te ratera pas — et la Trauma Team ne viendra pas. »`,
   ch:[
     {t:`Suivre une thérapie`,s:`−500 €$ · +Humanité`,req:R.ed(500),fx:{ed:-500,hum:22,msg:`Immunoblockers, séances, sommeil. Doucement, ton esprit remonte.`}},
     {t:`Prendre un calmant illégal`,s:`+Humanité faible`,fx:{ed:-100,hum:10,hp:-8,msg:`La drogue chasse les voix, mais te laisse nauséeux(se).`}},

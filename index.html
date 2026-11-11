@@ -260,6 +260,8 @@ input.txt:focus{border-color:var(--c);box-shadow:0 0 12px #00f0ff44}
 .cinfo b{display:block}.cinfo small{color:var(--dim);font-size:13px}.cinfo .bigbar{margin-top:5px}
 .cdet{grid-column:1/-1;font-size:13.5px;color:var(--dim);line-height:1.5;border-top:1px dashed var(--line);padding-top:6px}
 .cdet[hidden],.fdesc[hidden]{display:none}
+
+.choice.exp{border-color:var(--y)}.choice.exp .k{border-color:var(--y);color:var(--y)}.choice.exp:not(.lock){background:linear-gradient(180deg,#26240a,#14140a)}
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -461,21 +463,50 @@ const HACKS = [
 ];
 /* ---------- Gear ---------- */
 const GEAR = [
-  {id:`lexington`,n:`Militech M-10AF Lexington`,t:`arme`,p:600,k:{cmb:1},d:`Pistolet automatique fiable. Le choix du débutant.`},
-  {id:`nue`,n:`Nue`,t:`arme`,p:2200,k:{cmb:2},d:`Revolver à haute puissance d'arrêt.`},
-  {id:`crusher`,n:`Shotgun Crusher`,t:`arme`,p:2000,k:{cmb:2},d:`Un fusil à pompe qui règle les discussions.`},
-  {id:`tamayura`,n:`Katana Tamayura`,t:`arme`,p:3000,k:{cmb:2},d:`Katana tranchant, bien équilibré.`},
-  {id:`masamune`,n:`Arasaka HJSH-18 Masamune`,t:`arme`,p:11000,k:{cmb:3},cred:35,d:`Fusil d'assaut "smart" d'Arasaka. Un luxe de guerre.`},
-  {id:`kevlar`,n:`Veste en kevlar`,t:`armure`,p:700,mit:.10,d:`Une protection légère sous la veste.`},
-  {id:`militecharm`,n:`Armure Militech`,t:`armure`,p:3500,mit:.20,d:`Armure de combat. Fait de toi un tank.`},
-  {id:`arasakaarm`,n:`Armure Arasaka`,t:`armure`,p:7500,mit:.30,cred:30,d:`Plaques composites, finition impeccable.`},
-  {id:`archer`,n:`Archer Quartz "Bandit"`,t:`véhicule`,p:1600,k:{drv:1},d:`Voiture bon marché. Elle roule — la plupart du temps.`},
-  {id:`mizutani`,n:`Mizutani Shion MZ2`,t:`véhicule`,p:3800,k:{drv:2},d:`Sportive japonaise. Rapide, nerveuse.`},
-  {id:`javelina`,n:`Quadra Type-66 Javelina`,t:`véhicule`,p:9500,k:{drv:3},cred:25,d:`Muscle car néo-rétro. Tu fais tourner les têtes.`},
-  {id:`caliburn`,n:`Rayfield Caliburn`,t:`véhicule`,p:48000,k:{drv:3},cred:50,fame:1,d:`Hypercar de collection. Une déclaration de puissance.`},
-  {id:`jacket`,n:`Veste de style (corpo-chic)`,t:`style`,p:900,at:{cool:1},d:`Elle coûte cher. Elle le dit.`},
-  {id:`samurai`,n:`Réplique de veste Samurai`,t:`style`,p:1400,at:{cool:1},fame:1,d:`Le style de Johnny Silverhand. Les nostalgiques te saluent.`},
+  /* ---- armes ---- */
+  {id:`lexington`,n:`Militech M-10AF Lexington`,t:`arme`,r:`c`,p:600,k:{cmb:1},d:`Pistolet automatique fiable. Le choix du débutant.`},
+  {id:`unity`,n:`Techtronika Unity`,t:`arme`,r:`c`,p:1300,k:{cmb:1},d:`Pistolet léger, rapide à dégainer.`},
+  {id:`nue`,n:`Nue`,t:`arme`,r:`c`,p:2200,k:{cmb:2},d:`Revolver à haute puissance d'arrêt.`},
+  {id:`crusher`,n:`Shotgun Crusher`,t:`arme`,r:`c`,p:2000,k:{cmb:2},d:`Un fusil à pompe qui règle les discussions.`},
+  {id:`tamayura`,n:`Katana Tamayura`,t:`arme`,r:`c`,p:3000,k:{cmb:2},d:`Katana tranchant, bien équilibré.`},
+  {id:`overture`,n:`Overture`,t:`arme`,r:`r`,p:3600,k:{cmb:2,stl:1},d:`Revolver à canon silencieux, le favori des infiltrés.`},
+  {id:`liberty`,n:`Militech Liberty`,t:`arme`,r:`r`,p:4600,k:{cmb:3},cred:20,d:`Pistolet lourd et précis, signé Militech.`},
+  {id:`dyingnight`,n:`Dying Night`,t:`arme`,r:`r`,p:5200,k:{cmb:3},cred:25,d:`Une arme de légende de rue. Elle porte la signature du chaos.`},
+  {id:`nekomata`,n:`Nekomata`,t:`arme`,r:`r`,p:7800,k:{cmb:3,stl:1},cred:30,d:`Fusil de précision d'Arasaka. Un tir, un nom.`},
+  {id:`skippy`,n:`Skippy`,t:`arme`,r:`r`,p:6200,k:{cmb:3,soc:1},cred:25,d:`Un pistolet "intelligent" qui commente chaque tir. Étonnamment sociable.`},
+  {id:`masamune`,n:`Arasaka HJSH-18 Masamune`,t:`arme`,r:`e`,p:11000,k:{cmb:3},cred:35,d:`Fusil d'assaut "smart" d'Arasaka. Un luxe de guerre.`},
+  {id:`comrade`,n:`Comrade's Hammer`,t:`arme`,r:`e`,p:12500,k:{cmb:4},cred:40,d:`Un pistolet d'une puissance absurde. Il laisse des trous.`},
+  {id:`malorian`,n:`Malorian Arms 3516`,t:`arme`,r:`l`,p:0,k:{cmb:5,soc:1},fame:1,loot:1,d:`LÉGENDAIRE · Le pistolet de Johnny Silverhand. Un monstre de puissance.`},
+  {id:`satori`,n:`Katana Satori`,t:`arme`,r:`l`,p:0,k:{cmb:5,stl:1},fame:1,loot:1,d:`LÉGENDAIRE · La lame d'Arasaka. Les rumeurs disent qu'elle ne s'est jamais ébréchée.`},
+  /* ---- armures ---- */
+  {id:`kevlar`,n:`Veste en kevlar`,t:`armure`,r:`c`,p:700,mit:.10,d:`Une protection légère sous la veste.`},
+  {id:`valjacket`,n:`Veste Valentinos`,t:`armure`,r:`c`,p:1100,mit:.08,k:{soc:1},d:`Cuir brodé aux couleurs du barrio. Les Valentinos te saluent.`},
+  {id:`clawsjacket`,n:`Veste Tyger Claws`,t:`armure`,r:`c`,p:1300,mit:.08,k:{soc:1},d:`Cuir noir, tigre brodé. Impressionnant à Japantown.`},
+  {id:`militecharm`,n:`Armure Militech`,t:`armure`,r:`r`,p:3500,mit:.20,d:`Armure de combat. Fait de toi un tank.`},
+  {id:`aldejacket`,n:`Veste Aldecaldos`,t:`armure`,r:`r`,p:3200,mit:.12,k:{drv:1},d:`Cuir usé par les tempêtes. Les nomades reconnaissent les leurs.`},
+  {id:`ghostsuit`,n:`Combinaison furtive`,t:`armure`,r:`r`,p:4200,mit:.10,k:{stl:2},d:`Tissu absorbant, silencieux. Un vêtement de fantôme.`},
+  {id:`kangarmor`,n:`Armure Kang Tao`,t:`armure`,r:`r`,p:5000,mit:.22,k:{cmb:1},cred:20,d:`Plaques légères, électronique embarquée.`},
+  {id:`arasakaarm`,n:`Armure Arasaka`,t:`armure`,r:`e`,p:7500,mit:.30,cred:30,d:`Plaques composites, finition impeccable.`},
+  {id:`barghestarm`,n:`Blindage Barghest`,t:`armure`,r:`e`,p:9500,mit:.35,cred:35,d:`Armure militaire lourde de Dogtown. Les balles s'en lassent.`},
+  {id:`samuraijacket`,n:`Veste Samurai (authentique)`,t:`armure`,r:`l`,p:0,mit:.18,k:{soc:3},at:{cool:1},fame:1,loot:1,d:`LÉGENDAIRE · La veste de Johnny. Cuir, étoile, histoire. Tout le monde la reconnaît.`},
+  /* ---- véhicules ---- */
+  {id:`archer`,n:`Archer Quartz "Bandit"`,t:`véhicule`,r:`c`,p:1600,k:{drv:1},d:`Voiture bon marché. Elle roule — la plupart du temps.`},
+  {id:`thorton`,n:`Thorton Colby`,t:`véhicule`,r:`c`,p:2400,k:{drv:1},d:`Pick-up robuste, parfait dans les Badlands.`},
+  {id:`mizutani`,n:`Mizutani Shion MZ2`,t:`véhicule`,r:`r`,p:3800,k:{drv:2},d:`Sportive japonaise. Rapide, nerveuse.`},
+  {id:`herrera`,n:`Herrera Outlaw GTS`,t:`véhicule`,r:`r`,p:5200,k:{drv:2},d:`Coupé nerveux. Il dérape comme il respire.`},
+  {id:`alvarado`,n:`Villefort Alvarado`,t:`véhicule`,r:`r`,p:6000,k:{drv:2,soc:1},d:`Berline luxueuse. Pour les rendez-vous qui comptent.`},
+  {id:`kusanagi`,n:`Yaiba Kusanagi CT-3X`,t:`véhicule`,r:`e`,p:7800,k:{drv:3},cred:25,d:`Moto de course. Un missile sur deux roues.`},
+  {id:`javelina`,n:`Quadra Type-66 Javelina`,t:`véhicule`,r:`e`,p:9500,k:{drv:3},cred:25,d:`Muscle car néo-rétro. Tu fais tourner les têtes.`},
+  {id:`caliburn`,n:`Rayfield Caliburn`,t:`véhicule`,r:`e`,p:48000,k:{drv:3,soc:2},cred:50,fame:1,d:`Hypercar de collection. Une déclaration de puissance.`},
+  {id:`nazare`,n:`Arch Nazaré`,t:`véhicule`,r:`l`,p:0,k:{drv:4,stl:1},fame:1,loot:1,d:`LÉGENDAIRE · Une moto devenue mythe. Elle t'obéit mieux que la plupart des gens.`},
+  /* ---- style ---- */
+  {id:`jacket`,n:`Veste de style (corpo-chic)`,t:`style`,r:`c`,p:900,k:{soc:1},d:`Elle coûte cher. Elle le dit.`},
+  {id:`samurai`,n:`Réplique de veste Samurai`,t:`style`,r:`c`,p:1400,k:{soc:1},fame:1,d:`Le style de Johnny Silverhand. Les nostalgiques te saluent.`},
+  {id:`kiroshisun`,n:`Lunettes Kiroshi "Sunset"`,t:`style`,r:`r`,p:2200,k:{soc:1,stl:1},d:`Verres fumés, enregistrement discret. Parfait pour les rendez-vous.`},
+  {id:`gala`,n:`Tenue de gala Arasaka-Mode`,t:`style`,r:`r`,p:3500,k:{soc:2},cred:15,d:`Coupe parfaite, tissu impossible à froisser. Les portes s'ouvrent.`},
+  {id:`silvertalk`,n:`Chaîne Samurai en argent`,t:`style`,r:`e`,p:6200,k:{soc:2},at:{cool:1},fame:1,cred:30,d:`Un pendentif devenu légende. Il parle pour toi.`},
 ];
+const RARITY = {c:[`Commun`,`#8a8aa8`],r:[`Rare`,`#00f0ff`],e:[`Épique`,`#c77dff`],l:[`Légendaire`,`#fcee0a`]};
 
 /* ---------- Gigs du tableau ---------- */
 const GIGS = [
@@ -494,7 +525,7 @@ const GIGS = [
 /* ---------- Faits de score / fins ---------- */
 const ENDS = {
   flatline:{t:`FLATLINE`,e:`Une balle, un couteau, un mauvais calcul. Night City ne pleure personne.`},
-  psycho:{t:`CYBERPSYCHOSE`,e:`Il ne restait plus assez d'humain pour te reconnaître. MaxTac s'en est chargé.`},
+  psycho:{t:`CYBERPSYCHOSE`,e:`Il ne restait plus assez d'humain pour te reconnaître. MaxTac s'en est chargé — et la Trauma Team ne vient jamais quand MaxTac tire.`},
   debt:{t:`DETTE MORTELLE`,e:`Les créanciers de Night City n'envoient pas de rappels. Ils envoient des gars.`},
   blaze:{t:`DERNIER RUN`,e:`Tu es parti(e) en flammes, comme les vrais. La ville en parle encore à l'Afterlife.`},
   retire:{t:`RETRAITE`,e:`Tu as survécu. Dans cette ville, ça fait déjà de toi une légende.`},
@@ -678,7 +709,7 @@ card({id:`delamain`,who:`delamain`,tag:`Taxi Delamain`,w:3,cond:()=>G.ed>=100&&!
     {t:`Descendre`,fx:{}}
   ]});
 card({id:`trauma_sub`,who:`doc`,tag:`Trauma Team`,w:4,once:true,cond:()=>G.ed>=1500&&G.cred>=8,
-  tx:`Un représentant de <em>Trauma Team International</em> t'aborde : « Un abonnement Platinum, et si vous tombez, une équipe blindée vous récupère en hélico. Pas de fusillade qui tienne. <strong>1 200 €$</strong>. »`,
+  tx:`Un représentant de <em>Trauma Team International</em> t'aborde : « Un abonnement Platinum, et si vous tombez, une équipe blindée vous récupère en hélico : une <strong>seconde vie</strong>. Sans abonnement, on vient quand même, mais la facture est de 3 000 €$. Seule exception : MaxTac. Si MaxTac tire, personne ne vient. Abonnement : <strong>1 200 €$</strong>. »`,
   ch:[
     {t:`Souscrire à l'abonnement`,s:`Une seconde chance en cas de mort`,req:R.ed(1200),fx:{ed:-1200,flag:[`trauma`],msg:`Contrat signé. Tu portes maintenant une puce de géolocalisation médicale.`}},
     {t:`Refuser, je compte sur mes réflexes`,fx:{cred:1}}
@@ -822,7 +853,7 @@ card({id:`dogtown`,who:`hansen`,tag:`Dogtown · Barghest`,story:true,at:[2077,10
 
 /* ============================ ÉTATS CRITIQUES ============================ */
 card({id:`hum_warn`,who:`doc`,tag:`⚠ Humanité critique`,w:30,cond:()=>G.hum<45&&G.hum>=20,
-  tx:`Tu entends des voix dans le métro. Ta main tremble quand tu la regardes, comme si elle appartenait à un autre. Un doc te dit sans détour : « Tu as trop de chrome, trop peu d'âme. La cyberpsychose te guette. »`,
+  tx:`Tu entends des voix dans le métro. Ta main tremble quand tu la regardes, comme si elle appartenait à un autre. Un doc te dit sans détour : « Tu as trop de chrome, trop peu d'âme. La cyberpsychose te guette. Si tu craques, MaxTac ne te ratera pas — et la Trauma Team ne viendra pas. »`,
   ch:[
     {t:`Suivre une thérapie`,s:`−500 €$ · +Humanité`,req:R.ed(500),fx:{ed:-500,hum:22,msg:`Immunoblockers, séances, sommeil. Doucement, ton esprit remonte.`}},
     {t:`Prendre un calmant illégal`,s:`+Humanité faible`,fx:{ed:-100,hum:10,hp:-8,msg:`La drogue chasse les voix, mais te laisse nauséeux(se).`}},
@@ -1599,6 +1630,245 @@ card({id:`dex_betray`,who:`dex`,tag:`Trahison de Dex`,once:true,w:40,cond:()=>G.
     {t:`Négocier`,s:`SANG-FROID`,chk:{a:`cool`,dc:9,ok:{ed:-400,rel:{dex:8},msg:`Tu rachètes ta peau et un semblant de paix.`},ko:{hp:-25,ed:-1000,msg:`Il a déjà vendu ton nom.`}}}
   ]});
 /* =====================================================================
+   CARTES 4 — faveurs/hostilités des blocs, choix selon l'origine,
+   choix « expert » verrouillés par attribut
+   ===================================================================== */
+const CARD_ = id => CARDS.find(c=>c.id===id);
+const ORI = (id,origin,ch) => { const c=CARD_(id); if(c) c.ch.push(Object.assign({only:origin},ch)); };
+const EXP = (id,a,v,ch) => { const c=CARD_(id); if(c) c.ch.push(Object.assign({req:R.at(a,v),exp:1,s:`${ATTRS[a].n} ${v}`},ch)); };
+
+/* ---------- Faveurs & hostilités de blocs ---------- */
+const BP = {
+  rue:{hi:[`La rue te porte`,`Dans chaque barrio, on te salue d'un geste. Les petits gangs t'invitent à leurs tables, les marchands sortent leur meilleur matos pour toi. Mais plus on t'aime, plus on attend de toi.`,`Profiter de l'ambiance`,`Rééquilibrer : trinquer avec la police`],
+        lo:[`La rue te tourne le dos`,`Les portes claquent, les marchands te fixent. Le mot circule : « Ne lui vends rien. » Quelqu'un a payé pour qu'on te fasse comprendre que tu n'es plus bienvenu(e).`,`Payer ta paix`,`Prouver ta loyauté`]},
+  corpo:{hi:[`Les corpos t'adulent`,`Des invitations arrivent par dizaines : cocktails à Corpo Plaza, dîners avec des VP. On te traite comme un atout. Un atout, ça se possède.`,`Accepter les avantages`,`Garder tes distances`],
+         lo:[`Les corpos te surveillent`,`Des drones planent trop souvent près de chez toi. Un compte bloqué, un contrat annulé, un message anonyme : « Nous savons. » Tu n'es plus le bienvenu dans les tours.`,`Racheter leur confiance`,`Brouiller les pistes`]},
+  loi:{hi:[`La NCPD te couvre`,`Un agent te fait un signe de tête. Ton dossier a disparu d'une base de données. La police est de ton côté — pour l'instant. La rue, elle, commence à murmurer.`,`Profiter de la protection`,`Se montrer discret(e)`],
+       lo:[`La NCPD te traque`,`Une voiture de patrouille ralentit à ta hauteur. Contrôles à répétition, perquisitions « de routine ». On te cherche un motif.`,`Graisser quelques pattes`,`Disparaître pour un temps`]},
+  nomad:{hi:[`Les clans t'ouvrent la route`,`Des nomades te saluent sur la route. Un convoi t'offre sa protection, un mécano refuse ton argent. Les Badlands te considèrent comme l'un des leurs.`,`Rouler avec le convoi`,`Rendre une faveur au clan`],
+         lo:[`Les routes se ferment`,`Un barrage de nomades te bloque l'accès. Tu n'es plus le bienvenu sur la piste. Le péage est devenu un racket.`,`Payer le péage`,`Forcer le passage`]}
+};
+Object.keys(BP).forEach(b=>['hi','lo'].forEach(side=>{
+  const [tag,tx,a,bb]=BP[b][side], hi=side===`hi`, B=BLOCS[b];
+  card({id:`bp_${b}_${side}`,who:`narr`,tag:`⚖ ${B.n} · ${hi?`faveur`:`hostilité`}`,w:7,cd:8,
+    cond:()=>hi?(G.bloc[b]>=65&&G.bloc[b]<85):(G.bloc[b]<=35&&G.bloc[b]>15),
+    tx,ch:[
+      hi?{t:a,s:`Gain · le bloc monte encore`,fx:{ed:900,cred:3,bloc:{[b]:6},msg:`Tu profites de la situation. Les avantages sont réels — et ta liberté, un peu moins.`}}
+        :{t:a,s:`−900 €$ · le bloc remonte`,req:R.ed(900),fx:{ed:-900,bloc:{[b]:12},msg:`Quelques billets changent de mains. Les regards se radoucissent.`}},
+      hi?{t:bb,s:`Rééquilibre le bloc`,fx:{bloc:{[b]:-10},hum:4,cred:2,msg:`Tu rappelles que tu ne dois rien à personne. Le bloc relâche un peu la pression.`}}
+        :{t:bb,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{bloc:{[b]:14},cred:4,msg:`Tu retournes la situation par ton sang-froid.`},ko:{hp:-14,bloc:{[b]:-4},msg:`Ça ne prend pas. Le bloc se braque davantage.`}}}
+    ]});
+}));
+
+/* ---------- Choix selon l'origine (visibles seulement pour l'origine concernée) ---------- */
+ORI(`dex_gig`,`street`,{t:`Prendre les passages que seuls les gamins de ton quartier connaissent`,s:`Street Kid · RÉFLEXES`,chk:{a:`ref`,dc:6,ok:{ed:1400,cred:5,bloc:{rue:4},rel:{dex:6},msg:`Des ruelles, des toits, un escalier de secours. Personne ne t'a vu passer. Dex hoche la tête : « Tu connais la ville. »`},ko:{hp:-12,ed:200,msg:`Une ruelle bloquée, un type en colère. Tu t'en sors, mais le colis est abîmé.`}}});
+ORI(`dex_gig`,`corpo`,{t:`Passer avec ton badge corpo, tête haute`,s:`Corpo · SANG-FROID`,chk:{a:`cool`,dc:6,ok:{ed:1400,cred:3,bloc:{corpo:5},msg:`Un sourire et un badge impeccable. Les gardes s'écartent. Tu as livré en costard.`},ko:{ed:300,cred:-1,msg:`Un garde reconnaît ton badge périmé. Tu abandonnes le colis.`}}});
+ORI(`dex_gig`,`nomad`,{t:`Prendre la piste du désert avec ton véhicule`,s:`Nomade · RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:6,ok:{ed:1500,cred:5,bloc:{nomad:5},msg:`Tu coupes par la piste que personne ne surveille. Livraison avant l'aube, poussière sur les vitres.`},ko:{hp:-10,ed:300,msg:`Un ensablement. Tu perds du temps, mais pas la cargaison.`}}});
+ORI(`courier`,`street`,{t:`Exiger ta part : la rue connaît les prix`,s:`Street Kid`,fx:{ed:700,cred:2,bloc:{rue:3},msg:`Le type ricane, puis paie. Il a compris que tu savais ce que ça valait.`}});
+ORI(`courier`,`corpo`,{t:`Reconnaître le sceau : c'est une puce de ta corpo`,s:`Corpo · INTELLECT`,chk:{a:`int`,dc:6,ok:{ed:1600,cred:3,bloc:{corpo:6},msg:`Tu rapportes la puce à ton ancien service. Récompense, discrète mais généreuse.`},ko:{hp:-10,bloc:{corpo:-4},msg:`Mauvaise idée : on te soupçonne d'avoir tout lu.`}}});
+ORI(`courier`,`nomad`,{t:`La livrer à un convoi nomade qui la réclame`,s:`Nomade`,fx:{ed:600,cred:3,bloc:{nomad:6,corpo:-3},msg:`Les nomades te remercient d'une poignée de main de sable et de sueur.`}});
+ORI(`ncpd_sting`,`street`,{t:`Citer le nom du flic de ton quartier`,s:`Street Kid · SANG-FROID`,chk:{a:`cool`,dc:6,ok:{bloc:{loi:2},cred:2,msg:`« Ah, tu es des quartiers de Marcus ? » Les agents baissent d'un ton.`},ko:{ed:-300,msg:`Ils n'aiment pas les noms qu'on laisse tomber.`}}});
+ORI(`ncpd_sting`,`corpo`,{t:`Sortir ta carte d'employé corpo`,s:`Corpo`,fx:{bloc:{loi:3,corpo:2},msg:`Ils regardent le logo, puis ta tenue. « Excusez-nous, monsieur/madame. »`}});
+ORI(`ncpd_sting`,`nomad`,{t:`Dire que tu n'es que de passage`,s:`Nomade · SANG-FROID`,chk:{a:`cool`,dc:6,ok:{cred:2,msg:`« Un nomade ? Circulez. » Personne ne veut s'occuper de tes papiers.`},ko:{ed:-250,hp:-8,msg:`Ils te fouillent à la recherche d'une excuse.`}}});
+ORI(`barfight`,`street`,{t:`Reconnaître le type : c'est un voisin de ton bloc`,s:`Street Kid`,fx:{cred:3,hum:4,bloc:{rue:3},msg:`« Hé, mais je te connais ! » Tout le bar relâche la pression. Verre offert.`}});
+ORI(`barfight`,`nomad`,{t:`Le provoquer en duel de bras de fer, à la nomade`,s:`Nomade · CORPS`,chk:{a:`body`,dc:6,ok:{cred:5,ed:200,msg:`Un bras de fer qui dure une éternité. Tu gagnes sous les applaudissements.`},ko:{hp:-6,cred:1,msg:`Tu perds de peu, mais la foule respecte.`}}});
+ORI(`loan_shark`,`corpo`,{t:`Appeler ton ancien employeur pour une avance`,s:`Corpo · SANG-FROID`,chk:{a:`cool`,dc:6,ok:{ed:2200,bloc:{corpo:4},msg:`Un appel, un sourire, un virement. Les corpos paient toujours pour qu'on les oublie.`},ko:{hp:-12,ed:-200,msg:`On te raccroche au nez. Les créanciers n'attendront pas.`}}});
+ORI(`loan_shark`,`nomad`,{t:`Proposer un convoi de livraison en échange`,s:`Nomade · RÉFLEXES`,chk:{a:`ref`,k:`drv`,dc:6,ok:{ed:1800,cred:3,msg:`Tu convaincs le créancier : un convoi, c'est du temps contre de l'argent.`},ko:{hp:-14,ed:-300,msg:`Il refuse. Ses gars te passent à tabac.`}}});
+ORI(`loan_shark`,`street`,{t:`Négocier avec ceux de ton quartier`,s:`Street Kid · SANG-FROID`,chk:{a:`cool`,dc:6,ok:{ed:1000,cred:3,bloc:{rue:3},msg:`Un cousin, un ami d'un ami. On s'arrange entre voisins.`},ko:{hp:-10,ed:-200,msg:`Le quartier ne t'aide pas cette fois.`}}});
+ORI(`malfunction`,`nomad`,{t:`Bidouiller avec les outils de ton camp`,s:`Nomade · TECHNIQUE`,chk:{a:`tech`,dc:5,ok:{xp:{tech:3},cred:2,msg:`Les nomades savent tout réparer. Ton implant reprend vie, mieux qu'avant.`},ko:{hp:-12,msg:`Cette fois, l'outil a glissé.`}}});
+ORI(`malfunction`,`corpo`,{t:`Appeler le SAV de ta corpo`,s:`Corpo`,fx:{hp:15,bloc:{corpo:2},msg:`Un technicien débarque en trente minutes. Gratuit. Les corpos prennent soin de leurs actifs.`}});
+ORI(`malfunction`,`street`,{t:`Aller voir le ripperdoc du quartier`,s:`Street Kid`,fx:{hp:10,ed:-80,rel:{vik:3},msg:`Il te répare pour presque rien : « Tu es des nôtres. »`}});
+ORI(`cyberpsycho_bounty`,`nomad`,{t:`Le piéger avec ton véhicule`,s:`Nomade · RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:8,ok:{ed:2500,cred:8,bloc:{loi:4},msg:`Un dérapage contrôlé, un choc, un silence. Prime encaissée.`},ko:{hp:-30,hum:-3,msg:`Il saute sur ton capot. Tu perds le contrôle.`}}});
+ORI(`cyberpsycho_bounty`,`corpo`,{t:`Utiliser tes accès corpo pour le localiser et le piéger`,s:`Corpo · INTELLECT`,chk:{a:`int`,dc:7,ok:{ed:2500,cred:7,bloc:{corpo:4,loi:3},msg:`Une caméra, un pare-feu, un piège parfait. Il ne voit rien venir.`},ko:{hp:-22,msg:`Il casse le dispositif. Tu t'en sors à peine.`}}});
+ORI(`scavs`,`nomad`,{t:`Appeler tes frères nomades en renfort`,s:`Nomade`,fx:{cred:6,hum:8,bloc:{nomad:5},msg:`Un klaxon, deux Thorton, des silhouettes dans la poussière. Les Scavs s'enfuient avant d'avoir compris.`}});
+ORI(`race`,`nomad`,{t:`Courir avec ton convoi comme second pilote`,s:`Nomade`,fx:{ed:1800,cred:5,bloc:{nomad:4},msg:`Vous remportez la course en duo. Les nomades te considèrent désormais comme un pilote.`}});
+ORI(`wakako_escort`,`corpo`,{t:`Négocier avec les Tyger Claws sur leur terrain : les affaires`,s:`Corpo · SANG-FROID`,chk:{a:`cool`,dc:7,ok:{ed:1800,cred:5,fac:{tygers:4},msg:`Un contrat, un pourcentage, une poignée de main. Le client traverse Japantown sans heurt.`},ko:{hp:-12,fac:{tygers:-4},msg:`Les Tyger Claws ne comprennent pas ton langage.`}}});
+ORI(`old_friend`,`street`,{t:`Retrouver les gars qui lui doivent de l'argent, ensemble`,s:`Street Kid · SANG-FROID`,chk:{a:`cool`,dc:6,ok:{cred:5,hum:6,bloc:{rue:4},msg:`Vous leur rendez visite en bande. L'ami est tiré d'affaire.`},ko:{hp:-14,msg:`Ça tourne à la bagarre générale.`}}});
+
+/* ---------- Choix « expert » verrouillés par un attribut élevé ---------- */
+EXP(`dex_gig`,`ref`,8,{t:`Livrer le colis par les toits sans toucher le sol`,fx:{ed:1900,cred:7,rel:{dex:8},msg:`Un sprint, trois toits, une chute maîtrisée. Dex te regarde, impressionné.`}});
+EXP(`courier`,`int`,8,{t:`Décrypter la puce et la revendre au bon acheteur`,fx:{ed:2600,cred:5,role:{fixer:2},msg:`Ce que contenait la puce valait dix fois la livraison. Tu empoches la différence.`}});
+EXP(`barfight`,`body`,8,{t:`L'assommer d'un seul coup`,fx:{cred:7,ed:250,msg:`Un seul crochet. Le bar entier s'est tu. Les mercs t'invitent à leur table.`}});
+EXP(`padre_barrio`,`cool`,8,{t:`Récupérer l'argent avec les intérêts, sans lever la voix`,fx:{ed:1300,cred:6,fac:{valentinos:8},bloc:{rue:3},msg:`Ils paient. Ils te remercient, même. Padre sourit.`}});
+EXP(`cyberpsycho_bounty`,`ref`,9,{t:`L'abattre d'un seul tir, à distance`,fx:{ed:2800,cred:11,hum:-2,bloc:{loi:5},msg:`Un souffle, un tir. Le cyberpsycho s'effondre sans comprendre.`}});
+EXP(`regina_theft`,`tech`,8,{t:`Désactiver le traceur et repartir sans bruit`,fx:{ed:2800,cred:6,role:{tech:2},xp:{tech:3},msg:`Le traceur meurt sans un bip. La voiture glisse hors du parking comme un fantôme.`}});
+EXP(`wakako_escort`,`cool`,8,{t:`Faire de l'escorte une démonstration de force tranquille`,fx:{ed:2000,cred:7,fac:{tygers:6},msg:`Le client traverse Japantown, un Tyger sur deux te salue. Wakako s'en souviendra.`}});
+EXP(`scavs`,`body`,8,{t:`Les écraser sans effort et libérer l'enfant`,fx:{cred:9,hum:10,ed:300,msg:`Trois Scavs au sol avant qu'ils ne comprennent. L'enfant te prend la main sans un mot.`}});
+EXP(`ncpd_sting`,`cool`,8,{t:`Les convaincre de t'escorter jusque chez toi`,fx:{cred:4,bloc:{loi:4},msg:`Un sourire, un « bonne soirée, messieurs ». Ils te raccompagnent par politesse.`}});
+EXP(`race`,`ref`,8,{t:`Dépasser à contre-sens dans le dernier virage`,fx:{ed:4000,cred:9,msg:`Un dépassement impossible. La foule hurle. Tu viens d'entrer dans la légende de la piste.`}});
+EXP(`loan_shark`,`cool`,8,{t:`Retourner le créancier contre son propre patron`,fx:{ed:1600,cred:4,msg:`Quelques mots bien placés, un doute semé. Il te laisse tranquille — et réclame une trêve.`}});
+EXP(`malfunction`,`tech`,8,{t:`Réparer et améliorer l'implant`,fx:{xp:{tech:5},cred:2,msg:`Tu tires le meilleur de ton propre corps. L'implant est plus stable qu'à l'achat.`}});
+EXP(`old_friend`,`cool`,8,{t:`Régler ses dettes d'un seul appel`,fx:{hum:8,cred:4,msg:`Un nom, un service rendu. En trois phrases, le problème s'évapore.`}});
+EXP(`corp_war`,`int`,8,{t:`Infiltrer les deux camps et jouer l'un contre l'autre`,fx:{ed:4800,cred:8,fac:{militech:4,arasaka:4},msg:`Tu vends à Militech ce qu'Arasaka cache, et inversement. Personne ne sait pour qui tu travailles.`}});
+EXP(`nr_ice`,`int`,9,{t:`Percer la glace noire comme si elle n'existait pas`,fx:{ed:4600,cred:10,role:{net:3},msg:`Elle fond sous tes doigts. Le serveur s'ouvre comme un coffre mal fermé.`}});
+EXP(`hacker_gig`,`int`,9,{t:`Pirater le serveur en un tour de main`,fx:{ed:3600,cred:8,role:{net:2},msg:`Pas un log, pas un écho. Le dossier disparaît comme s'il n'avait jamais existé.`}});
+EXP(`edge_job`,`ref`,9,{t:`Danser entre les balles, sans un coup tiré`,fx:{ed:6500,cred:11,role:{solo:2},msg:`Tu traverses l'entrepôt comme une ombre. Les gardes pensent à des fantômes.`}});
+EXP(`hum_warn`,`cool`,8,{t:`Reprendre le contrôle par la seule force de ta volonté`,fx:{hum:20,cred:2,msg:`Tu fermes les yeux, tu respires. Les voix se taisent. Tu regardes tes mains : elles sont à toi.`}});
+EXP(`bd_snuff`,`int`,8,{t:`Remonter la piste jusqu'au producteur et le dénoncer`,fx:{hum:10,cred:6,rel:{judy:10},fac:{mox:10},msg:`Tu fournis à Judy un dossier béton. Le producteur disparaît des écrans.`}});
+EXP(`kerry_concert`,`cool`,8,{t:`Monter sur scène pour un duo improvisé`,fx:{cred:9,hum:6,rel:{kerry:12},role:{rocker:3},msg:`Kerry t'attrape par l'épaule, la foule hurle. Un moment pour toujours.`}});
+EXP(`mox_club`,`cool`,8,{t:`Devenir la voix des Mox ce soir`,fx:{cred:6,hum:8,fac:{mox:10},rel:{judy:6},msg:`Un micro, trois phrases, une salle debout. Lizzie sourit.`}});
+EXP(`rogue_drink`,`cool`,8,{t:`Lui parler comme à une égale`,fx:{cred:8,rel:{rogue:12},hum:4,msg:`Rogue lève un sourcil, puis te pousse un verre. Tu viens de marquer un point.`}});
+/* =====================================================================
+   CARTES 5 — quêtes secondaires en chaînes (3 cartes), contrats de
+   fixer au choix, quêtes liées aux personnages
+   ===================================================================== */
+const qon  = {flag:[`q_active`]};
+const qend = id => ({unflag:[`q_active`],flag:[`qdone_${id}`],loot:2});
+const QOK  = () => !G.flags.q_active;
+
+/* ---------- Contrats de fixer : 3 quêtes au choix ---------- */
+card({id:`fix_board`,who:`dex`,tag:`Contrats de fixer`,w:7,cond:()=>QOK()&&G.cred>=8&&(G.flags.dex||G.flags.fixer||G.cred>=20),
+  tx:`Dex étale trois dossiers sur le comptoir de l'Afterlife : « Je n'ai qu'un exécutant pour trois contrats. Choisis. Chacun est une affaire en plusieurs temps — pas un simple coup de main. »`,
+  ch:[
+    {t:`L'entrepôt oublié`,s:`● ● ○ · ~3 000 €$ · 3 étapes · Maelstrom`,req:()=>G.flags.qdone_q1?`Déjà accompli`:``,fx:{...qon,next:`q1_1`,rel:{dex:3},msg:`Dex pousse le dossier vers toi. « Fais-moi honneur. »`}},
+    {t:`Le client fantôme`,s:`● ○ ○ · ~2 500 €$ · 3 étapes · corpos`,req:()=>G.flags.qdone_q4?`Déjà accompli`:``,fx:{...qon,next:`q4_1`,rel:{dex:3},msg:`Un dossier mince, des clauses étranges. Ça sent le piège.`}},
+    {t:`Le passeur`,s:`● ● ● · ~4 000 €$ · 3 étapes · Badlands`,req:()=>G.flags.qdone_q7?`Déjà accompli`:``,fx:{...qon,next:`q7_1`,rel:{dex:3},msg:`Des gens à faire passer, une frontière à traverser, des flics à éviter.`}},
+    {t:`Pas aujourd'hui`,fx:{unonce:`fix_board`}}
+  ]});
+
+/* ---------- Q1 · L'entrepôt oublié ---------- */
+card({id:`q1_1`,who:`dex`,tag:`Quête · L'entrepôt oublié (1/3)`,once:true,
+  tx:`Northside, un entrepôt que les Maelstrom ont déserté en pleine nuit. Il reste du matériel Militech là-dedans, et peut-être plus. Trois façons d'entrer : les toits, les systèmes, ou la porte.`,
+  ch:[
+    {t:`Passer par les toits`,s:`SANG-FROID · furtivité`,chk:{a:`cool`,k:`stl`,dc:7,ok:{next:`q1_2`,flag:[`q1_clean`],msg:`Une lucarne, un câble, un silence parfait. Personne ne sait que tu es entré(e).`},ko:{next:`q1_2`,hp:-10,msg:`Une tuile glisse, un chien aboie. Tu entres, mais pas discrètement.`}}},
+    {t:`Pirater les accès`,s:`INTELLECT · hack`,req:R.deck(),chk:{a:`int`,k:`hck`,dc:7,ok:{next:`q1_2`,flag:[`q1_clean`],msg:`Les caméras se figent, les portes s'ouvrent. Propre.`},ko:{next:`q1_2`,hp:-8,msg:`Le système sonne une alarme muette. Tu entres quand même.`}}},
+    {t:`Forcer la porte`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:7,ok:{next:`q1_2`,cred:2,msg:`Un coup, une charnière, la porte tombe. Subtil comme un camion.`},ko:{next:`q1_2`,hp:-14,msg:`La porte résiste, puis cède sur toi. Tu entres sonné(e).`}}}
+  ]});
+card({id:`q1_2`,who:`narr`,tag:`Quête · L'entrepôt oublié (2/3)`,once:true,
+  tx:`À l'intérieur : des caisses de matériel Militech empilées jusqu'au plafond… et, derrière un grillage, trois personnes enchaînées. Des captifs des Maelstrom, destinés aux ripperdocs sans scrupules. Leurs yeux t'implorent en silence.`,
+  ch:[
+    {t:`Prendre les caisses et filer`,s:`+Gain · −Humanité`,fx:{ed:2500,hum:-8,flag:[`q1_loot`],next:`q1_3`,msg:`Tu charges le matériel. Les captifs ne crient pas. C'est pire.`}},
+    {t:`Libérer les captifs`,s:`RÉFLEXES`,chk:{a:`ref`,dc:7,ok:{hum:10,cred:3,flag:[`q1_free`],next:`q1_3`,msg:`Les chaînes tombent. Les captifs t'embrassent, en pleurs.`},ko:{hum:6,hp:-14,flag:[`q1_free`],next:`q1_3`,msg:`Un loquet te blesse. Mais ils sont libres.`}}},
+    {t:`Tout faire : libérer et récupérer`,s:`SANG-FROID · difficile`,chk:{a:`cool`,dc:9,ok:{ed:2500,hum:8,cred:5,flag:[`q1_loot`,`q1_free`],next:`q1_3`,msg:`Un plan en trois minutes. Les captifs sortent, les caisses aussi. Presque trop beau.`},ko:{hp:-18,flag:[`q1_free`],next:`q1_3`,msg:`Trop ambitieux : tu perds les caisses mais sauves les captifs.`}}}
+  ]});
+card({id:`q1_3`,who:`royce`,tag:`Quête · L'entrepôt oublié (3/3)`,once:true,
+  tx:`Des phares dans la nuit : les Maelstrom reviennent, en nombre, menés par Royce lui-même. Le grillage est ouvert, l'entrepôt exposé. Tu as quelques secondes.`,
+  ch:[
+    {t:`Les affronter`,s:`CORPS/RÉFLEXES · combat`,chk:{a:`body`,k:`cmb`,dc:9,ok:{...qend(`q1`),flag:[`qdone_q1`],ed:1500,cred:8,fac:{maelstrom:-10},msg:`Une fusillade courte et brutale. Royce recule, furieux. L'entrepôt est à toi.`},ko:{...qend(`q1`),hp:-35,cred:2,fac:{maelstrom:-8},msg:`Tu t'en sors à moitié mort(e). Les Maelstrom pillent ce qui reste.`}}},
+    {t:`Fuir par les toits avec les captifs`,s:`RÉFLEXES`,chk:{a:`ref`,dc:8,ok:{...qend(`q1`),hum:6,cred:6,msg:`Tu disparais dans la nuit, les captifs sur tes talons. Royce hurle sur le toit vide.`},ko:{...qend(`q1`),hp:-22,msg:`Tu t'en sors de justesse, un peu plus lourd(e) de plomb.`}}},
+    {t:`Négocier avec Royce`,s:`SANG-FROID`,chk:{a:`cool`,dc:9,ok:{...qend(`q1`),ed:2000,cred:7,fac:{maelstrom:4},msg:`Royce rit, te laisse partir avec une part. « Pas mal, pour un(e) civil(e). »`},ko:{...qend(`q1`),hp:-30,ed:-500,msg:`Royce n'est pas d'humeur à négocier. Tu repars en boitant.`}}}
+  ]});
+
+/* ---------- Q4 · Le client fantôme ---------- */
+card({id:`q4_1`,who:`corpo`,tag:`Quête · Le client fantôme (1/3)`,once:true,
+  tx:`Un costume impeccable te paie d'avance pour garder « un VIP » dans un café de Downtown, tous les jours, à la même heure. Il ne te donne ni nom ni photo. « Vous saurez le reconnaître. »`,
+  ch:[
+    {t:`Surveiller le café avec attention`,s:`INTELLECT`,chk:{a:`int`,dc:7,ok:{next:`q4_2`,flag:[`q4_know`],msg:`Au troisième jour, tu remarques que personne ne s'assoit à la table réservée. C'est un leurre.`},ko:{next:`q4_2`,msg:`Tu surveilles sans comprendre. Le piège se referme lentement.`}}},
+    {t:`Accepter sans poser de questions`,s:`Argent facile`,fx:{ed:800,next:`q4_2`,msg:`L'argent est réel. C'est tout ce que tu sais.`}}
+  ]});
+card({id:`q4_2`,who:`corpo`,tag:`Quête · Le client fantôme (2/3)`,once:true,
+  tx:`Le quatrième jour, un homme s'assoit enfin à la table. Arasaka, sans doute : costume sombre, regard glacé. Il commande un thé, puis te fixe. « Vous êtes le/la garde. Vous ne saviez pas pour qui vous travailliez, n'est-ce pas ? »`,
+  ch:[
+    {t:`Jouer l'innocence`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{next:`q4_3`,cred:3,msg:`Il hoche la tête. « Bien. Moins on sait, mieux on vit. »`},ko:{next:`q4_3`,hp:-10,msg:`Il ne te croit pas. Quelques regards s'attardent trop longtemps.`}}},
+    {t:`Enregistrer discrètement la conversation`,s:`INTELLECT`,chk:{a:`int`,dc:8,ok:{next:`q4_3`,flag:[`q4_rec`],msg:`Ton implant capte chaque mot. Tu viens de mettre la main sur quelque chose de gros.`},ko:{next:`q4_3`,hp:-12,msg:`Il repère ton micro. Un sourire sans joie.`}}}
+  ]});
+card({id:`q4_3`,who:`meredith`,tag:`Quête · Le client fantôme (3/3)`,once:true,
+  tx:`Le lendemain, Meredith Stout (Militech) te contacte : « Il paraît que vous avez rencontré un certain homme. Nous avons des intérêts communs. » Tu as un choix à faire, avec ou sans enregistrement.`,
+  ch:[
+    {t:`Vendre l'information à Militech`,s:`Gros gain`,fx:{...qend(`q4`),ed:4200,cred:6,fac:{militech:8,arasaka:-10},loot:3,msg:`Meredith sourit. Le virement dépasse tes attentes. Arasaka t'aura dans le viseur.`}},
+    {t:`Prévenir Arasaka`,s:`Loyauté`,fx:{...qend(`q4`),ed:2500,cred:5,fac:{arasaka:10,militech:-8},msg:`Ils te remercient d'un geste sobre. Une enveloppe, un regard.`}},
+    {t:`Tout effacer et disparaître quelque temps`,s:`+Humanité`,fx:{...qend(`q4`),hum:8,cred:2,msg:`Tu détruis l'enregistrement. Certaines histoires valent mieux qu'on les oublie.`}}
+  ]});
+
+/* ---------- Q7 · Le passeur ---------- */
+card({id:`q7_1`,who:`nomad`,tag:`Quête · Le passeur (1/3)`,once:true,
+  tx:`Une famille de réfugiés veut traverser la frontière des Badlands. Un passeur te propose une part : « Il faut un véhicule, un guide, et quelqu'un qui sait baratiner les barrages. »`,
+  ch:[
+    {t:`Conduire le convoi`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{next:`q7_2`,cred:3,msg:`La piste est bonne. La famille rit nerveusement dans la soute.`},ko:{next:`q7_2`,hp:-10,msg:`Une crevaison, une panne. Mais vous avancez.`}}},
+    {t:`Préparer les papiers`,s:`INTELLECT`,chk:{a:`int`,dc:7,ok:{next:`q7_2`,flag:[`q7_papers`],msg:`Des faux papiers parfaits. Ça passera.`},ko:{next:`q7_2`,msg:`Des papiers bâclés. Le barrage sera plus délicat.`}}}
+  ]});
+card({id:`q7_2`,who:`ncpd`,tag:`Quête · Le passeur (2/3)`,once:true,
+  tx:`Un barrage NCPD au milieu de la route. Les agents examinent les véhicules un par un. Dans ta soute, une famille retient son souffle. Un mauvais geste et tout bascule.`,
+  ch:[
+    {t:`Utiliser les faux papiers`,s:`Si tu en as`,req:R.flag(`q7_papers`,`Papiers requis`),fx:{next:`q7_3`,cred:3,msg:`Les agents lisent, hésitent, laissent passer. Un soulagement muet.`}},
+    {t:`Distraire les agents`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{next:`q7_3`,cred:4,msg:`Une histoire inventée, un sourire, une cigarette offerte. On t'ouvre la barrière.`},ko:{next:`q7_3`,hp:-14,ed:-300,msg:`Ils veulent fouiller. Un pot-de-vin règle la question.`}}},
+    {t:`Forcer le barrage`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:9,ok:{next:`q7_3`,cred:7,bloc:{loi:-5},msg:`Un coup d'accélérateur, une barrière brisée, des tirs derrière toi. Vous passez.`},ko:{next:`q7_3`,hp:-30,bloc:{loi:-6},msg:`Les agents tirent. Vous passez, mais vous saignez.`}}}
+  ]});
+card({id:`q7_3`,who:`nomad`,tag:`Quête · Le passeur (3/3)`,once:true,
+  tx:`De l'autre côté, dans les Badlands, la famille descend. Le père te serre les mains, la mère pleure en silence. Le passeur, lui, compte les billets : « Ta part, comme convenu. Mais tu peux aussi leur laisser. »`,
+  ch:[
+    {t:`Prendre ta part`,s:`+Gain`,fx:{...qend(`q7`),ed:4000,cred:5,bloc:{nomad:5},msg:`L'argent est réel. Les visages dans le rétroviseur, aussi.`}},
+    {t:`Leur laisser ta part`,s:`+Humanité`,fx:{...qend(`q7`),ed:1500,hum:15,cred:7,rel:{panam:5},bloc:{nomad:6},msg:`Le père n'arrive pas à parler. Dans leurs yeux, quelque chose que l'argent ne peut pas payer.`}}
+  ]});
+
+/* ---------- Q2 · La BD disparue (Judy) ---------- */
+card({id:`q2_1`,who:`judy`,tag:`Quête · La BD disparue (1/3)`,once:true,w:7,cond:()=>QOK()&&rel(`judy`)>=10,
+  tx:`Judy t'attrape par le bras, la voix serrée : « Une amie du Lizzie's Bar a disparu. Elle avait enregistré une BD d'elle-même pour sa famille. Elle est introuvable, la BD aussi. Je ne sais pas à qui m'adresser. »`,
+  ch:[
+    {t:`Enquêter dans les bas-fonds de Kabuki`,s:`INTELLECT`,chk:{a:`int`,dc:7,ok:{...qon,next:`q2_2`,flag:[`q_active`,`q2_lead`],rel:{judy:6},msg:`Un barman parle. Une silhouette, un van, une adresse à Japantown.`},ko:{...qon,next:`q2_2`,rel:{judy:3},msg:`Peu d'indices, mais une piste : Japantown.`}}},
+    {t:`Demander à Misty ses visions`,s:`+Humanité`,fx:{...qon,next:`q2_2`,hum:6,rel:{judy:4,misty:6},msg:`Misty bat ses cartes. « Un lieu bruyant. Des tigres. Elle n'est pas morte. »`}},
+    {t:`Refuser`,fx:{rel:{judy:-6},unonce:`q2_1`}}
+  ]});
+card({id:`q2_2`,who:`claws`,tag:`Quête · La BD disparue (2/3)`,once:true,
+  tx:`Un dojo de Japantown, fermé pour la nuit. Des Tyger Claws gardent la porte. Derrière, on entend des sanglots étouffés. Tu pourrais les affronter, les contourner, ou négocier un accès.`,
+  ch:[
+    {t:`Entrer par la force`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:8,ok:{next:`q2_3`,cred:5,fac:{tygers:-8},msg:`Deux gardes au sol, un troisième qui détale. La porte cède.`},ko:{next:`q2_3`,hp:-24,fac:{tygers:-8},msg:`Les Tyger Claws te repoussent. Tu entres quand même, à genoux.`}}},
+    {t:`Négocier avec le lieutenant`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{next:`q2_3`,ed:-600,fac:{tygers:3},msg:`Une somme, un geste. On t'ouvre, sans bruit.`},ko:{next:`q2_3`,hp:-12,msg:`On te laisse entrer, mais on te rappellera cet affront.`}}},
+    {t:`Passer par le toit`,s:`RÉFLEXES · furtivité`,chk:{a:`ref`,k:`stl`,dc:8,ok:{next:`q2_3`,cred:4,msg:`Tuiles, câble, lucarne. Tu es déjà à l'intérieur.`},ko:{next:`q2_3`,hp:-14,msg:`Un faux pas. Tu atterris dans la salle, un peu brutalement.`}}}
+  ]});
+card({id:`q2_3`,who:`judy`,tag:`Quête · La BD disparue (3/3)`,once:true,
+  tx:`Dans une salle de karaoké désaffectée, l'amie de Judy, attachée, la BD dans les mains d'un Tyger. Il te regarde avec un sourire cassé : « Tu veux la BD ? Elle vaut cher. Mais elle, elle ne vaut rien. »`,
+  ch:[
+    {t:`Libérer l'amie`,s:`CORPS/RÉFLEXES`,chk:{a:`ref`,k:`cmb`,dc:8,ok:{...qend(`q2`),hum:12,cred:7,rel:{judy:16},fac:{mox:10},msg:`Les liens tombent. Judy fond en larmes en la serrant dans ses bras.`},ko:{...qend(`q2`),hp:-26,hum:8,rel:{judy:10},fac:{mox:6},msg:`Tu la sauves, mais payes cher.`}}},
+    {t:`Récupérer la BD d'abord`,s:`Risqué`,fx:{...qend(`q2`),hum:-6,rel:{judy:-6},ed:1500,msg:`La BD est à toi. L'amie, moins. Judy ne te le pardonnera pas.`}}
+  ]});
+
+/* ---------- Q3 · Convoi maudit (Panam) ---------- */
+card({id:`q3_1`,who:`panam`,tag:`Quête · Convoi maudit (1/3)`,once:true,w:7,cond:()=>QOK()&&(rel(`panam`)>=10||G.fac.aldecaldos>=15),
+  tx:`Panam, inquiète : « Un convoi des nôtres devait rentrer hier. Plus de signal. Dans les Badlands, ça signifie des Raffen Shiv ou pire. Je veux y aller avec quelqu'un en qui j'ai confiance. »`,
+  ch:[
+    {t:`Partir avec elle en voiture`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{...qon,next:`q3_2`,rel:{panam:8},msg:`Une course dans la poussière. Vous trouvez des traces de pneus qui dévient.`},ko:{...qon,next:`q3_2`,hp:-8,rel:{panam:4},msg:`Un ensablement. Vous perdez du temps.`}}},
+    {t:`Lui conseiller de prévenir Saul`,fx:{rel:{panam:-4},unonce:`q3_1`,msg:`« On n'a pas le temps. » Elle part sans toi.`}}
+  ]});
+card({id:`q3_2`,who:`nomad`,tag:`Quête · Convoi maudit (2/3)`,once:true,
+  tx:`Une épave à l'orée du désert : le Thorton du convoi, vide, sans une goutte d'essence. Des empreintes de bottes, des douilles, une silhouette qui rôde derrière une dune. Les Raffen Shiv.`,
+  ch:[
+    {t:`Les attaquer avec Panam`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:8,ok:{next:`q3_3`,cred:6,rel:{panam:8},msg:`Un échange de tirs bref. Les Raffen Shiv détalent.`},ko:{next:`q3_3`,hp:-26,rel:{panam:5},msg:`Une balle, puis deux. Vous les mettez en fuite, mais mal en point.`}}},
+    {t:`Les piéger avec une fausse cargaison`,s:`INTELLECT`,chk:{a:`int`,dc:8,ok:{next:`q3_3`,cred:5,rel:{panam:10},msg:`Un leurre, une ruse. Les Raffen Shiv se jettent dessus.`},ko:{next:`q3_3`,hp:-14,msg:`Le piège rate à moitié. Vous vous en tirez.`}}}
+  ]});
+card({id:`q3_3`,who:`saul`,tag:`Quête · Convoi maudit (3/3)`,once:true,
+  tx:`Les nomades survivants sont là, ligotés dans un coin. Saul Bright en personne arrive peu après, grave. « Merci d'être venu(e). La route nous doit une dette. Choisis ce que tu veux de nous. »`,
+  ch:[
+    {t:`Un véhicule du clan`,s:`Thorton Colby`,fx:{...qend(`q3`),gear:`thorton`,rel:{panam:14},fac:{aldecaldos:12},bloc:{nomad:6},msg:`Saul te tend les clés d'un Thorton retapé. « Il a besoin d'un conducteur. »`}},
+    {t:`Une veste Aldecaldos`,s:`Armure`,fx:{...qend(`q3`),gear:`aldejacket`,rel:{panam:14},fac:{aldecaldos:12},bloc:{nomad:6},msg:`Saul te passe la veste sur les épaules. « Tu es des nôtres. »`}},
+    {t:`Rien, ta récompense est ailleurs`,s:`+Humanité`,fx:{...qend(`q3`),hum:12,rel:{panam:18,saul:0},fac:{aldecaldos:15},msg:`Saul sourit. « Un jour, on s'en souviendra. »`}}
+  ]});
+
+/* ---------- Q5 · Chasse au chrome (Vik) ---------- */
+card({id:`q5_1`,who:`vik`,tag:`Quête · Chasse au chrome (1/3)`,once:true,w:7,cond:()=>QOK()&&rel(`vik`)>=15,
+  tx:`Vik te montre un corps sur sa table : un jeune homme, éviscéré, implants arrachés. « Quelqu'un fait ça à des gamins de Watson. Un ripperdoc sans scrupules. Je veux qu'il s'arrête. »`,
+  ch:[
+    {t:`Remonter la piste des implants`,s:`INTELLECT`,chk:{a:`int`,dc:7,ok:{...qon,next:`q5_2`,rel:{vik:8},flag:[`q_active`,`q5_lead`],msg:`Les numéros de série mènent à un revendeur de Rancho Coronado.`},ko:{...qon,next:`q5_2`,rel:{vik:4},msg:`Tu suis des pistes floues.`}}},
+    {t:`Demander aux Mox et à la rue`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{...qon,next:`q5_2`,rel:{vik:6},fac:{mox:4},msg:`Les filles du Lizzie's Bar connaissent le boucher : une camionnette sans plaque.`},ko:{...qon,next:`q5_2`,msg:`On ne te dit rien.`}}}
+  ]});
+card({id:`q5_2`,who:`scav`,tag:`Quête · Chasse au chrome (2/3)`,once:true,
+  tx:`Le revendeur est un Scav bourré, au milieu de sa camionnette de pièces. Il te regarde sans comprendre. « Le doc ? Il ne me dit rien. Mais je sais où il opère. Un ancien entrepôt. »`,
+  ch:[
+    {t:`L'interroger rudement`,s:`CORPS`,chk:{a:`body`,dc:7,ok:{next:`q5_3`,hum:-3,msg:`Il craque en cinq minutes : une adresse précise.`},ko:{next:`q5_3`,hp:-12,msg:`Il se débat, te griffe. Tu obtiens l'adresse quand même.`}}},
+    {t:`Le payer`,s:`−400 €$`,req:R.ed(400),fx:{ed:-400,next:`q5_3`,hum:2,msg:`L'argent parle. Il murmure l'adresse en regardant ailleurs.`}}
+  ]});
+card({id:`q5_3`,who:`fingers`,tag:`Quête · Chasse au chrome (3/3)`,once:true,
+  tx:`Une salle d'opération glauque, des seringues sur la table, un homme en blouse tachée qui sursaute. « Ne me faites pas de mal. Je ne fais que… vendre des pièces. » Des bruits dans la pièce voisine : un jeune patient, sédaté, qui respire à peine.`,
+  ch:[
+    {t:`Maîtriser le boucher et libérer le patient`,s:`CORPS/RÉFLEXES`,chk:{a:`ref`,k:`cmb`,dc:8,ok:{...qend(`q5`),hum:12,cred:7,rel:{vik:16},msg:`Le boucher est neutralisé, le patient sauvé. Vik te remercie d'une voix étranglée.`},ko:{...qend(`q5`),hp:-24,hum:8,rel:{vik:10},msg:`Le boucher blesse le patient en fuyant. Tu le sauves de justesse.`}}},
+    {t:`Le livrer à la police`,s:`Légal`,fx:{...qend(`q5`),cred:3,bloc:{loi:6},rel:{vik:8},msg:`La NCPD le prend en charge. Qui sait ce qui lui arrivera vraiment.`}},
+    {t:`Le laisser filer contre de l'argent`,s:`−Humanité`,fx:{...qend(`q5`),ed:2500,hum:-14,rel:{vik:-14},msg:`Tu prends l'argent. Vik ne te le pardonnera pas.`}}
+  ]});
+
+/* ---------- Q6 · La bande volée (Kerry) ---------- */
+card({id:`q6_1`,who:`kerry`,tag:`Quête · La bande volée (1/2)`,once:true,w:7,cond:()=>QOK()&&rel(`kerry`)>=10,
+  tx:`Kerry fait les cent pas dans une loge : « On m'a volé les bandes de mon prochain album. Quelqu'un va les vendre à un label de Westbrook. Je dois les récupérer avant demain soir. »`,
+  ch:[
+    {t:`Infiltrer le label`,s:`SANG-FROID · furtivité`,chk:{a:`cool`,k:`stl`,dc:8,ok:{...qon,next:`q6_2`,rel:{kerry:8},msg:`Un badge, un faux sourire, une porte entrouverte. Tu les trouves.`},ko:{...qon,next:`q6_2`,hp:-12,rel:{kerry:4},msg:`On te repère. Tu t'enfuis avec un morceau de ce qu'il te fallait.`}}},
+    {t:`Menacer le voleur`,s:`CORPS`,chk:{a:`body`,dc:7,ok:{...qon,next:`q6_2`,rel:{kerry:6},msg:`Le voleur ne résiste pas longtemps. Il parle.`},ko:{...qon,next:`q6_2`,hp:-14,msg:`Il avait des amis. Tu repars avec une migraine.`}}}
+  ]});
+card({id:`q6_2`,who:`kerry`,tag:`Quête · La bande volée (2/2)`,once:true,
+  tx:`Tu tiens enfin la bande. Un type du label te rattrape : « Ces bandes valent des millions. Si tu les rends à Kerry, il garde son album. Si tu me les vends, tu deviens riche. » Tu hésites.`,
+  ch:[
+    {t:`Les rendre à Kerry`,s:`+Lien · +Humanité`,fx:{...qend(`q6`),hum:12,cred:8,rel:{kerry:18},role:{rocker:2},gear:`samurai`,msg:`Kerry te serre contre lui. Il te laisse une veste Samurai en cadeau, en souvenir de ses amis.`}},
+    {t:`Les vendre au label`,s:`Gros gain · −Humanité`,fx:{...qend(`q6`),ed:5500,hum:-12,rel:{kerry:-20},msg:`Une fortune. Kerry n'adressera plus jamais la parole à celui/celle qui l'a trahi.`}}
+  ]});
+/* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
 let G = null;
@@ -1621,7 +1891,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {friend_danger:12,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {fix_board:10,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -1632,7 +1902,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, relT:{}, dead:{}, pendingLoot:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -1663,12 +1933,40 @@ function skill(k){
   if(k===`hck`){ v+=Math.floor(G.hacks.length/2); if(G.flags.hackmentor) v+=1; }
   if(G.mine){ if(G.mine.type===`runners`&&k===`hck`)v++; if(G.mine.type===`nomads`&&k===`drv`)v++; if(G.mine.type===`gang`&&k===`cmb`)v++; }
   if(G.member===`wraiths`&&k===`drv`)v++;
+  if(G.origin===`street`&&k===`stl`) v++;
+  if(G.origin===`nomad`&&k===`drv`) v++;
+  if(G.origin===`corpo`&&k===`soc`) v++;
+  if(k===`soc`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).soc||0});
+  if(k===`stl`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).stl||0});
+  if(k===`drv`){ const bs=blocState(`nomad`); if(bs===`hi`)v++; if(bs===`lo`)v--; }
   return v;
+}
+function blocState(b){ const v=(G.bloc||{})[b]; return v>=65?`hi`:v<=35?`lo`:null; }
+function bm(){ // multiplicateurs liés aux blocs et à l'origine
+  const r=blocState(`rue`), c=blocState(`corpo`), l=blocState(`loi`), n=blocState(`nomad`);
+  return {
+    gear:(r===`hi`?.85:r===`lo`?1.15:1), cyber:(c===`hi`?.9:c===`lo`?1.15:1)*(G.origin===`corpo`?.9:1),
+    gig:(r===`hi`?1.1:r===`lo`?.9:1), income:(c===`hi`?1.2:c===`lo`?.9:1),
+    hurt:(l===`lo`?1.1:1), rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(n===`hi`?.8:1)
+  };
+}
+const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber);
+const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear);
+function blocPerkLines(b){
+  const s=blocState(b), v=Math.round(G.bloc[b]);
+  const L={
+    rue:[`Marché noir −15 % · gigs +10 %`,`Marché noir +15 % · gigs −10 %`],
+    corpo:[`Chrome −10 % · revenus passifs +20 %`,`Chrome +15 % · revenus passifs −10 %`],
+    loi:[`Protection : dégâts −10 % (blindage de fait)`,`Traqué : dégâts reçus +10 %`],
+    nomad:[`Routes sûres : conduite +1 · loyer −20 %`,`Routes fermées : conduite −1`]
+  }[b];
+  return {s,v,hi:L[0],lo:L[1]};
 }
 function mitigation(){
   let m=0;
   G.cyber.forEach(i=>m+=CY(i).mit||0);
   G.gear.forEach(i=>m+=GEARMAP[i].mit||0);
+  if(blocState(`loi`)===`hi`) m+=.1;
   return Math.min(.5,m);
 }
 const ownedList = () => DIST.filter(d=>G.dist[d.id]===`player`);
@@ -1730,7 +2028,7 @@ function makeLoot(t){
   const worst=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
   const dev=G.bloc[worst]-50;
   if(Math.abs(dev)>=18) pool.push({k:`bal`,ic:`⚖`,t:`Rééquilibrer`,d:`${BLOCS[worst].n} ${dev<0?`+`:`−`}${8+4*t} (te rapproche du milieu)`,w:3,ap:()=>applyFx({bloc:{[worst]:dev<0?8+4*t:-(8+4*t)}})});
-  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&x.p<=2000+1800*t&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
+  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&(x.loot?(t>=3&&Math.random()<.25):x.p<=2000+2200*t)&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
     pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
   if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
     pool.push({k:`hack`,ic:`💾`,t:`Quickhack`,d:`${x.n} (gratuit)`,w:2,ap:()=>{G.hacks.push(x.id);chip(`y`,`Chargé : ${x.n}`)}}); } }
@@ -1744,7 +2042,8 @@ function makeLoot(t){
 }
 /* ---------- jets ---------- */
 function rollInfo(c,bonus){
-  const tot = A(c.a) + (c.k?skill(c.k):0) + (bonus||0);
+  const kk = c.k||(c.a===`cool`?`soc`:null);
+  const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
   const need = dc + 4 - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
@@ -1757,7 +2056,7 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.hum){ const b=G.hum; G.hum=clamp(G.hum+fx.hum,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
@@ -1770,6 +2069,7 @@ function applyFx(fx){
   if(fx.unflag) fx.unflag.forEach(f=>delete G.flags[f]);
   if(fx.flagMark) G.joinedOnce[fx.flagMark]=true;
   if(fx.unonce) delete G.done[fx.unonce];
+  if(fx.loot) G.pendingLoot=Math.max(G.pendingLoot||0,fx.loot);
   if(fx.cy) installCy(fx.cy,true);
   if(fx.xp) Object.entries(fx.xp).forEach(([k,v])=>gainXp(k,v));
   if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
@@ -1793,6 +2093,7 @@ function installCy(id,free){
   if(c.slot===`neural`&&c.id!==`plug`){}
 }
 const relv = id => (G.rel&&G.rel[id])||0;
+const visChoices = c => c.ch.map((h,i)=>({h,i})).filter(x=>!x.h.only||x.h.only===G.origin);
 function bestAlly(a){
   if(G.helpP===G.stats.cards) return null;
   const l=(ALLY[a]||[]).filter(i=>relv(i)>=25&&!(G.dead||{})[i]); l.sort((x,y)=>relv(y)-relv(x)); return l[0]||null;
@@ -1813,7 +2114,6 @@ function adviceNow(){
   if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
   const bd=G.board&&G.board.p===G.stats.cards?G.board.left:2;
   if(bd>0&&G.hp>=60) return {ic:`📋`,t:`${bd} gig(s) dispo : du cash et de la rep.`,go:`gigs`};
-  if(G.trainP!==G.stats.cards) return {ic:`📈`,t:`Séance d'entraînement gratuite disponible.`,go:`train`};
   if(G.ed>=2500&&!G.gear.some(i=>GEARMAP[i].mit)) return {ic:`🛡`,t:`Tu as de l'argent : pense à une armure.`,go:`gear`};
   return null;
 }
@@ -1822,7 +2122,7 @@ const FN = {
   allySaved(){ const id=G.tmp&&G.tmp.ally; if(id) { chip(`y`,`${WHO[id].n.split(` `)[0]} est sauvé(e)`); } },
   allyLost(){ const id=G.tmp&&G.tmp.ally; if(!id) return; G.dead=G.dead||{}; G.dead[id]=true; G.rel[id]=0; chip(`n`,`† ${WHO[id].n.split(` `)[0]} est mort(e)`); G.log.unshift({d:dateStr(),m:`${WHO[id].n} est mort(e).`}); G.hum=clamp(G.hum-10,0,100); chip(`n`,`−10 Humanité`); },
   sellOne(){ if(!G.cyber.length)return; const id=G.cyber[rnd(0,G.cyber.length-1)]; removeCy(id); const v=Math.round(CY(id).p*.5); G.ed+=v; chip(`i`,`+${v} €$`); chip(`n`,`− ${CY(id).n}`); },
-  defendWin(){ if(G.mine) G.mine.power++; chip(`y`,`Territoire défendu`); },
+  defendWin(){ if(G.mine) G.mine.power++; if(G.tmp&&G.tmp.d){G.hold=G.hold||{};G.hold[G.tmp.d]=clamp(holdOf(G.tmp.d)+20,0,100);} chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
   facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
@@ -1841,11 +2141,12 @@ const FN = {
 function tick(months){
   const k = months/STEP;
   let inc = 0;
-  ownedList().forEach(d=>inc+=d.inc*3*(G.mine&&G.mine.type===`gang`?1.2:1));
+  ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
   if(G.flags.corpjob) inc+=140*STEP;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*STEP*.6; }
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*STEP;
+  inc*=bm().income;
+  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*STEP*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
@@ -1879,45 +2180,71 @@ function prepCard(c){
   G.cur = {id:c.id, text:raw.replace(/\{n\}/g,G.name)};
 }
 
-/* ---------- conquête ---------- */
+/* ---------- guerre de territoire ---------- */
+const OPS_PER=2;
+const opsLeft=()=>{ if(!G.ops) G.ops={left:OPS_PER}; return G.ops.left; };
+const holdOf=id=>{ if(!G.hold) G.hold={}; return G.hold[id]===undefined?65:G.hold[id]; };
+function warDc(d,base){ return base + ownedList().length*1.1 + Math.floor((yr()-START_YEAR)/5); }
 function conquestChoices(d){
   const o=[];
-  o.push({k:`assault`,t:`Assaut armé`,s:`${ATTRS.body.n} + combat`,a:`body`,sk:`cmb`,dc:5+d.def*1.5});
-  o.push({k:`hack`,t:`Piratage des systèmes`,s:`${ATTRS.int.n} + hack · cyberdeck requis`,a:`int`,sk:`hck`,dc:5+d.def*1.5+1,req:hasDeck()?``:`Cyberdeck requis`});
-  o.push({k:`talk`,t:`Diplomatie & pression`,s:`${ATTRS.cool.n}`,a:`cool`,sk:null,dc:6+d.def*1.5});
-  const price=d.def*1800;
-  o.push({k:`buy`,t:`Acheter le quartier`,s:`${price} €$ · réussite garantie`,price,req:G.ed>=price?``:`${price} €$ requis`});
+  o.push({k:`assault`,t:`Assaut armé`,s:`${ATTRS.body.n} + combat · +28 influence`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
+  o.push({k:`hack`,t:`Piratage des systèmes`,s:`${ATTRS.int.n} + hack · +24 influence`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Hack avancé requis (deck ou formation)`});
+  o.push({k:`talk`,t:`Diplomatie & pression`,s:`${ATTRS.cool.n} · +20 influence · sans risque physique`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
+  const price=d.def*1000;
+  o.push({k:`buy`,t:`Corrompre & financer`,s:`${price} €$ · +35 influence, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
   return o;
 }
 function canConquer(d){
   if(G.dist[d.id]===`player`) return `Déjà à toi`;
   if(d.lock&&!G.flags.dogtown) return `Verrouillé`;
   if(G.member&&G.dist[d.id]===G.member) return `Ta propre faction`;
-  const need = d.def*7;
+  const need = d.def*7+ownedList().length*2;
   if(G.cred<need) return `Street Cred ${need} requis`;
   return ``;
 }
-function doConquer(d,opt){
-  CHIPS=[];
-  const prev=G.dist[d.id];
-  let ok=true, info=null;
-  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); }
+function doOperation(d,opt){
+  CHIPS=[]; G.ctl=G.ctl||{}; G.hold=G.hold||{}; opsLeft(); G.ops.left--;
+  const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
+  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=35; }
   else {
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
+    gain = ok ? ({assault:28,hack:24,talk:20}[opt.k]+(roll===10?14:0)) : -8;
   }
-  if(ok){
-    G.dist[d.id]=`player`; G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
-    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-15,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
+  const before=G.ctl[d.id]||0; G.ctl[d.id]=clamp(before+gain,0,100);
+  chip(gain>0?`y`:`n`,`${sgn(G.ctl[d.id]-before)} influence`);
+  if(!ok){ if(opt.k!==`talk`) applyFx({hp:-(d.def*7)}); G.cred=clamp(G.cred-2,0,100); chip(`n`,`−2 Street Cred`); }
+  if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-3,-100,100); }
+  let captured=false, riposte=null;
+  if(G.ctl[d.id]>=100){
+    captured=true; delete G.ctl[d.id]; G.dist[d.id]=`player`; G.hold[d.id]=65;
+    G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
+    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-12,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
     if(G.mine) G.mine.power++;
     G.log.unshift({d:dateStr(),m:`Tu prends le contrôle de ${d.n}.`}); chip(`y`,`${d.n} conquis`);
-  } else {
-    const hp=-(d.def*8); applyFx({hp}); if(FAC[prev]){G.fac[prev]=clamp((G.fac[prev]||0)-6,-100,100);chip(`n`,`−6 ${FAC[prev].n}`)}
-    G.cred=clamp(G.cred-2,0,100); chip(`n`,`−2 Street Cred`);
+  } else if(Math.random()<.45){
+    const mine=ownedList();
+    if(mine.length){ const t=mine[rnd(0,mine.length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-15,0,100); riposte=`Riposte ennemie sur ${t.n} (−15 tenue)`; chip(`n`,`⚔ ${riposte}`); }
+    else { applyFx({hp:-10}); riposte=`Riposte : embuscade sur toi`; }
   }
-  tick(2);
-  return {ok,info,chips:CHIPS.slice()};
+  tick(1);
+  return {ok,info,gain,captured,riposte,chips:CHIPS.slice()};
+}
+const doConquer = doOperation;
+function reinforce(d){
+  const price=d.def*350; if(G.ed<price) return false;
+  G.ed-=price; G.hold=G.hold||{}; G.hold[d.id]=clamp(holdOf(d.id)+35,0,100); return price;
+}
+function warTick(){
+  G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
+  ownedList().forEach(d=>{
+    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2);
+    G.hold[d.id]=clamp(holdOf(d.id)-Math.max(1,dec),0,100);
+    if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n} faute de tenue.`}); }
+    else if(G.hold[d.id]<=25) toast(`⚠ ${d.n} : tenue ${G.hold[d.id]} — renforce !`);
+  });
 }
 
 /* ---------- fins & score ---------- */
@@ -1961,7 +2288,9 @@ function endGame(kind){
 function checkEnd(){
   if(G.over) return true;
   if(G.hp<=0){
-    if(G.flags.trauma){ delete G.flags.trauma; G.hp=35; toast(`Trauma Team Platinum t'a sauvé(e) !`); SFX.ok(); G.log.unshift({d:dateStr(),m:`Trauma Team t'a ramené(e) de justesse.`}); return false; }
+    const since=G.stats.cards-(G.lastRevive===undefined?-99:G.lastRevive);
+    if(G.flags.trauma){ delete G.flags.trauma; G.hp=50; G.lastRevive=G.stats.cards; toast(`Trauma Team Platinum t'a sauvé(e) ! (abonnement utilisé)`); SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Trauma Team Platinum t'a ramené(e) de justesse (abonnement utilisé).`}); return false; }
+    if(G.ed>=3000&&since>=10){ G.ed-=3000; G.hp=35; G.lastRevive=G.stats.cards; toast(`Trauma Team t'a sauvé(e) : facture 3 000 €$`); SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Trauma Team intervient en urgence : facture de 3 000 €$.`}); return false; }
     endGame(`flatline`); return true;
   }
   if(G.hum<=0){ endGame(`psycho`); return true; }
@@ -2087,7 +2416,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -2220,9 +2549,14 @@ function renderBlocs(){
   const b=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
   $(`#blocs`).innerHTML=Object.keys(BLOCS).map(k=>{
     const v=Math.round(b[k]), danger=v<=20||v>=80;
-    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-b="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
+    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-bl="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
   }).join(``);
-  document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{const k=e.dataset.b;SFX.tap();toast(`${BLOCS[k].n} ${Math.round(b[k])}/100 — ${BLOCS[k].d}. Trop bas : ils te traquent. Trop haut : ils te possèdent.`)});
+  document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{SFX.tap();openBloc(e.dataset.bl)});
+}
+function openBloc(k){
+  const rows=Object.keys(BLOCS).map(b=>{ const p=blocPerkLines(b); return `<div class="item ${b===k?`own`:``}" style="border-color:${BLOCS[b].c}${b===k?``:`55`}"><div class="in"><b style="color:${BLOCS[b].c}">${BLOCS[b].n} · ${p.v}/100 ${p.s===`hi`?`<span class="tagx g">FAVEUR</span>`:p.s===`lo`?`<span class="tagx">HOSTILE</span>`:``}</b><small>${BLOCS[b].d}</small>
+    <small style="color:${p.s===`hi`?`var(--g)`:`var(--dim)`}">▲ 65+ : ${p.hi}</small><small style="color:${p.s===`lo`?`var(--m)`:`var(--dim)`}">▼ 35− : ${p.lo}</small></div></div>`; }).join(``);
+  modal(`Équilibre`,`<div class="log" style="color:var(--dim)">Garde les barres <b>près du milieu</b>. Une faveur (65+) donne des avantages, mais à 100 ils te possèdent. Une hostilité (35−) te coûte, et à 0 ils te tuent. Un bloc qui monte fait baisser son opposé : Rue ↔ Loi, Corpos ↔ Badlands.</div>${rows}`);
 }
 function previewDots(ch){
   const keys=new Set(); const add=f=>{if(!f)return;[`hp`,`hum`,`cred`,`ed`].forEach(k=>{if(f[k])keys.add(k)});};
@@ -2248,11 +2582,11 @@ function showCardView(){
   stage.innerHTML=`<div class="speaker">${portrait(c.who)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}</div></div></div>
     <div class="cardwrap" id="cw"><div class="card" id="card" style="--ac:${w.c}">
       <div class="tag">${esc(c.tag||``)}</div><div class="tx">${G.cur.text}</div></div></div>`;
-  chs.innerHTML=c.ch.map((h,i)=>{
+  chs.innerHTML=visChoices(c).map(({h,i},pos)=>{
     const lock=h.req?h.req():``; let badge=``;
     if(h.chk){ const r=rollInfo(h.chk); const p=Math.round(r.chance*100); badge=`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`; }
     let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(WHO[al].n)}">📞<small>${esc(WHO[al].n.split(` `)[0])}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
-    return `<div class="crow"><button class="btn choice ${lock?`lock`:``}" data-i="${i}"><span class="k">${i+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
+    return `<div class="crow"><button class="btn choice ${lock?`lock`:``} ${h.exp?`exp`:``}" data-i="${i}"><span class="k">${pos+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
   }).join(``);
   chs.querySelectorAll(`.help`).forEach(b=>b.onclick=()=>pick(+b.dataset.h,0,b.dataset.al));
   chs.querySelectorAll(`.choice`).forEach(b=>{
@@ -2322,7 +2656,8 @@ function showResult(r){
 }
 function finishCard(r){
   picking=false;
-  if(r.loot&&!G.over){ const t=r.loot; r.loot=0; return showLoot(t,()=>finishCard(r)); }
+  if(r.loot&&!G.over){ const t=r.loot; r.loot=0; G.trainLast=-99; return showLoot(t,()=>finishCard(r)); }
+  if(!G.over&&!r.die&&!r.retire&&!r.quit&&trainDue()) return showTrainPicker(()=>finishCard(r));
   if(G.pendingFound){ const kind=G.pendingFound; G.pendingFound=null; return askFactionName(kind,()=>afterCard(r)); }
   afterCard(r);
 }
@@ -2332,7 +2667,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -2348,6 +2683,18 @@ function askFactionName(kind,done){
   };
 }
 
+/* ---------- entraînement imposé ---------- */
+const trainDue=()=>G.stats.cards-(G.trainLast||0)>=4;
+function showTrainPicker(cb){
+  G.trainLast=G.stats.cards; G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
+  modal(`📈 Entraînement`,`<div class="log" style="color:var(--dim)">Tes dernières épreuves t'ont appris quelque chose. Choisis l'attribut que tu travailles : <b>+3 XP</b>. Quand la barre est pleine, l'attribut monte tout seul.</div>`+
+   Object.keys(ATTRS).map(k=>{ const lv=G.at[k], max=lv>=9, need=xpNeed(lv), x=G.xp[k]||0, m=relv(MENTOR[k]), bonus=3+(m>=15?2:0);
+     return `<button class="tile" data-tr="${k}" ${max?`disabled`:``} style="flex-direction:row;align-items:center;gap:12px;min-height:auto"><span style="flex:1"><b>${ATTRS[k].n} ${lv}</b><small>${max?`Niveau max`:`${x} / ${need} XP`}${m>=15?` · mentor ${WHO[MENTOR[k]].n.split(` `)[0]} +2`:``}</small><div class="bigbar" style="margin-top:6px"><i style="background:var(--y);width:${max?100:Math.round(x/need*100)}%"></i></div></span><b style="color:var(--g)">+${bonus}</b></button>`; }).join(``),{lock:true});
+  document.querySelectorAll(`[data-tr]`).forEach(b=>b.onclick=()=>{
+    const k=b.dataset.tr; CHIPS=[]; gainXp(k,3+(relv(MENTOR[k])>=15?2:0)); SFX.buy(); updateHud();
+    G.log.unshift({d:dateStr(),m:`Entraînement : ${ATTRS[k].n}.`}); toast(CHIPS.map(c=>c.txt).join(` · `)); closeModal(); cb();
+  });
+}
 /* ---------- butin ---------- */
 function showLoot(tier,cb){
   const opts=makeLoot(tier); SFX.ok(); flash(`#fcee0a`);
@@ -2374,7 +2721,7 @@ function closeModal(){ const m=$(`#modal`); if(m)m.remove(); modalLock=false; }
 document.addEventListener(`keydown`,e=>{
   if(e.key===`Escape`&&!modalLock) closeModal();
   if(!G||G.over||$(`#modal`)||picking) return;
-  if(/^[1-4]$/.test(e.key)&&$(`#choices`)){ const b=document.querySelector(`.choice[data-i="${+e.key-1}"]`); if(b)b.click(); }
+  if(/^[1-5]$/.test(e.key)&&$(`#choices`)){ const b=document.querySelectorAll(`#choices .choice`)[+e.key-1]; if(b)b.click(); }
 });
 const money = v => v.toLocaleString(`fr`)+` €$`;
 
@@ -2406,7 +2753,7 @@ function statBar(){
   return `<div class="vstat"><span style="color:var(--hp)">♥ ${G.hp}</span><span style="color:var(--hum)">◐ ${G.hum}</span><span style="color:var(--y)">★ ${G.cred}</span><b style="color:var(--ed)">${money(G.ed)}</b></div>`;
 }
 function goAdvice(go){
-  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,train:openTrain,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
+  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
 }
 function openCity(){
   const ad=adviceNow();
@@ -2415,10 +2762,10 @@ function openCity(){
    ${ad?`<button class="adv inl" id="advc">${ad.ic} ${ad.t} <b>›</b></button>`:``}
    <div class="tiles one">
     ${big(`shop`,`🛒`,`Boutique`,`Chrome · Armes · Hacks`)}
-    ${big(`work`,`💼`,`Boulot`,`Gigs · Entraînement`,(G.board&&G.board.p===G.stats.cards?G.board.left:2)>0&&G.hp>=60)}
+    ${big(`work`,`💼`,`Boulot`,`Gigs du tableau`,(G.board&&G.board.p===G.stats.cards?G.board.left:2)>0&&G.hp>=60)}
     ${big(`rest`,`❤`,`Repos`,`Soins · Thérapie · Dormir`,G.hp<50||G.hum<50)}
    </div>`);
-  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();openCitySub(b.dataset.c)});
+  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();b.dataset.c===`work`?openGigs():openCitySub(b.dataset.c)});
   const ac=$(`#advc`); if(ac) ac.onclick=()=>{SFX.tap();goAdvice(ad.go)};
 }
 function openCitySub(k){
@@ -2427,18 +2774,19 @@ function openCitySub(k){
   const body={
     shop:`<div class="tiles">${tile(`rip`,`🦾`,`Chrome`,`Implants`)}${tile(`gear`,`🔫`,`Équipement`,`Armes · armures`)}${tile(`hack`,`💾`,`Hacks`,hasDeck()?`${G.hacks.length}/${deckSlots()}`:`Deck requis`,{dis:!hasDeck()})}</div>`,
     work:`<div class="tiles">${tile(`gigs`,`📋`,`Gigs`,`${left} dispo`,{dis:!left})}${tile(`train`,`📈`,`Entraînement`,G.trainP===G.stats.cards?`Fait`:`Gratuit`,{dis:G.trainP===G.stats.cards})}</div>`,
-    rest:`<div class="tiles three">${tile(`heal`,`➕`,`Clinique`,`200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}${tile(`therapy`,`🧠`,`Thérapie`,`600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}${tile(`rest`,`🛏`,`Dormir`,`Gratuit`)}</div>`
+    rest:`<div class="tiles">${tile(`heal`,`➕`,`Clinique`,`200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}${tile(`therapy`,`🧠`,`Thérapie`,`600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}${tile(`rest`,`🛏`,`Dormir`,`Gratuit`)}${tile(`trauma`,`🚑`,`Trauma Team`,G.flags.trauma?`Actif ✓ · seconde vie`:`1 200 €$ · seconde vie`,{dis:!!G.flags.trauma||G.ed<1200})}</div><div class="log" style="color:var(--dim)">Trauma Team te ramène si tu tombes à 0 Santé — jamais si c'est MaxTac qui tire.</div>`
   }[k];
   const title={shop:`Boutique`,work:`Boulot`,rest:`Repos`}[k];
   modal(title,`${statBar()}${body}`,{back:openCity});
-  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();({rip:()=>openShop(`cy`),gear:()=>openShop(`gear`),hack:()=>openShop(`hack`),gigs:openGigs,train:openTrain,heal:()=>doDown(`heal`),therapy:()=>doDown(`therapy`),rest:()=>doDown(`rest`)})[b.dataset.c]()});
+  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();({rip:()=>openShop(`cy`),gear:()=>openShop(`gear`),hack:()=>openShop(`hack`),gigs:openGigs,train:openTrain,heal:()=>doDown(`heal`),therapy:()=>doDown(`therapy`),rest:()=>doDown(`rest`),trauma:()=>doDown(`trauma`)})[b.dataset.c]()});
 }
 function doDown(k){
   CHIPS=[];
   if(k===`heal`){ if(G.ed<200){toast(`Pas assez d'eddies`);return} applyFx({ed:-200,hp:35}); }
   if(k===`therapy`){ if(G.ed<600){toast(`Pas assez d'eddies`);return} applyFx({ed:-600,hum:15}); }
   if(k===`rest`){ applyFx({hp:15,hum:5}); }
-  SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`}[k]});
+  if(k===`trauma`){ if(G.flags.trauma||G.ed<1200){toast(`Impossible`);return} applyFx({ed:-1200,flag:[`trauma`]}); toast(`Abonnement Trauma Team activé`); }
+  SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`,trauma:`Abonnement Trauma Team Platinum souscrit.`}[k]});
   updateHud(); toast(CHIPS.map(c=>c.txt).join(` · `)||`Fait`);
   if(checkEnd()){ closeModal(); return showEnd(); }
   openCitySub(`rest`);
@@ -2451,12 +2799,12 @@ function openShop(kind){
   const chipBar=(list,cur)=>`<div class="fchips">${list.map(([k,l])=>`<button class="fc ${cur===k?`on`:``}" data-f="${k}">${l}</button>`).join(``)}</div>`;
   const tagsOf=o=>[
     ...Object.entries(o.at||{}).map(([k,v])=>`<span class="tagx g">+${v} ${ATTRS[k].n}</span>`),
-    ...(o.k?Object.entries(o.k).map(([k,v])=>`<span class="tagx g">+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`}[k]}</span>`):[]),
+    ...(o.k?Object.entries(o.k).map(([k,v])=>`<span class="tagx g">+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`,soc:`social`}[k]}</span>`):[]),
     o.mit?`<span class="tagx g">−${Math.round(o.mit*100)}% dégâts</span>`:``, o.regen?`<span class="tagx g">soin auto</span>`:``, o.deck?`<span class="tagx c">${o.deck} slots</span>`:``].join(``);
   if(kind===`cy`){
     chips=chipBar([[`all`,`Tout`],...Object.entries(SLOTS)],f);
     CYBER.filter(c=>f===`all`||c.slot===f).forEach(c=>{
-      const price=Math.round(c.p*disc*(G.member===`maelstrom`?.9:1)), own=hasCy(c.id);
+      const price=cyPrice(c), own=hasCy(c.id);
       const lock = c.cred&&G.cred<c.cred?`Cred ${c.cred}`: c.needs&&!hasCy(c.needs)?`Interface requise`:``;
       const cur=G.cyber.find(i=>CY(i).slot===c.slot&&i!==c.id);
       const afford=G.ed>=price;
@@ -2465,10 +2813,10 @@ function openShop(kind){
     });
   } else if(kind===`gear`){
     chips=chipBar([[`all`,`Tout`],[`arme`,`Armes`],[`armure`,`Armures`],[`véhicule`,`Véhicules`],[`style`,`Style`]],f);
-    GEAR.filter(g=>f===`all`||g.t===f).forEach(g=>{
+    GEAR.filter(g=>!g.loot&&(f===`all`||g.t===f)).forEach(g=>{
       const own=G.gear.includes(g.id), lock=g.cred&&G.cred<g.cred?`Cred ${g.cred}`:``;
-      const price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)), afford=G.ed>=price;
-      rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${g.n}</b><small>${g.t} · ${g.d}</small><small>${tagsOf(g)}</small></div>
+      const price=gearPrice(g), afford=G.ed>=price;
+      rows.push(`<div class="item ${own?`own`:``}" style="border-left:3px solid ${RARITY[g.r||`c`][1]}"><div class="in"><b>${g.n} <span class="tagx" style="border-color:${RARITY[g.r||`c`][1]};color:${RARITY[g.r||`c`][1]}">${RARITY[g.r||`c`][0]}</span></b><small>${g.t} · ${g.d}</small><small>${tagsOf(g)}</small></div>
       ${own?`<b class="own-t">POSSÉDÉ</b>`:`<button class="buy ${afford&&!lock?``:`no`}" data-g="${g.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(price)}</button>`}</div>`);
     });
   } else {
@@ -2486,7 +2834,7 @@ function openShop(kind){
   document.querySelectorAll(`[data-h]`).forEach(b=>b.onclick=()=>buyHack(b.dataset.h));
 }
 function buyCy(id){
-  const c=CY(id), price=Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1));
+  const c=CY(id), price=cyPrice(c);
   if(G.ed<price){ SFX.ko(); toast(`Pas assez d'eddies`); return; }
   if(G.hum-c.h<=8 && !confirm(`Ça te laisse à ${G.hum-c.h} Humanité. Risque de cyberpsychose. Continuer ?`)) return;
   CHIPS=[]; applyFx({ed:-price,hum:-c.h}); installCy(id); SFX.buy(); flash(`#05ffa1`); vib(60);
@@ -2495,7 +2843,7 @@ function buyCy(id){
   openShop(`cy`);
 }
 function buyGear(id){
-  const g=GEARMAP[id], price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1));
+  const g=GEARMAP[id], price=gearPrice(g);
   if(G.ed<price){ SFX.ko(); toast(`Pas assez d'eddies`); return; }
   G.ed-=price; G.gear=G.gear.filter(x=>GEARMAP[x].t!==g.t); G.gear.push(id);
   SFX.buy(); updateHud(); toast(`${g.n} acquis`); G.log.unshift({d:dateStr(),m:`Achat : ${g.n}.`}); openShop(`gear`);
@@ -2524,7 +2872,7 @@ function openTrain(){
 }
 const rel_ = id => (G.rel&&G.rel[id])||0;
 const GIG_PER_PERIOD=2;
-const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function gigBoard(){
   if(!G.board||G.board.p!==G.stats.cards){
     const cs=[],used=new Set();
@@ -2540,7 +2888,7 @@ function openGigs(){
    bd.gigs.map((x,i)=>{
     const g=GIGS.find(y=>y.n===x.n); const r=rollInfo({a:g.a,k:g.k,dc:g.dc}); const p=Math.round(r.chance*100); const off=x.done||!bd.left;
     return `<button class="btn choice ${off?`lock`:``}" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}${x.done?` ✓`:``}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(gigPay(g))} · +${gigCr(g)} Cred · échec : −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
-  }).join(``),{back:()=>openCitySub(`work`)});
+  }).join(``),{back:openCity});
   document.querySelectorAll(`[data-gi]`).forEach(b=>b.onclick=()=>{
     const x=bd.gigs[+b.dataset.gi]; if(x.done||!bd.left){SFX.ko();return}
     const g=GIGS.find(y=>y.n===x.n), r=rollInfo({a:g.a,k:g.k,dc:g.dc}), roll=rnd(1,10);
@@ -2550,8 +2898,8 @@ function openGigs(){
     gainXp(g.a,ok?3:1); G.lastA=g.a;
     tick(1); updateHud();
     modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${ok?`Choisir ma récompense`:bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
-    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:()=>openCitySub(`work`))(); };
-    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,back); else back(); };
+    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,()=>trainDue()?showTrainPicker(back):back()); else back(); };
   });
 }
 
@@ -2573,7 +2921,7 @@ function openMap(keep){
     return `<g data-d="${d.id}" style="cursor:pointer;opacity:${dim}"><rect x="${d.x}" y="${d.y}" width="${d.wd}" height="${d.h}" rx="4" fill="${locked?`#15152a`:ownerColor(o)}" fill-opacity="${o===`player`?.95:locked?.6:.6}" ${sel?`stroke="#fff" stroke-width="3"`:o===`player`?`stroke="#fcee0a" stroke-width="2"`:``}/>
       <text x="${d.x+6}" y="${d.y+16}" style="font-size:10px">${d.n}${locked?` 🔒`:``}</text>
       <text x="${d.x+6}" y="${d.y+27}" style="font-size:6.5px;fill:#ffffffaa;font-weight:500;letter-spacing:.1em">${d.w.toUpperCase()}</text>${pips}
-      ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text>`:``}</g>`;
+      ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text><rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*holdOf(d.id)/100}" height="3" fill="${holdOf(d.id)<=25?`#ff2a6d`:`#fcee0a`}" stroke="none"/>`:(G.ctl&&G.ctl[d.id]?`<rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*G.ctl[d.id]/100}" height="3" fill="#00f0ff" stroke="none"/>`:``)}</g>`;
   }).join(``);
   const cnt={}; DIST.forEach(d=>{cnt[G.dist[d.id]]=(cnt[G.dist[d.id]]||0)+1});
   const leg=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(o=>`<button class="fc ${hl===o?`on`:``}" data-l="${o}" style="border-color:${ownerColor(o)}"><i style="background:${ownerColor(o)}"></i>${ownerName(o)} ${cnt[o]}</button>`).join(``);
@@ -2590,23 +2938,31 @@ function openMap(keep){
   else $(`#mpanel`).innerHTML=`<div class="log" style="text-align:center;color:var(--dim)">👆 Touche un quartier</div>`;
 }
 function renderDistrictPanel(id){
-  const d=DMAP[id], o=G.dist[id], why=canConquer(d);
+  const d=DMAP[id], o=G.dist[id], why=canConquer(d), mine=o===`player`;
+  const ctl=(G.ctl&&G.ctl[id])||0, hold=holdOf(id), left=opsLeft();
+  let act=``;
+  if(mine){ const price=d.def*350; act=`<div class="vstat"><span>Tenue</span><b style="color:${hold<=25?`var(--m)`:`var(--g)`}">${hold}/100</b></div><div class="bigbar"><i style="background:${hold<=25?`var(--m)`:`var(--y)`};width:${hold}%"></i></div>
+    <button class="btn pri" id="goreinf" ${G.ed<price||hold>=100?`disabled`:``}>🛡 Renforcer · ${money(price)} (+35 tenue)</button><div class="log" style="color:var(--dim)">La tenue baisse à chaque période. À 0, le quartier t'échappe. Revenu : ${Math.round(d.inc*3*(.4+.6*hold/100))} €$ / période.</div>`; }
+  else if(why) act=`<div class="why">${why===`Verrouillé`?`🔒 Verrouillé`:`🔒 ${why}`}</div>`;
+  else act=`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
+    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Mener une opération (${left} restante${left>1?`s`:``})`:`Plus d'opération cette période`}</button><div class="log" style="color:var(--dim)">Atteins 100 d'influence pour prendre le quartier. L'influence retombe de 6 par période, et l'ennemi riposte.</div>`;
   $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)}"><div class="in"><b>${d.n} <small style="display:inline;color:var(--dim)">· ${d.w}</small></b><small>${d.d}</small>
-    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)} · ${d.inc*3} €$/période</small></div></div>
-    ${why?`<div class="why">${why==="Déjà à toi"?`★ Ce quartier est à toi.`:`🔒 ${why}`}</div>`:`<button class="btn pri" id="goq">Conquérir ${d.n}</button>`}`;
+    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</small></div></div>${act}`;
   const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
+  const rf=$(`#goreinf`); if(rf) rf.onclick=()=>{ const p=reinforce(d); if(p){SFX.buy();toast(`${d.n} renforcé`);updateHud();openMap(true)} };
   const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
 }
 function openConquest(d){
-  const prev=G.dist[d.id];
-  modal(`Conquérir ${d.n}`,`<div class="log">Actuellement : <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5.<br>Un échec coûte de la Santé et de la réputation auprès du propriétaire.</div>`+
-   conquestChoices(d).map((c,i)=>`<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance>=.7?`hi`:rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance<=.35?`lo`:``}">${Math.round(rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance*100)}%</span>`:``}</button>`).join(``),{back:()=>openMap(true)});
+  const prev=G.dist[d.id], ctl=(G.ctl&&G.ctl[d.id])||0;
+  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
+   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Une opération par action : choisis ta méthode.</div>`+
+   conquestChoices(d).map((c,i)=>{ const ch=c.a?rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance:0; return `<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${ch>=.7?`hi`:ch<=.35?`lo`:``}">${Math.round(ch*100)}%</span>`:``}</button>`; }).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
-    const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req){SFX.ko();return}
-    const r=doConquer(d,opt); updateHud();
-    modal(r.ok?`${d.n} est à toi !`:`Échec à ${d.n}`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
-      <div class="rt">${r.ok?`Les rues changent de couleur. ${d.n} porte désormais ton nom.`:`L'assaut tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
-    r.ok?(SFX.ok(),flash(`#fcee0a`),vib(80)):(SFX.ko(),shake());
+    const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req||!opsLeft()){SFX.ko();return}
+    const r=doOperation(d,opt); updateHud();
+    modal(r.captured?`${d.n} est à toi !`:r.ok?`Opération réussie`:`Opération ratée`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
+      <div class="rt">${r.captured?`Les rues changent de couleur. ${d.n} porte désormais ton nom — mais il faudra le garder.`:r.ok?`Tu grignotes du terrain. L'influence monte, mais l'ennemi n'a pas dit son dernier mot.`:opt.k===`talk`?`Les négociations échouent. Ils se méfient de toi.`:`L'opération tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
+    r.ok?(SFX.ok(),flash(r.captured?`#fcee0a`:`#05ffa1`),vib(80)):(SFX.ko(),shake());
     $(`#qok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else {MAPSEL=d.id;openMap(true)} };
   });
 }

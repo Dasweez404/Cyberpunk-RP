@@ -198,21 +198,50 @@ const HACKS = [
 ];
 /* ---------- Gear ---------- */
 const GEAR = [
-  {id:`lexington`,n:`Militech M-10AF Lexington`,t:`arme`,p:600,k:{cmb:1},d:`Pistolet automatique fiable. Le choix du débutant.`},
-  {id:`nue`,n:`Nue`,t:`arme`,p:2200,k:{cmb:2},d:`Revolver à haute puissance d'arrêt.`},
-  {id:`crusher`,n:`Shotgun Crusher`,t:`arme`,p:2000,k:{cmb:2},d:`Un fusil à pompe qui règle les discussions.`},
-  {id:`tamayura`,n:`Katana Tamayura`,t:`arme`,p:3000,k:{cmb:2},d:`Katana tranchant, bien équilibré.`},
-  {id:`masamune`,n:`Arasaka HJSH-18 Masamune`,t:`arme`,p:11000,k:{cmb:3},cred:35,d:`Fusil d'assaut "smart" d'Arasaka. Un luxe de guerre.`},
-  {id:`kevlar`,n:`Veste en kevlar`,t:`armure`,p:700,mit:.10,d:`Une protection légère sous la veste.`},
-  {id:`militecharm`,n:`Armure Militech`,t:`armure`,p:3500,mit:.20,d:`Armure de combat. Fait de toi un tank.`},
-  {id:`arasakaarm`,n:`Armure Arasaka`,t:`armure`,p:7500,mit:.30,cred:30,d:`Plaques composites, finition impeccable.`},
-  {id:`archer`,n:`Archer Quartz "Bandit"`,t:`véhicule`,p:1600,k:{drv:1},d:`Voiture bon marché. Elle roule — la plupart du temps.`},
-  {id:`mizutani`,n:`Mizutani Shion MZ2`,t:`véhicule`,p:3800,k:{drv:2},d:`Sportive japonaise. Rapide, nerveuse.`},
-  {id:`javelina`,n:`Quadra Type-66 Javelina`,t:`véhicule`,p:9500,k:{drv:3},cred:25,d:`Muscle car néo-rétro. Tu fais tourner les têtes.`},
-  {id:`caliburn`,n:`Rayfield Caliburn`,t:`véhicule`,p:48000,k:{drv:3},cred:50,fame:1,d:`Hypercar de collection. Une déclaration de puissance.`},
-  {id:`jacket`,n:`Veste de style (corpo-chic)`,t:`style`,p:900,at:{cool:1},d:`Elle coûte cher. Elle le dit.`},
-  {id:`samurai`,n:`Réplique de veste Samurai`,t:`style`,p:1400,at:{cool:1},fame:1,d:`Le style de Johnny Silverhand. Les nostalgiques te saluent.`},
+  /* ---- armes ---- */
+  {id:`lexington`,n:`Militech M-10AF Lexington`,t:`arme`,r:`c`,p:600,k:{cmb:1},d:`Pistolet automatique fiable. Le choix du débutant.`},
+  {id:`unity`,n:`Techtronika Unity`,t:`arme`,r:`c`,p:1300,k:{cmb:1},d:`Pistolet léger, rapide à dégainer.`},
+  {id:`nue`,n:`Nue`,t:`arme`,r:`c`,p:2200,k:{cmb:2},d:`Revolver à haute puissance d'arrêt.`},
+  {id:`crusher`,n:`Shotgun Crusher`,t:`arme`,r:`c`,p:2000,k:{cmb:2},d:`Un fusil à pompe qui règle les discussions.`},
+  {id:`tamayura`,n:`Katana Tamayura`,t:`arme`,r:`c`,p:3000,k:{cmb:2},d:`Katana tranchant, bien équilibré.`},
+  {id:`overture`,n:`Overture`,t:`arme`,r:`r`,p:3600,k:{cmb:2,stl:1},d:`Revolver à canon silencieux, le favori des infiltrés.`},
+  {id:`liberty`,n:`Militech Liberty`,t:`arme`,r:`r`,p:4600,k:{cmb:3},cred:20,d:`Pistolet lourd et précis, signé Militech.`},
+  {id:`dyingnight`,n:`Dying Night`,t:`arme`,r:`r`,p:5200,k:{cmb:3},cred:25,d:`Une arme de légende de rue. Elle porte la signature du chaos.`},
+  {id:`nekomata`,n:`Nekomata`,t:`arme`,r:`r`,p:7800,k:{cmb:3,stl:1},cred:30,d:`Fusil de précision d'Arasaka. Un tir, un nom.`},
+  {id:`skippy`,n:`Skippy`,t:`arme`,r:`r`,p:6200,k:{cmb:3,soc:1},cred:25,d:`Un pistolet "intelligent" qui commente chaque tir. Étonnamment sociable.`},
+  {id:`masamune`,n:`Arasaka HJSH-18 Masamune`,t:`arme`,r:`e`,p:11000,k:{cmb:3},cred:35,d:`Fusil d'assaut "smart" d'Arasaka. Un luxe de guerre.`},
+  {id:`comrade`,n:`Comrade's Hammer`,t:`arme`,r:`e`,p:12500,k:{cmb:4},cred:40,d:`Un pistolet d'une puissance absurde. Il laisse des trous.`},
+  {id:`malorian`,n:`Malorian Arms 3516`,t:`arme`,r:`l`,p:0,k:{cmb:5,soc:1},fame:1,loot:1,d:`LÉGENDAIRE · Le pistolet de Johnny Silverhand. Un monstre de puissance.`},
+  {id:`satori`,n:`Katana Satori`,t:`arme`,r:`l`,p:0,k:{cmb:5,stl:1},fame:1,loot:1,d:`LÉGENDAIRE · La lame d'Arasaka. Les rumeurs disent qu'elle ne s'est jamais ébréchée.`},
+  /* ---- armures ---- */
+  {id:`kevlar`,n:`Veste en kevlar`,t:`armure`,r:`c`,p:700,mit:.10,d:`Une protection légère sous la veste.`},
+  {id:`valjacket`,n:`Veste Valentinos`,t:`armure`,r:`c`,p:1100,mit:.08,k:{soc:1},d:`Cuir brodé aux couleurs du barrio. Les Valentinos te saluent.`},
+  {id:`clawsjacket`,n:`Veste Tyger Claws`,t:`armure`,r:`c`,p:1300,mit:.08,k:{soc:1},d:`Cuir noir, tigre brodé. Impressionnant à Japantown.`},
+  {id:`militecharm`,n:`Armure Militech`,t:`armure`,r:`r`,p:3500,mit:.20,d:`Armure de combat. Fait de toi un tank.`},
+  {id:`aldejacket`,n:`Veste Aldecaldos`,t:`armure`,r:`r`,p:3200,mit:.12,k:{drv:1},d:`Cuir usé par les tempêtes. Les nomades reconnaissent les leurs.`},
+  {id:`ghostsuit`,n:`Combinaison furtive`,t:`armure`,r:`r`,p:4200,mit:.10,k:{stl:2},d:`Tissu absorbant, silencieux. Un vêtement de fantôme.`},
+  {id:`kangarmor`,n:`Armure Kang Tao`,t:`armure`,r:`r`,p:5000,mit:.22,k:{cmb:1},cred:20,d:`Plaques légères, électronique embarquée.`},
+  {id:`arasakaarm`,n:`Armure Arasaka`,t:`armure`,r:`e`,p:7500,mit:.30,cred:30,d:`Plaques composites, finition impeccable.`},
+  {id:`barghestarm`,n:`Blindage Barghest`,t:`armure`,r:`e`,p:9500,mit:.35,cred:35,d:`Armure militaire lourde de Dogtown. Les balles s'en lassent.`},
+  {id:`samuraijacket`,n:`Veste Samurai (authentique)`,t:`armure`,r:`l`,p:0,mit:.18,k:{soc:3},at:{cool:1},fame:1,loot:1,d:`LÉGENDAIRE · La veste de Johnny. Cuir, étoile, histoire. Tout le monde la reconnaît.`},
+  /* ---- véhicules ---- */
+  {id:`archer`,n:`Archer Quartz "Bandit"`,t:`véhicule`,r:`c`,p:1600,k:{drv:1},d:`Voiture bon marché. Elle roule — la plupart du temps.`},
+  {id:`thorton`,n:`Thorton Colby`,t:`véhicule`,r:`c`,p:2400,k:{drv:1},d:`Pick-up robuste, parfait dans les Badlands.`},
+  {id:`mizutani`,n:`Mizutani Shion MZ2`,t:`véhicule`,r:`r`,p:3800,k:{drv:2},d:`Sportive japonaise. Rapide, nerveuse.`},
+  {id:`herrera`,n:`Herrera Outlaw GTS`,t:`véhicule`,r:`r`,p:5200,k:{drv:2},d:`Coupé nerveux. Il dérape comme il respire.`},
+  {id:`alvarado`,n:`Villefort Alvarado`,t:`véhicule`,r:`r`,p:6000,k:{drv:2,soc:1},d:`Berline luxueuse. Pour les rendez-vous qui comptent.`},
+  {id:`kusanagi`,n:`Yaiba Kusanagi CT-3X`,t:`véhicule`,r:`e`,p:7800,k:{drv:3},cred:25,d:`Moto de course. Un missile sur deux roues.`},
+  {id:`javelina`,n:`Quadra Type-66 Javelina`,t:`véhicule`,r:`e`,p:9500,k:{drv:3},cred:25,d:`Muscle car néo-rétro. Tu fais tourner les têtes.`},
+  {id:`caliburn`,n:`Rayfield Caliburn`,t:`véhicule`,r:`e`,p:48000,k:{drv:3,soc:2},cred:50,fame:1,d:`Hypercar de collection. Une déclaration de puissance.`},
+  {id:`nazare`,n:`Arch Nazaré`,t:`véhicule`,r:`l`,p:0,k:{drv:4,stl:1},fame:1,loot:1,d:`LÉGENDAIRE · Une moto devenue mythe. Elle t'obéit mieux que la plupart des gens.`},
+  /* ---- style ---- */
+  {id:`jacket`,n:`Veste de style (corpo-chic)`,t:`style`,r:`c`,p:900,k:{soc:1},d:`Elle coûte cher. Elle le dit.`},
+  {id:`samurai`,n:`Réplique de veste Samurai`,t:`style`,r:`c`,p:1400,k:{soc:1},fame:1,d:`Le style de Johnny Silverhand. Les nostalgiques te saluent.`},
+  {id:`kiroshisun`,n:`Lunettes Kiroshi "Sunset"`,t:`style`,r:`r`,p:2200,k:{soc:1,stl:1},d:`Verres fumés, enregistrement discret. Parfait pour les rendez-vous.`},
+  {id:`gala`,n:`Tenue de gala Arasaka-Mode`,t:`style`,r:`r`,p:3500,k:{soc:2},cred:15,d:`Coupe parfaite, tissu impossible à froisser. Les portes s'ouvrent.`},
+  {id:`silvertalk`,n:`Chaîne Samurai en argent`,t:`style`,r:`e`,p:6200,k:{soc:2},at:{cool:1},fame:1,cred:30,d:`Un pendentif devenu légende. Il parle pour toi.`},
 ];
+const RARITY = {c:[`Commun`,`#8a8aa8`],r:[`Rare`,`#00f0ff`],e:[`Épique`,`#c77dff`],l:[`Légendaire`,`#fcee0a`]};
 
 /* ---------- Gigs du tableau ---------- */
 const GIGS = [
@@ -231,7 +260,7 @@ const GIGS = [
 /* ---------- Faits de score / fins ---------- */
 const ENDS = {
   flatline:{t:`FLATLINE`,e:`Une balle, un couteau, un mauvais calcul. Night City ne pleure personne.`},
-  psycho:{t:`CYBERPSYCHOSE`,e:`Il ne restait plus assez d'humain pour te reconnaître. MaxTac s'en est chargé.`},
+  psycho:{t:`CYBERPSYCHOSE`,e:`Il ne restait plus assez d'humain pour te reconnaître. MaxTac s'en est chargé — et la Trauma Team ne vient jamais quand MaxTac tire.`},
   debt:{t:`DETTE MORTELLE`,e:`Les créanciers de Night City n'envoient pas de rappels. Ils envoient des gars.`},
   blaze:{t:`DERNIER RUN`,e:`Tu es parti(e) en flammes, comme les vrais. La ville en parle encore à l'Afterlife.`},
   retire:{t:`RETRAITE`,e:`Tu as survécu. Dans cette ville, ça fait déjà de toi une légende.`},

@@ -115,7 +115,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -248,9 +248,14 @@ function renderBlocs(){
   const b=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
   $(`#blocs`).innerHTML=Object.keys(BLOCS).map(k=>{
     const v=Math.round(b[k]), danger=v<=20||v>=80;
-    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-b="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
+    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-bl="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
   }).join(``);
-  document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{const k=e.dataset.b;SFX.tap();toast(`${BLOCS[k].n} ${Math.round(b[k])}/100 — ${BLOCS[k].d}. Trop bas : ils te traquent. Trop haut : ils te possèdent.`)});
+  document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{SFX.tap();openBloc(e.dataset.bl)});
+}
+function openBloc(k){
+  const rows=Object.keys(BLOCS).map(b=>{ const p=blocPerkLines(b); return `<div class="item ${b===k?`own`:``}" style="border-color:${BLOCS[b].c}${b===k?``:`55`}"><div class="in"><b style="color:${BLOCS[b].c}">${BLOCS[b].n} · ${p.v}/100 ${p.s===`hi`?`<span class="tagx g">FAVEUR</span>`:p.s===`lo`?`<span class="tagx">HOSTILE</span>`:``}</b><small>${BLOCS[b].d}</small>
+    <small style="color:${p.s===`hi`?`var(--g)`:`var(--dim)`}">▲ 65+ : ${p.hi}</small><small style="color:${p.s===`lo`?`var(--m)`:`var(--dim)`}">▼ 35− : ${p.lo}</small></div></div>`; }).join(``);
+  modal(`Équilibre`,`<div class="log" style="color:var(--dim)">Garde les barres <b>près du milieu</b>. Une faveur (65+) donne des avantages, mais à 100 ils te possèdent. Une hostilité (35−) te coûte, et à 0 ils te tuent. Un bloc qui monte fait baisser son opposé : Rue ↔ Loi, Corpos ↔ Badlands.</div>${rows}`);
 }
 function previewDots(ch){
   const keys=new Set(); const add=f=>{if(!f)return;[`hp`,`hum`,`cred`,`ed`].forEach(k=>{if(f[k])keys.add(k)});};
@@ -276,11 +281,11 @@ function showCardView(){
   stage.innerHTML=`<div class="speaker">${portrait(c.who)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}</div></div></div>
     <div class="cardwrap" id="cw"><div class="card" id="card" style="--ac:${w.c}">
       <div class="tag">${esc(c.tag||``)}</div><div class="tx">${G.cur.text}</div></div></div>`;
-  chs.innerHTML=c.ch.map((h,i)=>{
+  chs.innerHTML=visChoices(c).map(({h,i},pos)=>{
     const lock=h.req?h.req():``; let badge=``;
     if(h.chk){ const r=rollInfo(h.chk); const p=Math.round(r.chance*100); badge=`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`; }
     let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(WHO[al].n)}">📞<small>${esc(WHO[al].n.split(` `)[0])}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
-    return `<div class="crow"><button class="btn choice ${lock?`lock`:``}" data-i="${i}"><span class="k">${i+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
+    return `<div class="crow"><button class="btn choice ${lock?`lock`:``} ${h.exp?`exp`:``}" data-i="${i}"><span class="k">${pos+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
   }).join(``);
   chs.querySelectorAll(`.help`).forEach(b=>b.onclick=()=>pick(+b.dataset.h,0,b.dataset.al));
   chs.querySelectorAll(`.choice`).forEach(b=>{
@@ -350,7 +355,8 @@ function showResult(r){
 }
 function finishCard(r){
   picking=false;
-  if(r.loot&&!G.over){ const t=r.loot; r.loot=0; return showLoot(t,()=>finishCard(r)); }
+  if(r.loot&&!G.over){ const t=r.loot; r.loot=0; G.trainLast=-99; return showLoot(t,()=>finishCard(r)); }
+  if(!G.over&&!r.die&&!r.retire&&!r.quit&&trainDue()) return showTrainPicker(()=>finishCard(r));
   if(G.pendingFound){ const kind=G.pendingFound; G.pendingFound=null; return askFactionName(kind,()=>afterCard(r)); }
   afterCard(r);
 }
@@ -360,7 +366,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -376,6 +382,18 @@ function askFactionName(kind,done){
   };
 }
 
+/* ---------- entraînement imposé ---------- */
+const trainDue=()=>G.stats.cards-(G.trainLast||0)>=4;
+function showTrainPicker(cb){
+  G.trainLast=G.stats.cards; G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
+  modal(`📈 Entraînement`,`<div class="log" style="color:var(--dim)">Tes dernières épreuves t'ont appris quelque chose. Choisis l'attribut que tu travailles : <b>+3 XP</b>. Quand la barre est pleine, l'attribut monte tout seul.</div>`+
+   Object.keys(ATTRS).map(k=>{ const lv=G.at[k], max=lv>=9, need=xpNeed(lv), x=G.xp[k]||0, m=relv(MENTOR[k]), bonus=3+(m>=15?2:0);
+     return `<button class="tile" data-tr="${k}" ${max?`disabled`:``} style="flex-direction:row;align-items:center;gap:12px;min-height:auto"><span style="flex:1"><b>${ATTRS[k].n} ${lv}</b><small>${max?`Niveau max`:`${x} / ${need} XP`}${m>=15?` · mentor ${WHO[MENTOR[k]].n.split(` `)[0]} +2`:``}</small><div class="bigbar" style="margin-top:6px"><i style="background:var(--y);width:${max?100:Math.round(x/need*100)}%"></i></div></span><b style="color:var(--g)">+${bonus}</b></button>`; }).join(``),{lock:true});
+  document.querySelectorAll(`[data-tr]`).forEach(b=>b.onclick=()=>{
+    const k=b.dataset.tr; CHIPS=[]; gainXp(k,3+(relv(MENTOR[k])>=15?2:0)); SFX.buy(); updateHud();
+    G.log.unshift({d:dateStr(),m:`Entraînement : ${ATTRS[k].n}.`}); toast(CHIPS.map(c=>c.txt).join(` · `)); closeModal(); cb();
+  });
+}
 /* ---------- butin ---------- */
 function showLoot(tier,cb){
   const opts=makeLoot(tier); SFX.ok(); flash(`#fcee0a`);
@@ -402,7 +420,7 @@ function closeModal(){ const m=$(`#modal`); if(m)m.remove(); modalLock=false; }
 document.addEventListener(`keydown`,e=>{
   if(e.key===`Escape`&&!modalLock) closeModal();
   if(!G||G.over||$(`#modal`)||picking) return;
-  if(/^[1-4]$/.test(e.key)&&$(`#choices`)){ const b=document.querySelector(`.choice[data-i="${+e.key-1}"]`); if(b)b.click(); }
+  if(/^[1-5]$/.test(e.key)&&$(`#choices`)){ const b=document.querySelectorAll(`#choices .choice`)[+e.key-1]; if(b)b.click(); }
 });
 const money = v => v.toLocaleString(`fr`)+` €$`;
 
@@ -434,7 +452,7 @@ function statBar(){
   return `<div class="vstat"><span style="color:var(--hp)">♥ ${G.hp}</span><span style="color:var(--hum)">◐ ${G.hum}</span><span style="color:var(--y)">★ ${G.cred}</span><b style="color:var(--ed)">${money(G.ed)}</b></div>`;
 }
 function goAdvice(go){
-  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,train:openTrain,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
+  ({heal:()=>openCitySub(`rest`),therapy:()=>openCitySub(`rest`),gigs:openGigs,gear:()=>openShop(`gear`),empire:()=>openEmpire(`map`)})[go]();
 }
 function openCity(){
   const ad=adviceNow();
@@ -443,10 +461,10 @@ function openCity(){
    ${ad?`<button class="adv inl" id="advc">${ad.ic} ${ad.t} <b>›</b></button>`:``}
    <div class="tiles one">
     ${big(`shop`,`🛒`,`Boutique`,`Chrome · Armes · Hacks`)}
-    ${big(`work`,`💼`,`Boulot`,`Gigs · Entraînement`,(G.board&&G.board.p===G.stats.cards?G.board.left:2)>0&&G.hp>=60)}
+    ${big(`work`,`💼`,`Boulot`,`Gigs du tableau`,(G.board&&G.board.p===G.stats.cards?G.board.left:2)>0&&G.hp>=60)}
     ${big(`rest`,`❤`,`Repos`,`Soins · Thérapie · Dormir`,G.hp<50||G.hum<50)}
    </div>`);
-  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();openCitySub(b.dataset.c)});
+  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();b.dataset.c===`work`?openGigs():openCitySub(b.dataset.c)});
   const ac=$(`#advc`); if(ac) ac.onclick=()=>{SFX.tap();goAdvice(ad.go)};
 }
 function openCitySub(k){
@@ -455,18 +473,19 @@ function openCitySub(k){
   const body={
     shop:`<div class="tiles">${tile(`rip`,`🦾`,`Chrome`,`Implants`)}${tile(`gear`,`🔫`,`Équipement`,`Armes · armures`)}${tile(`hack`,`💾`,`Hacks`,hasDeck()?`${G.hacks.length}/${deckSlots()}`:`Deck requis`,{dis:!hasDeck()})}</div>`,
     work:`<div class="tiles">${tile(`gigs`,`📋`,`Gigs`,`${left} dispo`,{dis:!left})}${tile(`train`,`📈`,`Entraînement`,G.trainP===G.stats.cards?`Fait`:`Gratuit`,{dis:G.trainP===G.stats.cards})}</div>`,
-    rest:`<div class="tiles three">${tile(`heal`,`➕`,`Clinique`,`200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}${tile(`therapy`,`🧠`,`Thérapie`,`600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}${tile(`rest`,`🛏`,`Dormir`,`Gratuit`)}</div>`
+    rest:`<div class="tiles">${tile(`heal`,`➕`,`Clinique`,`200 €$`,{dis:G.hp>=100||G.ed<200,rec:G.hp<50})}${tile(`therapy`,`🧠`,`Thérapie`,`600 €$`,{dis:G.hum>=100||G.ed<600,rec:G.hum<50})}${tile(`rest`,`🛏`,`Dormir`,`Gratuit`)}${tile(`trauma`,`🚑`,`Trauma Team`,G.flags.trauma?`Actif ✓ · seconde vie`:`1 200 €$ · seconde vie`,{dis:!!G.flags.trauma||G.ed<1200})}</div><div class="log" style="color:var(--dim)">Trauma Team te ramène si tu tombes à 0 Santé — jamais si c'est MaxTac qui tire.</div>`
   }[k];
   const title={shop:`Boutique`,work:`Boulot`,rest:`Repos`}[k];
   modal(title,`${statBar()}${body}`,{back:openCity});
-  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();({rip:()=>openShop(`cy`),gear:()=>openShop(`gear`),hack:()=>openShop(`hack`),gigs:openGigs,train:openTrain,heal:()=>doDown(`heal`),therapy:()=>doDown(`therapy`),rest:()=>doDown(`rest`)})[b.dataset.c]()});
+  document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();({rip:()=>openShop(`cy`),gear:()=>openShop(`gear`),hack:()=>openShop(`hack`),gigs:openGigs,train:openTrain,heal:()=>doDown(`heal`),therapy:()=>doDown(`therapy`),rest:()=>doDown(`rest`),trauma:()=>doDown(`trauma`)})[b.dataset.c]()});
 }
 function doDown(k){
   CHIPS=[];
   if(k===`heal`){ if(G.ed<200){toast(`Pas assez d'eddies`);return} applyFx({ed:-200,hp:35}); }
   if(k===`therapy`){ if(G.ed<600){toast(`Pas assez d'eddies`);return} applyFx({ed:-600,hum:15}); }
   if(k===`rest`){ applyFx({hp:15,hum:5}); }
-  SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`}[k]});
+  if(k===`trauma`){ if(G.flags.trauma||G.ed<1200){toast(`Impossible`);return} applyFx({ed:-1200,flag:[`trauma`]}); toast(`Abonnement Trauma Team activé`); }
+  SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`,trauma:`Abonnement Trauma Team Platinum souscrit.`}[k]});
   updateHud(); toast(CHIPS.map(c=>c.txt).join(` · `)||`Fait`);
   if(checkEnd()){ closeModal(); return showEnd(); }
   openCitySub(`rest`);
@@ -479,12 +498,12 @@ function openShop(kind){
   const chipBar=(list,cur)=>`<div class="fchips">${list.map(([k,l])=>`<button class="fc ${cur===k?`on`:``}" data-f="${k}">${l}</button>`).join(``)}</div>`;
   const tagsOf=o=>[
     ...Object.entries(o.at||{}).map(([k,v])=>`<span class="tagx g">+${v} ${ATTRS[k].n}</span>`),
-    ...(o.k?Object.entries(o.k).map(([k,v])=>`<span class="tagx g">+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`}[k]}</span>`):[]),
+    ...(o.k?Object.entries(o.k).map(([k,v])=>`<span class="tagx g">+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`,soc:`social`}[k]}</span>`):[]),
     o.mit?`<span class="tagx g">−${Math.round(o.mit*100)}% dégâts</span>`:``, o.regen?`<span class="tagx g">soin auto</span>`:``, o.deck?`<span class="tagx c">${o.deck} slots</span>`:``].join(``);
   if(kind===`cy`){
     chips=chipBar([[`all`,`Tout`],...Object.entries(SLOTS)],f);
     CYBER.filter(c=>f===`all`||c.slot===f).forEach(c=>{
-      const price=Math.round(c.p*disc*(G.member===`maelstrom`?.9:1)), own=hasCy(c.id);
+      const price=cyPrice(c), own=hasCy(c.id);
       const lock = c.cred&&G.cred<c.cred?`Cred ${c.cred}`: c.needs&&!hasCy(c.needs)?`Interface requise`:``;
       const cur=G.cyber.find(i=>CY(i).slot===c.slot&&i!==c.id);
       const afford=G.ed>=price;
@@ -493,10 +512,10 @@ function openShop(kind){
     });
   } else if(kind===`gear`){
     chips=chipBar([[`all`,`Tout`],[`arme`,`Armes`],[`armure`,`Armures`],[`véhicule`,`Véhicules`],[`style`,`Style`]],f);
-    GEAR.filter(g=>f===`all`||g.t===f).forEach(g=>{
+    GEAR.filter(g=>!g.loot&&(f===`all`||g.t===f)).forEach(g=>{
       const own=G.gear.includes(g.id), lock=g.cred&&G.cred<g.cred?`Cred ${g.cred}`:``;
-      const price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)), afford=G.ed>=price;
-      rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${g.n}</b><small>${g.t} · ${g.d}</small><small>${tagsOf(g)}</small></div>
+      const price=gearPrice(g), afford=G.ed>=price;
+      rows.push(`<div class="item ${own?`own`:``}" style="border-left:3px solid ${RARITY[g.r||`c`][1]}"><div class="in"><b>${g.n} <span class="tagx" style="border-color:${RARITY[g.r||`c`][1]};color:${RARITY[g.r||`c`][1]}">${RARITY[g.r||`c`][0]}</span></b><small>${g.t} · ${g.d}</small><small>${tagsOf(g)}</small></div>
       ${own?`<b class="own-t">POSSÉDÉ</b>`:`<button class="buy ${afford&&!lock?``:`no`}" data-g="${g.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(price)}</button>`}</div>`);
     });
   } else {
@@ -514,7 +533,7 @@ function openShop(kind){
   document.querySelectorAll(`[data-h]`).forEach(b=>b.onclick=()=>buyHack(b.dataset.h));
 }
 function buyCy(id){
-  const c=CY(id), price=Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1));
+  const c=CY(id), price=cyPrice(c);
   if(G.ed<price){ SFX.ko(); toast(`Pas assez d'eddies`); return; }
   if(G.hum-c.h<=8 && !confirm(`Ça te laisse à ${G.hum-c.h} Humanité. Risque de cyberpsychose. Continuer ?`)) return;
   CHIPS=[]; applyFx({ed:-price,hum:-c.h}); installCy(id); SFX.buy(); flash(`#05ffa1`); vib(60);
@@ -523,7 +542,7 @@ function buyCy(id){
   openShop(`cy`);
 }
 function buyGear(id){
-  const g=GEARMAP[id], price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1));
+  const g=GEARMAP[id], price=gearPrice(g);
   if(G.ed<price){ SFX.ko(); toast(`Pas assez d'eddies`); return; }
   G.ed-=price; G.gear=G.gear.filter(x=>GEARMAP[x].t!==g.t); G.gear.push(id);
   SFX.buy(); updateHud(); toast(`${g.n} acquis`); G.log.unshift({d:dateStr(),m:`Achat : ${g.n}.`}); openShop(`gear`);
@@ -552,7 +571,7 @@ function openTrain(){
 }
 const rel_ = id => (G.rel&&G.rel[id])||0;
 const GIG_PER_PERIOD=2;
-const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function gigBoard(){
   if(!G.board||G.board.p!==G.stats.cards){
     const cs=[],used=new Set();
@@ -568,7 +587,7 @@ function openGigs(){
    bd.gigs.map((x,i)=>{
     const g=GIGS.find(y=>y.n===x.n); const r=rollInfo({a:g.a,k:g.k,dc:g.dc}); const p=Math.round(r.chance*100); const off=x.done||!bd.left;
     return `<button class="btn choice ${off?`lock`:``}" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}${x.done?` ✓`:``}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(gigPay(g))} · +${gigCr(g)} Cred · échec : −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
-  }).join(``),{back:()=>openCitySub(`work`)});
+  }).join(``),{back:openCity});
   document.querySelectorAll(`[data-gi]`).forEach(b=>b.onclick=()=>{
     const x=bd.gigs[+b.dataset.gi]; if(x.done||!bd.left){SFX.ko();return}
     const g=GIGS.find(y=>y.n===x.n), r=rollInfo({a:g.a,k:g.k,dc:g.dc}), roll=rnd(1,10);
@@ -578,8 +597,8 @@ function openGigs(){
     gainXp(g.a,ok?3:1); G.lastA=g.a;
     tick(1); updateHud();
     modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${ok?`Choisir ma récompense`:bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
-    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:()=>openCitySub(`work`))(); };
-    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,back); else back(); };
+    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,()=>trainDue()?showTrainPicker(back):back()); else back(); };
   });
 }
 
@@ -601,7 +620,7 @@ function openMap(keep){
     return `<g data-d="${d.id}" style="cursor:pointer;opacity:${dim}"><rect x="${d.x}" y="${d.y}" width="${d.wd}" height="${d.h}" rx="4" fill="${locked?`#15152a`:ownerColor(o)}" fill-opacity="${o===`player`?.95:locked?.6:.6}" ${sel?`stroke="#fff" stroke-width="3"`:o===`player`?`stroke="#fcee0a" stroke-width="2"`:``}/>
       <text x="${d.x+6}" y="${d.y+16}" style="font-size:10px">${d.n}${locked?` 🔒`:``}</text>
       <text x="${d.x+6}" y="${d.y+27}" style="font-size:6.5px;fill:#ffffffaa;font-weight:500;letter-spacing:.1em">${d.w.toUpperCase()}</text>${pips}
-      ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text>`:``}</g>`;
+      ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text><rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*holdOf(d.id)/100}" height="3" fill="${holdOf(d.id)<=25?`#ff2a6d`:`#fcee0a`}" stroke="none"/>`:(G.ctl&&G.ctl[d.id]?`<rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*G.ctl[d.id]/100}" height="3" fill="#00f0ff" stroke="none"/>`:``)}</g>`;
   }).join(``);
   const cnt={}; DIST.forEach(d=>{cnt[G.dist[d.id]]=(cnt[G.dist[d.id]]||0)+1});
   const leg=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(o=>`<button class="fc ${hl===o?`on`:``}" data-l="${o}" style="border-color:${ownerColor(o)}"><i style="background:${ownerColor(o)}"></i>${ownerName(o)} ${cnt[o]}</button>`).join(``);
@@ -618,23 +637,31 @@ function openMap(keep){
   else $(`#mpanel`).innerHTML=`<div class="log" style="text-align:center;color:var(--dim)">👆 Touche un quartier</div>`;
 }
 function renderDistrictPanel(id){
-  const d=DMAP[id], o=G.dist[id], why=canConquer(d);
+  const d=DMAP[id], o=G.dist[id], why=canConquer(d), mine=o===`player`;
+  const ctl=(G.ctl&&G.ctl[id])||0, hold=holdOf(id), left=opsLeft();
+  let act=``;
+  if(mine){ const price=d.def*350; act=`<div class="vstat"><span>Tenue</span><b style="color:${hold<=25?`var(--m)`:`var(--g)`}">${hold}/100</b></div><div class="bigbar"><i style="background:${hold<=25?`var(--m)`:`var(--y)`};width:${hold}%"></i></div>
+    <button class="btn pri" id="goreinf" ${G.ed<price||hold>=100?`disabled`:``}>🛡 Renforcer · ${money(price)} (+35 tenue)</button><div class="log" style="color:var(--dim)">La tenue baisse à chaque période. À 0, le quartier t'échappe. Revenu : ${Math.round(d.inc*3*(.4+.6*hold/100))} €$ / période.</div>`; }
+  else if(why) act=`<div class="why">${why===`Verrouillé`?`🔒 Verrouillé`:`🔒 ${why}`}</div>`;
+  else act=`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
+    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Mener une opération (${left} restante${left>1?`s`:``})`:`Plus d'opération cette période`}</button><div class="log" style="color:var(--dim)">Atteins 100 d'influence pour prendre le quartier. L'influence retombe de 6 par période, et l'ennemi riposte.</div>`;
   $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)}"><div class="in"><b>${d.n} <small style="display:inline;color:var(--dim)">· ${d.w}</small></b><small>${d.d}</small>
-    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)} · ${d.inc*3} €$/période</small></div></div>
-    ${why?`<div class="why">${why==="Déjà à toi"?`★ Ce quartier est à toi.`:`🔒 ${why}`}</div>`:`<button class="btn pri" id="goq">Conquérir ${d.n}</button>`}`;
+    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</small></div></div>${act}`;
   const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
+  const rf=$(`#goreinf`); if(rf) rf.onclick=()=>{ const p=reinforce(d); if(p){SFX.buy();toast(`${d.n} renforcé`);updateHud();openMap(true)} };
   const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
 }
 function openConquest(d){
-  const prev=G.dist[d.id];
-  modal(`Conquérir ${d.n}`,`<div class="log">Actuellement : <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5.<br>Un échec coûte de la Santé et de la réputation auprès du propriétaire.</div>`+
-   conquestChoices(d).map((c,i)=>`<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance>=.7?`hi`:rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance<=.35?`lo`:``}">${Math.round(rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance*100)}%</span>`:``}</button>`).join(``),{back:()=>openMap(true)});
+  const prev=G.dist[d.id], ctl=(G.ctl&&G.ctl[d.id])||0;
+  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
+   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Une opération par action : choisis ta méthode.</div>`+
+   conquestChoices(d).map((c,i)=>{ const ch=c.a?rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance:0; return `<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${ch>=.7?`hi`:ch<=.35?`lo`:``}">${Math.round(ch*100)}%</span>`:``}</button>`; }).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
-    const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req){SFX.ko();return}
-    const r=doConquer(d,opt); updateHud();
-    modal(r.ok?`${d.n} est à toi !`:`Échec à ${d.n}`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
-      <div class="rt">${r.ok?`Les rues changent de couleur. ${d.n} porte désormais ton nom.`:`L'assaut tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
-    r.ok?(SFX.ok(),flash(`#fcee0a`),vib(80)):(SFX.ko(),shake());
+    const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req||!opsLeft()){SFX.ko();return}
+    const r=doOperation(d,opt); updateHud();
+    modal(r.captured?`${d.n} est à toi !`:r.ok?`Opération réussie`:`Opération ratée`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
+      <div class="rt">${r.captured?`Les rues changent de couleur. ${d.n} porte désormais ton nom — mais il faudra le garder.`:r.ok?`Tu grignotes du terrain. L'influence monte, mais l'ennemi n'a pas dit son dernier mot.`:opt.k===`talk`?`Les négociations échouent. Ils se méfient de toi.`:`L'opération tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
+    r.ok?(SFX.ok(),flash(r.captured?`#fcee0a`:`#05ffa1`),vib(80)):(SFX.ko(),shake());
     $(`#qok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else {MAPSEL=d.id;openMap(true)} };
   });
 }

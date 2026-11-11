@@ -249,3 +249,5 @@ input.txt:focus{border-color:var(--c);box-shadow:0 0 12px #00f0ff44}
 .cinfo b{display:block}.cinfo small{color:var(--dim);font-size:13px}.cinfo .bigbar{margin-top:5px}
 .cdet{grid-column:1/-1;font-size:13.5px;color:var(--dim);line-height:1.5;border-top:1px dashed var(--line);padding-top:6px}
 .cdet[hidden],.fdesc[hidden]{display:none}
+
+.choice.exp{border-color:var(--y)}.choice.exp .k{border-color:var(--y);color:var(--y)}.choice.exp:not(.lock){background:linear-gradient(180deg,#26240a,#14140a)}

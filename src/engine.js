@@ -21,7 +21,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {friend_danger:12,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {fix_board:10,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -32,7 +32,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, relT:{}, dead:{}, pendingLoot:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -63,12 +63,40 @@ function skill(k){
   if(k===`hck`){ v+=Math.floor(G.hacks.length/2); if(G.flags.hackmentor) v+=1; }
   if(G.mine){ if(G.mine.type===`runners`&&k===`hck`)v++; if(G.mine.type===`nomads`&&k===`drv`)v++; if(G.mine.type===`gang`&&k===`cmb`)v++; }
   if(G.member===`wraiths`&&k===`drv`)v++;
+  if(G.origin===`street`&&k===`stl`) v++;
+  if(G.origin===`nomad`&&k===`drv`) v++;
+  if(G.origin===`corpo`&&k===`soc`) v++;
+  if(k===`soc`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).soc||0});
+  if(k===`stl`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).stl||0});
+  if(k===`drv`){ const bs=blocState(`nomad`); if(bs===`hi`)v++; if(bs===`lo`)v--; }
   return v;
+}
+function blocState(b){ const v=(G.bloc||{})[b]; return v>=65?`hi`:v<=35?`lo`:null; }
+function bm(){ // multiplicateurs liés aux blocs et à l'origine
+  const r=blocState(`rue`), c=blocState(`corpo`), l=blocState(`loi`), n=blocState(`nomad`);
+  return {
+    gear:(r===`hi`?.85:r===`lo`?1.15:1), cyber:(c===`hi`?.9:c===`lo`?1.15:1)*(G.origin===`corpo`?.9:1),
+    gig:(r===`hi`?1.1:r===`lo`?.9:1), income:(c===`hi`?1.2:c===`lo`?.9:1),
+    hurt:(l===`lo`?1.1:1), rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(n===`hi`?.8:1)
+  };
+}
+const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber);
+const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear);
+function blocPerkLines(b){
+  const s=blocState(b), v=Math.round(G.bloc[b]);
+  const L={
+    rue:[`Marché noir −15 % · gigs +10 %`,`Marché noir +15 % · gigs −10 %`],
+    corpo:[`Chrome −10 % · revenus passifs +20 %`,`Chrome +15 % · revenus passifs −10 %`],
+    loi:[`Protection : dégâts −10 % (blindage de fait)`,`Traqué : dégâts reçus +10 %`],
+    nomad:[`Routes sûres : conduite +1 · loyer −20 %`,`Routes fermées : conduite −1`]
+  }[b];
+  return {s,v,hi:L[0],lo:L[1]};
 }
 function mitigation(){
   let m=0;
   G.cyber.forEach(i=>m+=CY(i).mit||0);
   G.gear.forEach(i=>m+=GEARMAP[i].mit||0);
+  if(blocState(`loi`)===`hi`) m+=.1;
   return Math.min(.5,m);
 }
 const ownedList = () => DIST.filter(d=>G.dist[d.id]===`player`);
@@ -130,7 +158,7 @@ function makeLoot(t){
   const worst=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
   const dev=G.bloc[worst]-50;
   if(Math.abs(dev)>=18) pool.push({k:`bal`,ic:`⚖`,t:`Rééquilibrer`,d:`${BLOCS[worst].n} ${dev<0?`+`:`−`}${8+4*t} (te rapproche du milieu)`,w:3,ap:()=>applyFx({bloc:{[worst]:dev<0?8+4*t:-(8+4*t)}})});
-  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&x.p<=2000+1800*t&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
+  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&(x.loot?(t>=3&&Math.random()<.25):x.p<=2000+2200*t)&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
     pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
   if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
     pool.push({k:`hack`,ic:`💾`,t:`Quickhack`,d:`${x.n} (gratuit)`,w:2,ap:()=>{G.hacks.push(x.id);chip(`y`,`Chargé : ${x.n}`)}}); } }
@@ -144,7 +172,8 @@ function makeLoot(t){
 }
 /* ---------- jets ---------- */
 function rollInfo(c,bonus){
-  const tot = A(c.a) + (c.k?skill(c.k):0) + (bonus||0);
+  const kk = c.k||(c.a===`cool`?`soc`:null);
+  const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
   const need = dc + 4 - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
@@ -157,7 +186,7 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.hum){ const b=G.hum; G.hum=clamp(G.hum+fx.hum,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
@@ -170,6 +199,7 @@ function applyFx(fx){
   if(fx.unflag) fx.unflag.forEach(f=>delete G.flags[f]);
   if(fx.flagMark) G.joinedOnce[fx.flagMark]=true;
   if(fx.unonce) delete G.done[fx.unonce];
+  if(fx.loot) G.pendingLoot=Math.max(G.pendingLoot||0,fx.loot);
   if(fx.cy) installCy(fx.cy,true);
   if(fx.xp) Object.entries(fx.xp).forEach(([k,v])=>gainXp(k,v));
   if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
@@ -193,6 +223,7 @@ function installCy(id,free){
   if(c.slot===`neural`&&c.id!==`plug`){}
 }
 const relv = id => (G.rel&&G.rel[id])||0;
+const visChoices = c => c.ch.map((h,i)=>({h,i})).filter(x=>!x.h.only||x.h.only===G.origin);
 function bestAlly(a){
   if(G.helpP===G.stats.cards) return null;
   const l=(ALLY[a]||[]).filter(i=>relv(i)>=25&&!(G.dead||{})[i]); l.sort((x,y)=>relv(y)-relv(x)); return l[0]||null;
@@ -213,7 +244,6 @@ function adviceNow(){
   if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
   const bd=G.board&&G.board.p===G.stats.cards?G.board.left:2;
   if(bd>0&&G.hp>=60) return {ic:`📋`,t:`${bd} gig(s) dispo : du cash et de la rep.`,go:`gigs`};
-  if(G.trainP!==G.stats.cards) return {ic:`📈`,t:`Séance d'entraînement gratuite disponible.`,go:`train`};
   if(G.ed>=2500&&!G.gear.some(i=>GEARMAP[i].mit)) return {ic:`🛡`,t:`Tu as de l'argent : pense à une armure.`,go:`gear`};
   return null;
 }
@@ -222,7 +252,7 @@ const FN = {
   allySaved(){ const id=G.tmp&&G.tmp.ally; if(id) { chip(`y`,`${WHO[id].n.split(` `)[0]} est sauvé(e)`); } },
   allyLost(){ const id=G.tmp&&G.tmp.ally; if(!id) return; G.dead=G.dead||{}; G.dead[id]=true; G.rel[id]=0; chip(`n`,`† ${WHO[id].n.split(` `)[0]} est mort(e)`); G.log.unshift({d:dateStr(),m:`${WHO[id].n} est mort(e).`}); G.hum=clamp(G.hum-10,0,100); chip(`n`,`−10 Humanité`); },
   sellOne(){ if(!G.cyber.length)return; const id=G.cyber[rnd(0,G.cyber.length-1)]; removeCy(id); const v=Math.round(CY(id).p*.5); G.ed+=v; chip(`i`,`+${v} €$`); chip(`n`,`− ${CY(id).n}`); },
-  defendWin(){ if(G.mine) G.mine.power++; chip(`y`,`Territoire défendu`); },
+  defendWin(){ if(G.mine) G.mine.power++; if(G.tmp&&G.tmp.d){G.hold=G.hold||{};G.hold[G.tmp.d]=clamp(holdOf(G.tmp.d)+20,0,100);} chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
   facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
@@ -241,11 +271,12 @@ const FN = {
 function tick(months){
   const k = months/STEP;
   let inc = 0;
-  ownedList().forEach(d=>inc+=d.inc*3*(G.mine&&G.mine.type===`gang`?1.2:1));
+  ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
   if(G.flags.corpjob) inc+=140*STEP;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*STEP*.6; }
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*STEP;
+  inc*=bm().income;
+  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*STEP*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
@@ -279,45 +310,71 @@ function prepCard(c){
   G.cur = {id:c.id, text:raw.replace(/\{n\}/g,G.name)};
 }
 
-/* ---------- conquête ---------- */
+/* ---------- guerre de territoire ---------- */
+const OPS_PER=2;
+const opsLeft=()=>{ if(!G.ops) G.ops={left:OPS_PER}; return G.ops.left; };
+const holdOf=id=>{ if(!G.hold) G.hold={}; return G.hold[id]===undefined?65:G.hold[id]; };
+function warDc(d,base){ return base + ownedList().length*1.1 + Math.floor((yr()-START_YEAR)/5); }
 function conquestChoices(d){
   const o=[];
-  o.push({k:`assault`,t:`Assaut armé`,s:`${ATTRS.body.n} + combat`,a:`body`,sk:`cmb`,dc:5+d.def*1.5});
-  o.push({k:`hack`,t:`Piratage des systèmes`,s:`${ATTRS.int.n} + hack · cyberdeck requis`,a:`int`,sk:`hck`,dc:5+d.def*1.5+1,req:hasDeck()?``:`Cyberdeck requis`});
-  o.push({k:`talk`,t:`Diplomatie & pression`,s:`${ATTRS.cool.n}`,a:`cool`,sk:null,dc:6+d.def*1.5});
-  const price=d.def*1800;
-  o.push({k:`buy`,t:`Acheter le quartier`,s:`${price} €$ · réussite garantie`,price,req:G.ed>=price?``:`${price} €$ requis`});
+  o.push({k:`assault`,t:`Assaut armé`,s:`${ATTRS.body.n} + combat · +28 influence`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
+  o.push({k:`hack`,t:`Piratage des systèmes`,s:`${ATTRS.int.n} + hack · +24 influence`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Hack avancé requis (deck ou formation)`});
+  o.push({k:`talk`,t:`Diplomatie & pression`,s:`${ATTRS.cool.n} · +20 influence · sans risque physique`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
+  const price=d.def*1000;
+  o.push({k:`buy`,t:`Corrompre & financer`,s:`${price} €$ · +35 influence, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
   return o;
 }
 function canConquer(d){
   if(G.dist[d.id]===`player`) return `Déjà à toi`;
   if(d.lock&&!G.flags.dogtown) return `Verrouillé`;
   if(G.member&&G.dist[d.id]===G.member) return `Ta propre faction`;
-  const need = d.def*7;
+  const need = d.def*7+ownedList().length*2;
   if(G.cred<need) return `Street Cred ${need} requis`;
   return ``;
 }
-function doConquer(d,opt){
-  CHIPS=[];
-  const prev=G.dist[d.id];
-  let ok=true, info=null;
-  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); }
+function doOperation(d,opt){
+  CHIPS=[]; G.ctl=G.ctl||{}; G.hold=G.hold||{}; opsLeft(); G.ops.left--;
+  const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
+  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=35; }
   else {
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
+    gain = ok ? ({assault:28,hack:24,talk:20}[opt.k]+(roll===10?14:0)) : -8;
   }
-  if(ok){
-    G.dist[d.id]=`player`; G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
-    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-15,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
+  const before=G.ctl[d.id]||0; G.ctl[d.id]=clamp(before+gain,0,100);
+  chip(gain>0?`y`:`n`,`${sgn(G.ctl[d.id]-before)} influence`);
+  if(!ok){ if(opt.k!==`talk`) applyFx({hp:-(d.def*7)}); G.cred=clamp(G.cred-2,0,100); chip(`n`,`−2 Street Cred`); }
+  if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-3,-100,100); }
+  let captured=false, riposte=null;
+  if(G.ctl[d.id]>=100){
+    captured=true; delete G.ctl[d.id]; G.dist[d.id]=`player`; G.hold[d.id]=65;
+    G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
+    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-12,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
     if(G.mine) G.mine.power++;
     G.log.unshift({d:dateStr(),m:`Tu prends le contrôle de ${d.n}.`}); chip(`y`,`${d.n} conquis`);
-  } else {
-    const hp=-(d.def*8); applyFx({hp}); if(FAC[prev]){G.fac[prev]=clamp((G.fac[prev]||0)-6,-100,100);chip(`n`,`−6 ${FAC[prev].n}`)}
-    G.cred=clamp(G.cred-2,0,100); chip(`n`,`−2 Street Cred`);
+  } else if(Math.random()<.45){
+    const mine=ownedList();
+    if(mine.length){ const t=mine[rnd(0,mine.length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-15,0,100); riposte=`Riposte ennemie sur ${t.n} (−15 tenue)`; chip(`n`,`⚔ ${riposte}`); }
+    else { applyFx({hp:-10}); riposte=`Riposte : embuscade sur toi`; }
   }
-  tick(2);
-  return {ok,info,chips:CHIPS.slice()};
+  tick(1);
+  return {ok,info,gain,captured,riposte,chips:CHIPS.slice()};
+}
+const doConquer = doOperation;
+function reinforce(d){
+  const price=d.def*350; if(G.ed<price) return false;
+  G.ed-=price; G.hold=G.hold||{}; G.hold[d.id]=clamp(holdOf(d.id)+35,0,100); return price;
+}
+function warTick(){
+  G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
+  ownedList().forEach(d=>{
+    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2);
+    G.hold[d.id]=clamp(holdOf(d.id)-Math.max(1,dec),0,100);
+    if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n} faute de tenue.`}); }
+    else if(G.hold[d.id]<=25) toast(`⚠ ${d.n} : tenue ${G.hold[d.id]} — renforce !`);
+  });
 }
 
 /* ---------- fins & score ---------- */
@@ -361,7 +418,9 @@ function endGame(kind){
 function checkEnd(){
   if(G.over) return true;
   if(G.hp<=0){
-    if(G.flags.trauma){ delete G.flags.trauma; G.hp=35; toast(`Trauma Team Platinum t'a sauvé(e) !`); SFX.ok(); G.log.unshift({d:dateStr(),m:`Trauma Team t'a ramené(e) de justesse.`}); return false; }
+    const since=G.stats.cards-(G.lastRevive===undefined?-99:G.lastRevive);
+    if(G.flags.trauma){ delete G.flags.trauma; G.hp=50; G.lastRevive=G.stats.cards; toast(`Trauma Team Platinum t'a sauvé(e) ! (abonnement utilisé)`); SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Trauma Team Platinum t'a ramené(e) de justesse (abonnement utilisé).`}); return false; }
+    if(G.ed>=3000&&since>=10){ G.ed-=3000; G.hp=35; G.lastRevive=G.stats.cards; toast(`Trauma Team t'a sauvé(e) : facture 3 000 €$`); SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Trauma Team intervient en urgence : facture de 3 000 €$.`}); return false; }
     endGame(`flatline`); return true;
   }
   if(G.hum<=0){ endGame(`psycho`); return true; }
