@@ -77,7 +77,7 @@ card({id:`no_intro2`,who:`panam`,tag:`Convoi sous attaque`,once:true,
 card({id:`dex_gig`,who:`dex`,tag:`Afterlife · Boulot`,w:7,cond:()=>G.cred>=3,
   tx:`« Un client veut qu'un colis arrive à bon port avant l'aube. Il y a du monde sur le trajet, des gars qui n'aiment pas les inconnus. La paie : <strong>1 200 €$</strong>. Tu en es ? »`,
   ch:[
-    {t:`Y aller, plein gaz`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{ed:1200,cred:5,flag:[`dex`],rel:{dex:6},role:{fixer:1},msg:`Livraison parfaite. Dex hoche la tête : « Pas mal. »`},ko:{hp:-20,ed:300,cred:1,msg:`Une embuscade te coûte du sang et la moitié du pognon.`}}},
+    {t:`Y aller, plein gaz`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{ed:1200,cred:5,bloc:{rue:3},flag:[`dex`],rel:{dex:6},role:{fixer:1},msg:`Livraison parfaite. Dex hoche la tête : « Pas mal. »`},ko:{hp:-20,ed:300,cred:1,msg:`Une embuscade te coûte du sang et la moitié du pognon.`}}},
     {t:`Passer en douce par les toits`,s:`SANG-FROID · discrétion`,chk:{a:`cool`,k:`stl`,dc:7,ok:{ed:1200,cred:4,at:{cool:1},msg:`Tu traverses Watson comme un fantôme. Le colis arrive sans une égratignure.`},ko:{ed:200,hp:-10,cred:0,msg:`Trop de caméras, trop de gardes. Tu abandonnes le colis.`}}},
     {t:`Refuser poliment`,fx:{cred:0,msg:`« Comme tu veux. Mais les offres comme ça ne reviennent pas souvent. »`}}
   ]});
@@ -119,7 +119,7 @@ card({id:`courier`,who:`fix`,tag:`Livraison`,w:6,
 card({id:`cyberpsycho_bounty`,who:`ncpd`,tag:`Cyberpsycho Sighting`,w:5,cond:()=>G.cred>=10&&(skill(`cmb`)>=1||A(`ref`)>=6||G.member===`ncpd`),
   tx:`L'alerte clignote sur ta puce. Un ancien ouvrier d'Arasaka, trop de chrome, plus assez d'humain, retranché dans une station-service. Prime : <strong>2 500 €$</strong>. NCPD ne se déplace pas avant l'aube.`,
   ch:[
-    {t:`L'affronter de face`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:9,ok:{ed:2500,cred:8,hum:-5,role:{solo:2},msg:`Un duel brutal. Tu gagnes, mais son regard vide te hante. Ça aurait pu être toi.`},ko:{hp:-40,cred:1,hum:-3,msg:`Ses bras te broient les côtes. Tu t'enfuis à moitié mort(e).`}}},
+    {t:`L'affronter de face`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:9,ok:{ed:2500,cred:8,hum:-5,bloc:{loi:6},role:{solo:2},msg:`Un duel brutal. Tu gagnes, mais son regard vide te hante. Ça aurait pu être toi.`},ko:{hp:-40,cred:1,hum:-3,msg:`Ses bras te broient les côtes. Tu t'enfuis à moitié mort(e).`}}},
     {t:`Le piéger avec un hack`,s:`Deck + INT`,req:R.deck(),chk:{a:`int`,k:`hck`,dc:8,ok:{ed:2500,cred:8,role:{net:2},msg:`Overheat, Short Circuit, puis un dernier mot. Le cyberpsycho s'effondre, silencieux.`},ko:{hp:-30,hum:-2,msg:`Son implant bloque ton intrusion. Il te charge.`}}},
     {t:`Appeler le MaxTac et partir`,s:`Prudent`,fx:{cred:1,hum:2,ed:200,msg:`Tu laisses faire les pros. Une petite prime de signalement te revient.`}}
   ]});
@@ -207,7 +207,7 @@ card({id:`malfunction`,who:`narr`,tag:`Panne de chrome`,w:4,cond:()=>G.cyber.len
 card({id:`ncpd_sting`,who:`ncpd`,tag:`NCPD · Contrôle`,w:3,cond:()=>G.cred>=10&&G.member!==`ncpd`,
   tx:`Une patrouille NCPD te coince : « Papiers. Ces implants, ils sont déclarés ? » Dans le monde de Night City, la police a ses prix et tu le sais.`,
   ch:[
-    {t:`Graisser la patte`,s:`−400 €$`,req:R.ed(400),fx:{ed:-400,msg:`« Bonne soirée, citoyen. » Sans bruit, ils s'effacent.`}},
+    {t:`Graisser la patte`,s:`−400 €$`,req:R.ed(400),fx:{ed:-400,bloc:{loi:-5},msg:`« Bonne soirée, citoyen. » Sans bruit, ils s'effacent.`}},
     {t:`Argumenter`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{cred:2,msg:`Tu connais tes droits. Les agents hésitent et te laissent partir.`},ko:{hp:-12,ed:-150,cred:-1,msg:`Ils n'aiment pas les petits malins. Tu passes la nuit en cellule.`}}},
     {t:`Fuir`,s:`RÉFLEXES`,chk:{a:`ref`,dc:7,ok:{cred:2,msg:`Tu files dans un cul-de-sac, escalades, disparais.`},ko:{hp:-20,ed:-200,msg:`Un taser dans le dos. Ça fait mal.`}}}
   ]});
@@ -415,7 +415,7 @@ card({id:`path_cop`,who:`ncpd`,tag:`Voie de Flic`,once:true,cond:()=>G.member===
 card({id:`corp_headhunt`,who:`corpo`,tag:`Offre corpo`,w:5,cond:()=>(G.cred>=20||G.origin===`corpo`)&&!G.member,
   tx:`Un costume impeccable t'aborde au sortir de l'Afterlife : « Vos compétences nous intéressent. Un poste, un salaire, une assurance Trauma Team. En échange : loyauté et discrétion. »`,
   ch:[
-    {t:`Écouter l'offre`,s:`Voie corporative`,fx:{ed:700,cred:2,flag:[`corpjob`],role:{corpo:2},msg:`Tu signes une clause de confidentialité longue comme un roman. Le salaire est correct.`}},
+    {t:`Écouter l'offre`,s:`Voie corporative`,fx:{ed:700,cred:2,bloc:{corpo:10},flag:[`corpjob`],role:{corpo:2},msg:`Tu signes une clause de confidentialité longue comme un roman. Le salaire est correct.`}},
     {t:`Décliner, tu es libre`,fx:{cred:2,hum:3}}
   ]});
 card({id:`corp_promotion`,who:`corpo`,tag:`Promotion`,w:5,cond:()=>G.flags.corpjob&&G.origin===`corpo`,
@@ -434,8 +434,8 @@ card({id:`corp_war`,who:`meredith`,tag:`Guerre des corpos`,w:4,cond:()=>yr()>=20
 card({id:`corp_leak`,who:`corpo`,tag:`Fuite de données`,w:3,cond:()=>G.flags.corpjob,
   tx:`Un collègue te confie, en pleurs, que la corpo teste des implants défectueux sur des volontaires sans leur dire. Il a des preuves.`,
   ch:[
-    {t:`Fuiter les preuves aux médias`,s:`Héroïque`,fx:{hum:12,cred:6,ed:-500,unflag:[`corpjob`],msg:`Le scandale éclate. Tu perds ton poste. Mais tu dors mieux.`}},
-    {t:`Le dénoncer en interne`,s:`Carrière`,fx:{ed:1500,hum:-10,cred:-2,msg:`Tu es promu(e). Ton collègue disparaît. Tu n'oublieras jamais son visage.`}},
+    {t:`Fuiter les preuves aux médias`,s:`Héroïque`,fx:{hum:12,cred:6,ed:-500,bloc:{corpo:-14,rue:4},unflag:[`corpjob`],msg:`Le scandale éclate. Tu perds ton poste. Mais tu dors mieux.`}},
+    {t:`Le dénoncer en interne`,s:`Carrière`,fx:{ed:1500,hum:-10,cred:-2,bloc:{corpo:8},msg:`Tu es promu(e). Ton collègue disparaît. Tu n'oublieras jamais son visage.`}},
     {t:`Ne rien faire`,fx:{hum:-3}}
   ]});
 
@@ -473,7 +473,7 @@ card({id:`edge_job`,who:`dex`,tag:`Gros coup`,w:7,cond:()=>G.flags.edge,
 card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=32&&G.ed>=2500&&!G.mine,
   tx:`Tu ne veux plus suivre les ordres de personne. Tu as de l'argent, des alliés, une réputation. Il est temps de bâtir quelque chose à toi : une faction, une famille, un nom que les rues connaîtront.`,
   ch:[
-    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(2500),fx:{found:`gang`,ed:-2500,cred:6,role:{boss:3}}},
+    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(2500),fx:{found:`gang`,ed:-2500,cred:6,bloc:{rue:10},role:{boss:3}}},
     {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(2500),fx:{found:`fixers`,ed:-2500,cred:5,role:{boss:3,fixer:2}}},
     {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(2500),fx:{found:`nomads`,ed:-2500,cred:5,role:{boss:3,nomad:2}}},
     {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=2500?``:`2500 €$`):`Cyberdeck requis`,fx:{found:`runners`,ed:-2500,cred:5,role:{boss:3,net:2}}},

@@ -349,3 +349,24 @@ endCard(`end_love`,`lover`,`Fin : une vie ailleurs`,()=>(G.flags.partner||G.flag
   `Tu regardes la personne à tes côtés. Un voyage vers le sud, une maison, un jardin. Peut-être qu'on peut aussi mériter la paix.`,`Tout quitter, ensemble`,`together`,`Fin paisible`,35);
 endCard(`end_war`,`you`,`Fin : le trône`,()=>Object.keys(G.flags).some(f=>f.startsWith(`leader_`))&&G.cred>=55,
   `Tu diriges ta famille d'une main de fer. Tes lieutenants te suivent. Tu pourrais continuer ou entrer dans l'histoire.`,`Entrer dans l'histoire`,`warlord`);
+
+/* ============================ ÉQUILIBRE DES BLOCS ============================ */
+const BEND = {
+  rue:{lo:[`TRAQUÉ PAR LA RUE`,`Les gangs se sont unis contre toi. Une nuit, au coin d'une ruelle, plus personne ne t'a défendu.`],hi:[`MARIONNETTE DE LA RUE`,`Tu ne décides plus rien : les gangs t'utilisent comme étendard, puis te jettent quand tu deviens inutile.`]},
+  corpo:{lo:[`BLACKLISTÉ PAR LES CORPOS`,`Les corporations t'ont rayé de la carte. Un contrat, un sniper, et ton nom a disparu des bases de données.`],hi:[`CHIEN DE GARDE CORPO`,`Tu portes la laisse des corpos depuis si longtemps que tu as oublié le goût de la liberté.`]},
+  loi:{lo:[`GIBIER DE LA NCPD`,`NCPD et MaxTac te traquent sans relâche. Cette fois, il n'y a pas eu de sommation.`],hi:[`INDIC DE LA NCPD`,`Trop proche de la police, tu es devenu(e) un indic. La rue n'a pas oublié.`]},
+  nomad:{lo:[`BANNI DES BADLANDS`,`Tous les clans te ferment la route. Sans eux, le désert est une tombe.`],hi:[`PRISONNIER DES CLANS`,`Les clans t'ont adopté… puis enchaîné. Tu roules pour eux, jusqu'à ce que le moteur lâche.`]},
+};
+Object.keys(BEND).forEach(b=>['lo','hi'].forEach(side=>{
+  ENDS[`bloc_${b}_${side}`]={t:BEND[b][side][0],e:BEND[b][side][1],m:.55};
+  const low=side===`lo`, B=BLOCS[b];
+  card({id:`bc_${b}_${side}`,who:`narr`,tag:`⚖ Équilibre · ${B.n} ${low?`en colère`:`trop proche`}`,w:90,
+    cond:()=>low?G.bloc[b]<=15:G.bloc[b]>=85,
+    tx:low?`<strong>${B.n}</strong> te perçoit comme une menace. ${B.d} : les ponts se coupent, les menaces arrivent, les portes se ferment. Si rien ne change, ils auront ta peau.`
+          :`<strong>${B.n}</strong> te tient de très près. ${B.d} : tu leur dois tout, et ils le savent. Si tu continues, tu n'auras plus de liberté — ni de vie à toi.`,
+    ch:[
+      {t:`Apaiser la situation`,s:`−1 200 €$ · retour à l'équilibre`,req:R.ed(1200),fx:{ed:-1200,bloc:{[b]:low?22:-22},msg:`Un gros virement, quelques mains serrées. La tension retombe — pour l'instant.`}},
+      {t:`Prouver ta valeur`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{bloc:{[b]:low?16:-16},cred:3,msg:`Tu retournes la situation par ton sang-froid. L'équilibre revient.`},ko:{hp:-18,bloc:{[b]:low?4:-4},msg:`Ça ne prend pas. Tu t'en sors blessé(e), à peine moins en danger.`}}},
+      {t:`Ignorer l'avertissement`,s:`Danger de mort`,fx:{bloc:{[b]:low?-8:8},msg:`Tu hausses les épaules. Le piège se resserre.`}}
+    ]});
+}));

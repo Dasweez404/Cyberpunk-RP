@@ -113,13 +113,14 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.rel=G.rel||{};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
 function showHow(){
-  modal(`Comment jouer`,`<div class="log"><b>1.</b> Chaque carte est un événement. Choisis une réponse (tape, touche 1-2-3, ou glisse la carte quand il y a deux choix).</div>
+  modal(`Comment jouer`,`<div class="log"><b>1.</b> Chaque carte est un événement. Choisis une réponse (touche simplement un choix, ou les touches 1-2-3).</div>
   <div class="log"><b>2.</b> Surveille ta <b style="color:var(--hp)">Santé</b>, ton <b style="color:var(--hum)">Humanité</b> (trop de chrome = cyberpsychose), ta <b style="color:var(--cred)">Street Cred</b> et tes <b style="color:var(--ed)">€$</b>.</div>
+  <div class="log"><b>⚖</b> <b>Équilibre :</b> les 4 barres RUE · CORPOS · LOI · BADLANDS (sous les jauges) doivent rester <b>au milieu</b>. Trop bas, ils te traquent ; trop haut, ils te possèdent — dans les deux cas, ça peut te coûter la vie. Les points sur les barres montrent ce qu'un choix va changer.</div>
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent.</div>
   <div class="log"><b>4.</b> Dans <b>VILLE</b> : ripperdoc, marché noir, gigs, soins, entraînement. Dans <b>CARTE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
@@ -178,6 +179,9 @@ function renderCreate(){
     const o=ORIGINS[CR.origin], s=o.subs[CR.sub];
     G=newState({name:nm,origin:CR.origin,sub:CR.sub,cred:o.cred,ed:o.ed,at:o.at,alloc:CR.alloc,fac:s.fac,flags:o.flags});
     (o.gear||[]).forEach(g=>G.gear.push(g));
+    if(CR.origin===`corpo`){G.bloc.corpo=62;G.bloc.rue=40}
+    if(CR.origin===`nomad`){G.bloc.nomad=62;G.bloc.corpo=40}
+    if(CR.origin===`street`){G.bloc.rue=60;G.bloc.loi=40}
     if(CR.origin===`corpo`){ G.role.corpo=2; }
     if(CR.origin===`nomad`){ G.role.nomad=2; }
     if(CR.origin===`street`){ G.role.fixer=1; }
@@ -197,6 +201,7 @@ function renderGame(){
         <div class="meter m-cred" id="m-cred"><div class="lb">Cred<b id="v-cred"></b></div><div class="bar"><i id="b-cred"></i></div><span class="dot"></span></div>
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
+      <div class="blocs" id="blocs"></div>
       <div class="sub-hud"><span id="hdate"></span><span class="role" id="hrole"></span></div>
     </div>
     <div class="stage" id="stage"></div>
@@ -220,6 +225,7 @@ function updateHud(init){
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
   $(`#hdate`).textContent=`${dateStr()} · ${G.name}, ${G.age} ans`;
   $(`#hrole`).textContent=roleTitle()+(rankTitle()?` · ${rankTitle()}`:``);
+  const cb=document.querySelector(`.dock [data-d=city]`); if(cb)cb.classList.toggle(`alert`,G.hp<45||G.hum<45);
   $(`#m-hp`).classList.toggle(`warn`,G.hp<=25);
   $(`#m-hum`).classList.toggle(`warn`,G.hum<=30);
   document.body.classList.toggle(`lowhum`,G.hum<=35);
@@ -228,12 +234,23 @@ function updateHud(init){
       const d=v[k]-lastVals[k]; if(d){ const m=$(`#m-${k}`); m.classList.remove(`bump`);void m.offsetWidth;m.classList.add(`bump`); floatAt(m,(d>0?`+`:``)+d,c); }
     });
   }
+  renderBlocs();
   lastVals=v;
+}
+function renderBlocs(){
+  const b=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
+  $(`#blocs`).innerHTML=Object.keys(BLOCS).map(k=>{
+    const v=Math.round(b[k]), danger=v<=20||v>=80;
+    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-b="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
+  }).join(``);
+  document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{const k=e.dataset.b;SFX.tap();toast(`${BLOCS[k].n} ${Math.round(b[k])}/100 — ${BLOCS[k].d}. Trop bas : ils te traquent. Trop haut : ils te possèdent.`)});
 }
 function previewDots(ch){
   const keys=new Set(); const add=f=>{if(!f)return;[`hp`,`hum`,`cred`,`ed`].forEach(k=>{if(f[k])keys.add(k)});};
   if(ch){ add(ch.fx); if(ch.chk){add(ch.chk.ok);add(ch.chk.ko);} }
   [`hp`,`hum`,`cred`,`ed`].forEach(k=>$(`#m-${k}`).classList.toggle(`pv`,keys.has(k)));
+  const bl=new Set(); if(ch){ [ch.fx,ch.chk&&ch.chk.ok,ch.chk&&ch.chk.ko].forEach(f=>Object.keys(blocFromFx(f)).forEach(k=>bl.add(k))); }
+  Object.keys(BLOCS).forEach(k=>{const e=$(`#bl-${k}`); if(e)e.classList.toggle(`pv`,bl.has(k))});
 }
 
 /* ---------- boucle ---------- */
@@ -251,16 +268,12 @@ function showCardView(){
   const stage=$(`#stage`), chs=$(`#choices`);
   stage.innerHTML=`<div class="speaker">${portrait(c.who)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}</div></div></div>
     <div class="cardwrap" id="cw"><div class="card" id="card" style="--ac:${w.c}">
-      <span class="swipelb l" id="slL"></span><span class="swipelb r" id="slR"></span>
-      <div class="tag">${esc(c.tag||``)}</div><div class="tx">${G.cur.text}</div></div></div>
-    <div class="hint" id="hint"></div>`;
-  const two=c.ch.length===2;
+      <div class="tag">${esc(c.tag||``)}</div><div class="tx">${G.cur.text}</div></div></div>`;
   chs.innerHTML=c.ch.map((h,i)=>{
     const lock=h.req?h.req():``; let badge=``;
     if(h.chk){ const r=rollInfo(h.chk); const p=Math.round(r.chance*100); badge=`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`; }
     return `<button class="btn choice ${lock?`lock`:``}" data-i="${i}"><span class="k">${i+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>`;
   }).join(``);
-  $(`#hint`).textContent=two?`◄ glisse la carte ►`:``;
   chs.querySelectorAll(`.choice`).forEach(b=>{
     const i=+b.dataset.i;
     b.onclick=()=>pick(i);
@@ -268,7 +281,6 @@ function showCardView(){
     b.onmouseleave=b.onblur=()=>previewDots(null);
     b.addEventListener(`touchstart`,()=>previewDots(c.ch[i]),{passive:true});
   });
-  if(two) setupSwipe(c);
   SFX.swoosh();
 }
 let picking=false;
@@ -282,28 +294,6 @@ function pick(i,dir){
   $(`#choices`).innerHTML=``;
   setTimeout(()=>resolveChoice(ch),260);
 }
-function setupSwipe(c){
-  const card=$(`#card`); if(!card)return;
-  let sx=0,dx=0,drag=false,id=null;
-  const L=$(`#slL`),Rr=$(`#slR`);
-  L.textContent=c.ch[0].t; Rr.textContent=c.ch[1].t;
-  card.addEventListener(`pointerdown`,e=>{drag=true;sx=e.clientX;id=e.pointerId;try{card.setPointerCapture(id)}catch(_){} card.style.animation=`none`;card.style.transition=`none`});
-  card.addEventListener(`pointermove`,e=>{
-    if(!drag)return; dx=e.clientX-sx;
-    card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;
-    const p=clamp(Math.abs(dx)/90,0,1);
-    L.style.opacity=dx<0?p:0; Rr.style.opacity=dx>0?p:0;
-    previewDots(dx<-20?c.ch[0]:dx>20?c.ch[1]:null);
-  });
-  const end=()=>{
-    if(!drag)return; drag=false;
-    if(Math.abs(dx)>90){ const i=dx<0?0:1; if(c.ch[i].req&&c.ch[i].req()){ reset(); SFX.ko(); } else pick(i,dx<0?-1:1); }
-    else reset(); dx=0;
-  };
-  function reset(){ card.style.transition=`transform .3s cubic-bezier(.2,.9,.2,1)`; card.style.transform=``; L.style.opacity=Rr.style.opacity=0; previewDots(null); }
-  card.addEventListener(`pointerup`,end); card.addEventListener(`pointercancel`,end);
-}
-
 function resolveChoice(ch){
   CHIPS=[]; let fx, info=null;
   if(ch.chk){
@@ -324,7 +314,7 @@ function resolveChoice(ch){
 function showResult(r){
   const cw=$(`#cw`);
   const diceHtml = r.info ? `<div class="dice"><div class="die roll" id="die"><span>?</span></div><div class="info" id="dinfo">${ATTRS[r.info.a].n} <b>jet en cours…</b><span>Difficulté ${r.info.need} sur d10</span></div></div>` : ``;
-  cw.innerHTML=`<div class="result" id="res">${diceHtml}<div class="rt" id="rt" style="${r.info?`visibility:hidden`:``}">${r.msg||`<em>${esc(r.title)}</em>`}</div><div class="chips" id="chips"></div><div class="cont" id="cont" style="visibility:hidden">TAPE POUR CONTINUER</div></div>`;
+  cw.innerHTML=`<div class="result" id="res">${diceHtml}<div class="rt" id="rt" style="${r.info?`visibility:hidden`:``}">${r.msg||`<em>${esc(r.title)}</em>`}</div><div class="chips" id="chips"></div><button class="btn pri" id="cont" style="visibility:hidden">Continuer ›</button></div>`;
   let done=false;
   const reveal=()=>{
     $(`#rt`).style.visibility=`visible`;
@@ -375,11 +365,13 @@ function askFactionName(kind,done){
 /* ---------- modales ---------- */
 let modalLock=false;
 function modal(title,body,o){
-  closeModal(true); modalLock=!!(o&&o.lock);
-  const m=document.createElement(`div`); m.className=`modal`; m.id=`modal`;
-  m.innerHTML=`<div class="sheet"><header><h3 class="hd">${title}</h3>${modalLock?``:`<button class="x" id="mx">✕</button>`}</header><div class="body" id="mb">${body}</div></div>`;
+  o=o||{}; const old=$(`#modal`); const keep=old&&old.dataset.t===title;
+  closeModal(true); modalLock=!!o.lock;
+  const m=document.createElement(`div`); m.className=`modal`; m.id=`modal`; m.dataset.t=title; if(keep)m.style.animation=`none`;
+  m.innerHTML=`<div class="sheet ${o.full?`full`:``}" ${keep?`style="animation:none"`:``}><header>${o.back?`<button class="x bk" id="mbk">‹</button>`:``}<h3 class="hd">${title}</h3>${modalLock?``:`<button class="x" id="mx">✕</button>`}</header><div class="body" id="mb">${body}</div></div>`;
   document.body.appendChild(m);
   if(!modalLock){ m.addEventListener(`pointerdown`,e=>{if(e.target===m)closeModal()}); $(`#mx`).onclick=()=>{SFX.tap();closeModal()}; }
+  if(o.back) $(`#mbk`).onclick=()=>{SFX.tap();o.back()};
 }
 function closeModal(){ const m=$(`#modal`); if(m)m.remove(); modalLock=false; }
 document.addEventListener(`keydown`,e=>{
@@ -411,19 +403,30 @@ function relBlock(){
   if(!rs.length) return ``;
   return `<div class="sec">Relations</div>`+rs.map(([k,v])=>{const w=WHO[k];return `<div class="item"><div class="in"><b style="color:${w.c}">${esc(w.n)}${G.flags[`lover_`+k]?` ♥`:``}</b><small>${esc(w.r)}</small><div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};left:${v>=0?0:0}%;width:${Math.abs(v)}%"></i></div></div><b style="color:${v>=0?`var(--g)`:`var(--m)`}">${v}</b></div>`}).join(``);
 }
-/* ----- VILLE ----- */
+/* ----- VILLE (tuiles) ----- */
+const CITYSTATE = {shop:{cy:`all`,gear:`all`}};
+function statBar(){
+  return `<div class="vstat"><span style="color:var(--hp)">♥ ${G.hp}</span><span style="color:var(--hum)">◐ ${G.hum}</span><span style="color:var(--y)">★ ${G.cred}</span><b style="color:var(--ed)">${money(G.ed)}</b></div>`;
+}
 function openCity(){
-  const owned=ownedList().length;
-  modal(`Night City — ${dateStr()}`,`
-   <div class="log" style="color:var(--dim)">Chaque action fait avancer le temps. Les revenus et le loyer tombent à chaque période.</div>
-   <button class="btn" data-c="rip"><div class="t" style="color:var(--g);font-weight:700">Ripperdoc · Chrome</div><div class="d" style="color:var(--dim)">Installe des implants. Attention à l'Humanité.</div></button>
-   <button class="btn" data-c="gear"><div class="t" style="color:var(--y);font-weight:700">Marché noir · Équipement</div><div class="d" style="color:var(--dim)">Armes, armures, véhicules, style.</div></button>
-   <button class="btn" data-c="hack"><div class="t" style="color:var(--c);font-weight:700">Netrunner Market · Quickhacks</div><div class="d" style="color:var(--dim)">${hasDeck()?`Slots deck : ${G.hacks.length}/${deckSlots()}`:`Nécessite Interface neurale + Cyberdeck`}</div></button>
-   <button class="btn" data-c="gigs"><div class="t" style="color:var(--m);font-weight:700">Tableau des gigs · Afterlife</div><div class="d" style="color:var(--dim)">Des boulots pour des eddies et de la rep. 1 mois.</div></button>
-   <button class="btn" data-c="train"><div class="t" style="color:var(--t);font-weight:700">S'entraîner</div><div class="d" style="color:var(--dim)">Améliore un attribut. 2 mois.</div></button>
-   <button class="btn" data-c="heal" ${G.hp>=100?`disabled`:``}><div class="t" style="font-weight:700">Clinique · se soigner</div><div class="d" style="color:var(--dim)">+40 Santé · 150 €$ · 1 mois</div></button>
-   <button class="btn" data-c="therapy" ${G.hum>=100?`disabled`:``}><div class="t" style="font-weight:700">Thérapie & immunoblockers</div><div class="d" style="color:var(--dim)">+18 Humanité · 400 €$ · 1 mois</div></button>
-   <button class="btn" data-c="rest"><div class="t" style="font-weight:700">Se reposer chez toi</div><div class="d" style="color:var(--dim)">+15 Santé, +5 Humanité · 1 mois (loyer)</div></button>`);
+  const tile=(k,ic,t,d,o={})=>`<button class="tile ${o.rec?`rec`:``}" data-c="${k}" ${o.dis?`disabled`:``}><span class="ti">${ic}</span><b>${t}</b><small>${d}</small>${o.rec?`<em>Conseillé</em>`:``}</button>`;
+  modal(`Ville · ${dateStr()}`,`${statBar()}
+   <div class="sec">Boutiques</div>
+   <div class="tiles">
+    ${tile(`rip`,`🦾`,`Ripperdoc`,`Chrome & implants`)}
+    ${tile(`gear`,`🔫`,`Marché noir`,`Armes, armures, véhicules`)}
+    ${tile(`hack`,`💾`,`Quickhacks`,hasDeck()?`${G.hacks.length}/${deckSlots()} slots`:`Deck requis`,{dis:!hasDeck()})}
+    ${tile(`train`,`🏋`,`S'entraîner`,`+1 attribut · 2 mois`)}
+   </div>
+   <div class="sec">Boulots</div>
+   <div class="tiles one">${tile(`gigs`,`📋`,`Tableau des gigs`,`3 offres · eddies & Street Cred · 1 mois`)}</div>
+   <div class="sec">Récupérer</div>
+   <div class="tiles three">
+    ${tile(`heal`,`➕`,`Clinique`,`+40 Santé · 150 €$`,{dis:G.hp>=100||G.ed<150,rec:G.hp<50})}
+    ${tile(`therapy`,`🧠`,`Thérapie`,`+18 Humanité · 400 €$`,{dis:G.hum>=100||G.ed<400,rec:G.hum<50})}
+    ${tile(`rest`,`🛏`,`Repos`,`+15 Santé · +5 Hum.`)}
+   </div>
+   <div class="log" style="color:var(--dim)">Chaque action fait passer 1 à 2 mois. Revenus et loyer sont décomptés.</div>`);
   document.querySelectorAll(`[data-c]`).forEach(b=>b.onclick=()=>{SFX.tap();({rip:()=>openShop(`cy`),gear:()=>openShop(`gear`),hack:()=>openShop(`hack`),gigs:openGigs,train:openTrain,heal:()=>doDown(`heal`),therapy:()=>doDown(`therapy`),rest:()=>doDown(`rest`)})[b.dataset.c]()});
 }
 function doDown(k){
@@ -431,124 +434,149 @@ function doDown(k){
   if(k===`heal`){ if(G.ed<150){toast(`Pas assez d'eddies`);return} applyFx({ed:-150,hp:40}); }
   if(k===`therapy`){ if(G.ed<400){toast(`Pas assez d'eddies`);return} applyFx({ed:-400,hum:18}); }
   if(k===`rest`){ applyFx({hp:15,hum:5}); }
-  SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`}[k]}); updateHud(); closeModal(); toast(CHIPS.map(c=>c.txt).join(` · `)||`Fait`); if(checkEnd()) showEnd();
+  SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`}[k]});
+  updateHud(); toast(CHIPS.map(c=>c.txt).join(` · `)||`Fait`);
+  if(checkEnd()){ closeModal(); return showEnd(); }
+  openCity();
 }
+function shopHeader(){ return `${statBar()}`; }
 function openShop(kind){
   const disc = (G.flags.vik?.85:1);
-  const rows=[];
+  const f = CITYSTATE.shop[kind]||`all`;
+  let chips=``, rows=[];
+  const chipBar=(list,cur)=>`<div class="fchips">${list.map(([k,l])=>`<button class="fc ${cur===k?`on`:``}" data-f="${k}">${l}</button>`).join(``)}</div>`;
+  const tagsOf=o=>[
+    ...Object.entries(o.at||{}).map(([k,v])=>`<span class="tagx g">+${v} ${ATTRS[k].n}</span>`),
+    ...(o.k?Object.entries(o.k).map(([k,v])=>`<span class="tagx g">+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`}[k]}</span>`):[]),
+    o.mit?`<span class="tagx g">−${Math.round(o.mit*100)}% dégâts</span>`:``, o.regen?`<span class="tagx g">soin auto</span>`:``, o.deck?`<span class="tagx c">${o.deck} slots</span>`:``].join(``);
   if(kind===`cy`){
-    Object.keys(SLOTS).filter(s=>s!==`deck`||true).forEach(slot=>{
-      const list=CYBER.filter(c=>c.slot===slot); if(!list.length)return;
-      rows.push(`<div class="sec">${SLOTS[slot]}</div>`);
-      list.forEach(c=>{
-        const price=Math.round(c.p*disc*(G.member===`maelstrom`?.9:1)); const own=hasCy(c.id);
-        const lock = c.cred&&G.cred<c.cred?`Cred ${c.cred}`: c.needs&&!hasCy(c.needs)?`Interface neurale requise`:``;
-        const cur=G.cyber.find(i=>CY(i).slot===slot&&i!==c.id);
-        rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${c.n}</b><small>${c.d}</small><small>${Object.entries(c.at||{}).map(([k,v])=>`<span class="tagx g">+${v} ${ATTRS[k].n}</span>`).join(``)}${c.mit?`<span class="tagx g">−${c.mit*100}% dégâts</span>`:``}${c.deck?`<span class="tagx c">${c.deck} slots</span>`:``}<span class="tagx">−${c.h} Humanité</span>${cur?`<span class="tagx y">remplace ${CY(cur).n}</span>`:``}</small></div>
-         ${own?`<b style="color:var(--g)">INSTALLÉ</b>`:`<button class="btn" style="width:auto;padding:8px 14px" data-b="${c.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(price)}</button>`}</div>`);
-      });
+    chips=chipBar([[`all`,`Tout`],...Object.entries(SLOTS)],f);
+    CYBER.filter(c=>f===`all`||c.slot===f).forEach(c=>{
+      const price=Math.round(c.p*disc*(G.member===`maelstrom`?.9:1)), own=hasCy(c.id);
+      const lock = c.cred&&G.cred<c.cred?`Cred ${c.cred}`: c.needs&&!hasCy(c.needs)?`Interface requise`:``;
+      const cur=G.cyber.find(i=>CY(i).slot===c.slot&&i!==c.id);
+      const afford=G.ed>=price;
+      rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${c.n}</b><small>${SLOTS[c.slot]} · ${c.d}</small><small>${tagsOf(c)}<span class="tagx">−${c.h} Humanité</span>${cur?`<span class="tagx y">remplace ${CY(cur).n}</span>`:``}</small></div>
+      ${own?`<b class="own-t">INSTALLÉ</b>`:`<button class="buy ${afford&&!lock?``:`no`}" data-b="${c.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(price)}</button>`}</div>`);
     });
   } else if(kind===`gear`){
-    [`arme`,`armure`,`véhicule`,`style`].forEach(t=>{
-      rows.push(`<div class="sec">${t}</div>`);
-      GEAR.filter(g=>g.t===t).forEach(g=>{
-        const own=G.gear.includes(g.id); const lock=g.cred&&G.cred<g.cred?`Cred ${g.cred}`:``;
-        const price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1));
-        rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${g.n}</b><small>${g.d}</small><small>${g.k?Object.entries(g.k).map(([k,v])=>`<span class="tagx g">+${v} ${{cmb:`combat`,drv:`conduite`,hck:`hack`,stl:`furtivité`}[k]}</span>`).join(``):``}${g.mit?`<span class="tagx g">−${g.mit*100}% dégâts</span>`:``}${g.at?Object.entries(g.at).map(([k,v])=>`<span class="tagx g">+${v} ${ATTRS[k].n}</span>`).join(``):``}</small></div>
-        ${own?`<b style="color:var(--g)">POSSÉDÉ</b>`:`<button class="btn" style="width:auto;padding:8px 14px" data-g="${g.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(price)}</button>`}</div>`);
-      });
+    chips=chipBar([[`all`,`Tout`],[`arme`,`Armes`],[`armure`,`Armures`],[`véhicule`,`Véhicules`],[`style`,`Style`]],f);
+    GEAR.filter(g=>f===`all`||g.t===f).forEach(g=>{
+      const own=G.gear.includes(g.id), lock=g.cred&&G.cred<g.cred?`Cred ${g.cred}`:``;
+      const price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)), afford=G.ed>=price;
+      rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${g.n}</b><small>${g.t} · ${g.d}</small><small>${tagsOf(g)}</small></div>
+      ${own?`<b class="own-t">POSSÉDÉ</b>`:`<button class="buy ${afford&&!lock?``:`no`}" data-g="${g.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(price)}</button>`}</div>`);
     });
   } else {
-    if(!hasDeck()){ rows.push(`<div class="log">Il te faut une <b>Interface neurale</b> et un <b>Cyberdeck</b> (chez le ripperdoc).</div>`); }
-    else {
-      rows.push(`<div class="log">Slots : ${G.hacks.length} / ${deckSlots()} · INT ${A(`int`)}</div>`);
-      HACKS.forEach(h=>{
-        const own=G.hacks.includes(h.id); const lock=A(`int`)<h.int?`INT ${h.int}`:G.hacks.length>=deckSlots()?`Deck plein`:``;
-        rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${h.n}</b><small>${h.d}</small></div>${own?`<b style="color:var(--g)">INSTALLÉ</b>`:`<button class="btn" style="width:auto;padding:8px 14px" data-h="${h.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(h.p)}</button>`}</div>`);
-      });
-    }
+    if(!hasDeck()) rows.push(`<div class="log">Il te faut une <b>Interface neurale</b> et un <b>Cyberdeck</b> (chez le ripperdoc).</div>`);
+    else { rows.push(`<div class="log">Slots : <b>${G.hacks.length} / ${deckSlots()}</b> · INT ${A(`int`)}</div>`);
+      HACKS.forEach(h=>{ const own=G.hacks.includes(h.id); const lock=A(`int`)<h.int?`INT ${h.int}`:G.hacks.length>=deckSlots()?`Deck plein`:``;
+        rows.push(`<div class="item ${own?`own`:``}"><div class="in"><b>${h.n}</b><small>${h.d}</small></div>${own?`<b class="own-t">CHARGÉ</b>`:`<button class="buy ${G.ed>=h.p&&!lock?``:`no`}" data-h="${h.id}" ${lock?`disabled`:``}>${lock?`🔒 ${lock}`:money(h.p)}</button>`}</div>`); }); }
   }
-  modal({cy:`Ripperdoc · Chrome`,gear:`Marché noir`,hack:`Quickhacks`}[kind],`<div class="log" style="color:var(--dim)">Fonds : <b style="color:var(--ed)">${money(G.ed)}</b> · Humanité : <b style="color:var(--hum)">${G.hum}</b>${G.flags.vik&&kind===`cy`?` · Remise Vik −15 %`:``}</div>`+rows.join(``));
+  const sc=$(`#mb`)?$(`#mb`).scrollTop:0;
+  modal({cy:`Ripperdoc`,gear:`Marché noir`,hack:`Quickhacks`}[kind],`<div class="sticky">${statBar()}${chips}${G.flags.vik&&kind===`cy`?`<div class="log" style="color:var(--g)">Remise Vik −15 %</div>`:``}</div>`+rows.join(``),{back:openCity});
+  if($(`#mb`)) $(`#mb`).scrollTop=sc;
+  document.querySelectorAll(`[data-f]`).forEach(b=>b.onclick=()=>{CITYSTATE.shop[kind]=b.dataset.f;SFX.tap();$(`#mb`).scrollTop=0;openShop(kind)});
   document.querySelectorAll(`[data-b]`).forEach(b=>b.onclick=()=>buyCy(b.dataset.b));
   document.querySelectorAll(`[data-g]`).forEach(b=>b.onclick=()=>buyGear(b.dataset.g));
   document.querySelectorAll(`[data-h]`).forEach(b=>b.onclick=()=>buyHack(b.dataset.h));
 }
-function keepScroll(fn,kind){ const s=$(`#mb`)?$(`#mb`).scrollTop:0; fn(); const m=$(`#mb`); if(m)m.scrollTop=s; }
 function buyCy(id){
   const c=CY(id), price=Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1));
   if(G.ed<price){ SFX.ko(); toast(`Pas assez d'eddies`); return; }
   if(G.hum-c.h<=8 && !confirm(`Ça te laisse à ${G.hum-c.h} Humanité. Risque de cyberpsychose. Continuer ?`)) return;
-  CHIPS=[]; applyFx({ed:-price,hum:-c.h,at:{}}); installCy(id); SFX.buy(); flash(`#05ffa1`); vib(60);
+  CHIPS=[]; applyFx({ed:-price,hum:-c.h}); installCy(id); SFX.buy(); flash(`#05ffa1`); vib(60);
   G.log.unshift({d:dateStr(),m:`Installation : ${c.n}.`}); tick(1); updateHud(); toast(`${c.n} installé`);
   if(checkEnd()){ closeModal(); return showEnd(); }
-  keepScroll(()=>openShop(`cy`));
+  openShop(`cy`);
 }
 function buyGear(id){
   const g=GEARMAP[id], price=Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1));
   if(G.ed<price){ SFX.ko(); toast(`Pas assez d'eddies`); return; }
   G.ed-=price; G.gear=G.gear.filter(x=>GEARMAP[x].t!==g.t); G.gear.push(id);
-  SFX.buy(); updateHud(); toast(`${g.n} acquis`); G.log.unshift({d:dateStr(),m:`Achat : ${g.n}.`}); keepScroll(()=>openShop(`gear`));
+  SFX.buy(); updateHud(); toast(`${g.n} acquis`); G.log.unshift({d:dateStr(),m:`Achat : ${g.n}.`}); openShop(`gear`);
 }
 function buyHack(id){
   const h=HACKS.find(x=>x.id===id); if(G.ed<h.p){SFX.ko();toast(`Pas assez d'eddies`);return}
-  G.ed-=h.p; G.hacks.push(id); G.role.net+=1; SFX.buy(); updateHud(); toast(`${h.n} chargé`); keepScroll(()=>openShop(`hack`));
+  G.ed-=h.p; G.hacks.push(id); G.role.net+=1; SFX.buy(); updateHud(); toast(`${h.n} chargé`); openShop(`hack`);
 }
 function openTrain(){
-  modal(`S'entraîner`,Object.keys(ATTRS).map(k=>{
+  modal(`S'entraîner`,`${statBar()}`+Object.keys(ATTRS).map(k=>{
     const lv=G.at[k], price=lv*260, max=lv>=9;
-    return `<div class="item"><div class="in"><b>${ATTRS[k].n} ${lv}</b><small>${ATTRS[k].d}</small></div><button class="btn" style="width:auto;padding:8px 14px" data-t="${k}" ${max||G.ed<price?`disabled`:``}>${max?`MAX`:money(price)}</button></div>`;
-  }).join(``)+`<div class="log" style="color:var(--dim)">2 mois d'entraînement par session. Le maximum de base est 9.</div>`);
+    return `<div class="item"><div class="in"><b>${ATTRS[k].n} ${lv}</b><small>${ATTRS[k].d}</small><div class="pips" style="margin-top:4px">${Array.from({length:10},(_,i)=>`<div class="pip ${i<lv?`on`:``}"></div>`).join(``)}</div></div><button class="buy ${max||G.ed<price?`no`:``}" data-t="${k}" ${max||G.ed<price?`disabled`:``}>${max?`MAX`:money(price)}</button></div>`;
+  }).join(``)+`<div class="log" style="color:var(--dim)">2 mois par session. Maximum de base : 9.</div>`,{back:openCity});
   document.querySelectorAll(`[data-t]`).forEach(b=>b.onclick=()=>{
     const k=b.dataset.t, price=G.at[k]*260; if(G.ed<price)return;
-    CHIPS=[]; applyFx({ed:-price,at:{[k]:1}}); tick(2); SFX.ok(); updateHud(); G.log.unshift({d:dateStr(),m:`Entraînement : ${ATTRS[k].n}.`}); toast(`${ATTRS[k].n} +1`); if(checkEnd()){closeModal();return showEnd()} openTrain();
+    CHIPS=[]; applyFx({ed:-price,at:{[k]:1}}); tick(2); SFX.ok(); updateHud(); G.log.unshift({d:dateStr(),m:`Entraînement : ${ATTRS[k].n}.`}); toast(`${ATTRS[k].n} +1`);
+    if(checkEnd()){closeModal();return showEnd()} openTrain();
   });
 }
 function openGigs(){
   const cs=[]; const used=new Set();
   while(cs.length<3){ const g=GIGS[rnd(0,Math.min(GIGS.length-1,Math.floor(2+G.cred/12)+2))]; if(!used.has(g.n)){used.add(g.n);cs.push(g)} }
-  G.tmp.gigs=cs;
-  modal(`Tableau des gigs`,cs.map((g,i)=>{
+  modal(`Tableau des gigs`,`<div class="log" style="color:var(--dim)">Touche un gig pour le tenter (1 mois). Le % est ta chance de réussite.</div>`+cs.map((g,i)=>{
     const r=rollInfo({a:g.a,k:g.k,dc:g.dc}); const p=Math.round(r.chance*100);
-    return `<button class="btn choice" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(g.pay)} · +${g.cr} Cred · risque −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
-  }).join(``));
+    return `<button class="btn choice" data-gi="${i}" style="display:flex"><span class="tt"><b>${g.n}</b><small>${g.d} · ${ATTRS[g.a].n}</small><small style="color:var(--ed)">${money(g.pay)} · +${g.cr} Cred · échec : −${g.dm} Santé</small></span><span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span></button>`;
+  }).join(``),{back:openCity});
   document.querySelectorAll(`[data-gi]`).forEach(b=>b.onclick=()=>{
     const g=cs[+b.dataset.gi], r=rollInfo({a:g.a,k:g.k,dc:g.dc}), roll=rnd(1,10);
     const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[];
     if(ok){ applyFx({ed:g.pay,cred:g.cr}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${g.pay} €$).`}); }
     else { applyFx({hp:-g.dm,ed:Math.round(g.pay*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
     tick(1); updateHud();
-    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">OK</button>`);
-    $(`#gok`).onclick=()=>{closeModal(); if(checkEnd()) showEnd();};
+    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">Retour à la ville</button>`);
+    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else openCity(); };
   });
 }
 
 /* ----- CARTE ----- */
 function ownerColor(o){ return o===`player`?`#fcee0a`:o===`neutral`?`#3a3a55`:(FAC[o]?FAC[o].c:`#555`); }
 function ownerName(o){ return o===`player`?(G.mine?G.mine.name:`Toi`):o===`neutral`?`Neutre / corporatif`:(FAC[o]?FAC[o].n:o); }
-function openMap(){
+let MAPSEL=null, MAPHL=null;
+function openMap(keep){
+  const hl=MAPHL;
   const rects=DIST.map(d=>{
-    const o=G.dist[d.id], locked=d.lock&&!G.flags.dogtown;
-    return `<rect data-d="${d.id}" x="${d.x}" y="${d.y}" width="${d.wd}" height="${d.h}" fill="${locked?`#15152a`:ownerColor(o)}" fill-opacity="${o===`player`?.95:locked?.6:.55}" ${o===`player`?`stroke="#fff" stroke-width="2"`:``}/>
-      <text x="${d.x+5}" y="${d.y+d.h/2-1}">${d.n}${locked?` 🔒`:``}</text><text class="ward" x="${d.x+5}" y="${d.y+d.h/2+10}" style="font-size:6.5px;fill:#ffffffaa;letter-spacing:.12em;font-weight:500">${d.w.toUpperCase()}</text>`;
-  }).join(``)
-  ;
+    const o=G.dist[d.id], locked=d.lock&&!G.flags.dogtown, sel=MAPSEL===d.id;
+    const dim=hl&&hl!==o?.25:1;
+    const pips=Array.from({length:d.def},(_,i)=>`<circle cx="${d.x+8+i*7}" cy="${d.y+d.h-8}" r="2.2" fill="#fff" opacity=".85"/>`).join(``);
+    return `<g data-d="${d.id}" style="cursor:pointer;opacity:${dim}"><rect x="${d.x}" y="${d.y}" width="${d.wd}" height="${d.h}" rx="4" fill="${locked?`#15152a`:ownerColor(o)}" fill-opacity="${o===`player`?.95:locked?.6:.6}" ${sel?`stroke="#fff" stroke-width="3"`:o===`player`?`stroke="#fcee0a" stroke-width="2"`:``}/>
+      <text x="${d.x+6}" y="${d.y+16}" style="font-size:10px">${d.n}${locked?` 🔒`:``}</text>
+      <text x="${d.x+6}" y="${d.y+27}" style="font-size:6.5px;fill:#ffffffaa;font-weight:500;letter-spacing:.1em">${d.w.toUpperCase()}</text>${pips}
+      ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text>`:``}</g>`;
+  }).join(``);
   const cnt={}; DIST.forEach(d=>{cnt[G.dist[d.id]]=(cnt[G.dist[d.id]]||0)+1});
-  const leg=Object.keys(cnt).map(o=>`<span><i style="background:${ownerColor(o)}"></i>${ownerName(o)} (${cnt[o]})</span>`).join(``);
-  modal(`Carte de Night City`,`<svg class="map" viewBox="0 0 400 395">${rects}</svg><div class="leg">${leg}</div>
-    <div class="log" style="color:var(--dim)">Touche un quartier pour le détailler ou le conquérir. Revenu passif : ${ownedList().length} quartier(s) sous ton contrôle.</div><div id="dinfo2"></div>`);
-  document.querySelectorAll(`.map rect`).forEach(r=>r.onclick=()=>{SFX.tap();showDistrict(r.dataset.d)});
+  const leg=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(o=>`<button class="fc ${hl===o?`on`:``}" data-l="${o}" style="border-color:${ownerColor(o)}"><i style="background:${ownerColor(o)}"></i>${ownerName(o)} ${cnt[o]}</button>`).join(``);
+  const sc=$(`#mb`)?$(`#mb`).scrollTop:0;
+  modal(`Carte de Night City`,`<div class="sticky" style="padding-bottom:0">${statBar()}</div>
+   <svg class="map" viewBox="0 0 400 395">${rects}</svg>
+   <div class="sec">Filtrer par propriétaire</div><div class="fchips wrap">${leg}</div>
+   <div class="log" style="color:var(--dim)">Tes quartiers : ${ownedList().length} · ● = niveau de défense. Touche un quartier.</div>
+   <div class="mappanel" id="mpanel"></div>`,{full:true});
+  if($(`#mb`)) $(`#mb`).scrollTop=sc;
+  document.querySelectorAll(`.map g`).forEach(g=>g.onclick=()=>{SFX.tap();MAPSEL=g.dataset.d;openMap(true)});
+  document.querySelectorAll(`[data-l]`).forEach(b=>b.onclick=()=>{MAPHL=MAPHL===b.dataset.l?null:b.dataset.l;SFX.tap();openMap(true)});
+  if(MAPSEL) renderDistrictPanel(MAPSEL);
+  else $(`#mpanel`).innerHTML=`<div class="log" style="text-align:center;color:var(--dim)">Choisis un quartier sur la carte ↑</div>`;
 }
-function showDistrict(id){
-  const d=DMAP[id], o=G.dist[id], why=canConquer(d), locked=d.lock&&!G.flags.dogtown;
-  $(`#dinfo2`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)}"><div class="in"><b>${d.n} <small style="display:inline">· ${d.w}</small></b><small>${d.d}</small><small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)} · Revenu ${d.inc*3} €$ / période</small></div></div>
-  ${why?`<div class="log" style="color:var(--m)">${why}</div>`:conquestChoices(d).map((c,i)=>`<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd">${Math.round(rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance*100)}%</span>`:``}</button>`).join(``)}`;
+function renderDistrictPanel(id){
+  const d=DMAP[id], o=G.dist[id], why=canConquer(d);
+  $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)}"><div class="in"><b>${d.n} <small style="display:inline;color:var(--dim)">· ${d.w}</small></b><small>${d.d}</small>
+    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)} · ${d.inc*3} €$/période</small></div></div>
+    ${why?`<div class="why">${why==="Déjà à toi"?`★ Ce quartier est à toi.`:`🔒 ${why}`}</div>`:`<button class="btn pri" id="goq">Conquérir ${d.n}</button>`}`;
+  const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
+  const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
+}
+function openConquest(d){
+  const prev=G.dist[d.id];
+  modal(`Conquérir ${d.n}`,`<div class="log">Actuellement : <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5.<br>Un échec coûte de la Santé et de la réputation auprès du propriétaire.</div>`+
+   conquestChoices(d).map((c,i)=>`<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance>=.7?`hi`:rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance<=.35?`lo`:``}">${Math.round(rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance*100)}%</span>`:``}</button>`).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
-    const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req)return;
+    const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req){SFX.ko();return}
     const r=doConquer(d,opt); updateHud();
     modal(r.ok?`${d.n} est à toi !`:`Échec à ${d.n}`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
-      <div class="rt">${r.ok?`Les rues changent de couleur. ${d.n} porte désormais ton nom.`:`L'assaut tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">OK</button>`);
+      <div class="rt">${r.ok?`Les rues changent de couleur. ${d.n} porte désormais ton nom.`:`L'assaut tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
     r.ok?(SFX.ok(),flash(`#fcee0a`),vib(80)):(SFX.ko(),shake());
-    $(`#qok`).onclick=()=>{closeModal(); if(checkEnd())showEnd(); else openMap();};
+    $(`#qok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else {MAPSEL=d.id;openMap(true)} };
   });
 }
 

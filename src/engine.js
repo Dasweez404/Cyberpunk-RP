@@ -31,7 +31,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, rel:{}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -85,6 +85,20 @@ function roleTitle(){
 }
 function rankTitle(){ return G.member?RANKS[FAC[G.member].k][G.rank]:null; }
 
+/* ---------- blocs d'influence (équilibre) ---------- */
+function moveBloc(b,d){
+  if(!b||!d) return; G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
+  const o=BLOCS[b].opp, bb=G.bloc[b], ob=G.bloc[o];
+  G.bloc[b]=clamp(bb+d,0,100); G.bloc[o]=clamp(ob-d*.4,0,100);
+  const rd=Math.round(G.bloc[b]-bb); if(Math.abs(rd)>=1) chip(rd>0?`i`:`n`,`${sgn(rd)} ${BLOCS[b].n}`);
+}
+function blocFromFx(fx){
+  const m={}; if(!fx) return m;
+  if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{const b=BLOC[k];if(b)m[b]=(m[b]||0)+v*.5});
+  if(fx.join&&BLOC[fx.join]) m[BLOC[fx.join]]=(m[BLOC[fx.join]]||0)+10;
+  if(fx.bloc) Object.entries(fx.bloc).forEach(([k,v])=>m[k]=(m[k]||0)+v);
+  return m;
+}
 /* ---------- jets ---------- */
 function rollInfo(c){
   const tot = A(c.a) + (c.k?skill(c.k):0);
@@ -105,7 +119,8 @@ function applyFx(fx){
   if(fx.cred){ const b=G.cred; G.cred=clamp(G.cred+fx.cred,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
-  if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{ G.fac[k]=clamp((G.fac[k]||0)+v,-100,100); chip(v>0?`i`:`n`,`${sgn(v)} ${FAC[k].n}`); });
+  Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));
+  if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{ G.fac[k]=clamp((G.fac[k]||0)+v,-100,100); });
   if(fx.rel){ G.rel=G.rel||{}; Object.entries(fx.rel).forEach(([k,v])=>{ G.rel[k]=clamp((G.rel[k]||0)+v,-50,100); chip(v>0?`p`:`n`,`${sgn(v)} lien · ${WHO[k].n.split(` `)[0]}`); }); }
   if(fx.role) Object.entries(fx.role).forEach(([k,v])=>G.role[k]=(G.role[k]||0)+v);
   if(fx.flag) fx.flag.forEach(f=>G.flags[f]=true);
@@ -221,7 +236,7 @@ function doConquer(d,opt){
   }
   if(ok){
     G.dist[d.id]=`player`; G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
-    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-15,-100,100); chip(`n`,`−15 ${FAC[prev].n}`); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
+    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-15,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
     if(G.mine) G.mine.power++;
     G.log.unshift({d:dateStr(),m:`Tu prends le contrôle de ${d.n}.`}); chip(`y`,`${d.n} conquis`);
   } else {
@@ -278,6 +293,7 @@ function checkEnd(){
   }
   if(G.hum<=0){ endGame(`psycho`); return true; }
   if(G.ed<=-4000){ endGame(`debt`); return true; }
+  for(const b of Object.keys(BLOCS)){ const v=(G.bloc||{})[b]; if(v<=0){ endGame(`bloc_${b}_lo`); return true; } if(v>=100){ endGame(`bloc_${b}_hi`); return true; } }
   if(G.age>=RETIRE_AGE){ endGame(`retire`); return true; }
   return false;
 }

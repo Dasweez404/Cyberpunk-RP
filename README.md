@@ -13,6 +13,7 @@ Fais une carrière de 18 à 40 ans à Night City **sans mourir** avec le meilleu
 - Carte de Night City : 18 quartiers à conquérir (assaut, hack, diplomatie ou argent)
 - Cyberware (Sandevistan, Mantis, Monowire, Gorilla Arms, cyberdecks…), quickhacks, armes, véhicules
 - Voies de carrière : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic, Chef de faction
+- Équilibre à la Reigns : 4 blocs d'influence (Rue, Corpos, Loi, Badlands) à garder au milieu
 - Score final, Hall of Fame (localStorage), sauvegarde automatique
 
 ## Dev

@@ -238,3 +238,9 @@ const ENDS = {
   quit:{t:`DISPARU`,e:`Tu as tout laissé derrière toi. Peut-être qu'ailleurs il y a encore une chance.`},
   mercy:{t:`FLATLINE`,e:`Un dernier regard sur les néons. Puis le noir.`},
 };
+
+/* ---------- blocs d'influence ---------- */
+const BLOC = {valentinos:`rue`,maelstrom:`rue`,tygers:`rue`,sixth:`rue`,voodoo:`rue`,animals:`rue`,mox:`rue`,
+  arasaka:`corpo`,militech:`corpo`,kangtao:`corpo`,biotechnica:`corpo`,trauma:`corpo`,ncpd:`loi`,barghest:`loi`,aldecaldos:`nomad`,wraiths:`nomad`};
+const BLOCS = {rue:{n:`RUE`,c:`#ff9f1c`,d:`Gangs et rues de Night City`,opp:`loi`},corpo:{n:`CORPOS`,c:`#05ffa1`,d:`Arasaka, Militech, Kang Tao…`,opp:`nomad`},
+  loi:{n:`LOI`,c:`#3b8bff`,d:`NCPD, MaxTac, Barghest`,opp:`rue`},nomad:{n:`BADLANDS`,c:`#ff4d6d`,d:`Les clans nomades`,opp:`corpo`}};
