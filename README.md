@@ -17,4 +17,6 @@ Fais une carrière de 18 à 40 ans à Night City **sans mourir** avec le meilleu
 - Score final, Hall of Fame (localStorage), sauvegarde automatique
 
 ## Dev
+Hors ligne : `index.html` est autonome (ouvrable en fichier local). Servi en https, `sw.js` + `manifest.webmanifest` le rendent installable (PWA) et jouable sans connexion.
+
 Sources dans `src/` ; `./build.sh` assemble `index.html`.
