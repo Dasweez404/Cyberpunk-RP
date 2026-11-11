@@ -675,7 +675,9 @@ function legendTitle(k){
 }
 
 /* ---------- init ---------- */
-window.addEventListener(`DOMContentLoaded`,()=>{
+function boot(){
   document.body.insertAdjacentHTML(`beforeend`,`<div id="fx"></div><div id="vig"></div><div id="flash"></div>`);
   showTitle();
-});
+}
+window.addEventListener(`error`,e=>{ const r=$(`#root`); if(r&&!r.querySelector(`.screen`)) r.innerHTML=`<div style="padding:24px;color:#ff2a6d;font:14px monospace">Erreur : ${esc(e.message||`inconnue`)}<br><br><button onclick="try{localStorage.clear()}catch(e){};location.reload()" style="padding:10px;font:inherit">Réinitialiser et recharger</button></div>`; });
+if(document.readyState===`loading`) window.addEventListener(`DOMContentLoaded`,boot); else boot();
