@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07070d">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
@@ -291,6 +291,81 @@ button:focus-visible{outline:2px solid var(--c);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.amb .skyline,.rain{animation:none}}
 
 .portrait.scene{display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,#1a0a2e,#0b0b16);border-color:var(--y);filter:saturate(1.2)}
+
+/* =================== MOBILE-FIRST v5 =================== */
+html,body{overscroll-behavior:none;touch-action:manipulation}
+.screen{height:100vh;height:100dvh}
+#gs{overflow:hidden}
+.stage{flex:1 1 0;min-height:0}
+.cardwrap{min-height:120px}
+.choices{flex:0 1 auto;max-height:54%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.choices::-webkit-scrollbar{display:none}
+.crow{flex:none}
+#advice{flex:none}.hud,.dock{flex:none}
+#hdate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sub-hud .role{max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter .lb b,.m-ed .lb{white-space:nowrap}
+.sheet{max-height:92vh;max-height:92dvh}.sheet.full{height:96vh;height:96dvh}
+.sheet .body{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+.title,.create,.end{overflow:auto}
+.cere{overflow:auto}
+/* zones tactiles >= 44px */
+.hbtn{min-height:34px;padding:4px 12px}
+.bloc{padding:8px 0 5px}
+.sheet .x{width:44px;height:44px}
+.pm{width:46px;height:46px}
+.fc{padding:9px 14px}
+.buy{min-height:44px}
+.dock button{min-height:54px}
+.seg button{min-height:46px}
+.frow{min-height:46px}
+.choice{min-height:52px}
+@media (max-width:400px){
+  body{font-size:16px}
+  .hud{padding:8px 10px 4px}.meters{gap:6px}
+  .meter{padding:4px 5px 6px}.meter .lb{font-size:10px;letter-spacing:.08em}.meter .lb b{font-size:14px}
+  .stage{padding:4px 10px 0}.choices{padding:6px 10px}
+  .help{width:54px}
+  .tiles.three{grid-template-columns:1fr 1fr}
+  .frow b{width:96px;font-size:14px}
+}
+@media (max-height:760px){
+  .amb .skyline{display:none}
+  .speaker{min-height:38px;margin-bottom:4px}.portrait{width:40px;height:40px}.speaker .nm{font-size:17px}.speaker .rl{font-size:11px}
+  .card{padding:14px 14px}.card .tx{font-size:17.5px;line-height:1.34}.card .tag{font-size:11px;margin-bottom:5px}
+  .choice{padding:8px 10px;min-height:48px;gap:8px}.choice .tt b{font-size:15.5px}.choice .tt small{font-size:12px}.choice .k{width:20px;height:20px;font-size:11px}.choice .bd{font-size:12px}
+  .choices{gap:6px;padding-top:6px;padding-bottom:6px}
+  .dock button{min-height:48px;font-size:10px}
+  .sub-hud{font-size:12px}.hud{gap:4px}
+}
+@media (max-height:640px){
+  .speaker .rl,.card .tag{display:none}
+  .card .tx{font-size:16px}
+  .cic{font-size:44px}.cinner li{padding:7px 10px;font-size:14px}.cinner h2{font-size:26px}
+}
+/* paysage : carte à gauche, choix à droite */
+@media (orientation:landscape) and (max-height:520px){
+  #gs{display:grid;grid-template-columns:1.1fr 1fr;grid-template-rows:auto minmax(0,1fr) auto auto}
+  #gs .hud{grid-column:1/-1}
+  #gs .stage{grid-column:1;grid-row:2;padding-right:6px}
+  #gs .choices{grid-column:2;grid-row:2;max-height:none;padding-top:4px;align-content:start}
+  #gs #advice{grid-column:1/-1;grid-row:3}
+  #gs .dock{grid-column:1/-1;grid-row:4}
+  .meters{grid-template-columns:repeat(4,1fr)}
+  .blocs{display:none}.speaker{display:none}.card{padding:10px 14px}
+  .dock button{min-height:40px;flex-direction:row;justify-content:center;gap:6px}.dock button svg{width:18px;height:18px}
+  .sheet,.sheet.full{max-height:100dvh;height:auto}
+  .tiles{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-height:760px){
+  .stage{overflow:hidden}
+  .choices{max-height:46%}
+  .cardwrap{min-height:96px}
+  .choice .tt b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .choice .tt small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .help{width:50px;font-size:16px}
+}
+@media (max-height:640px){ .choices{max-height:44%} .hud{padding-top:6px} .meter .lb{font-size:9.5px} }
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -3216,7 +3291,7 @@ function openMap(keep){
     const dim=hl&&hl!==o?.25:1;
     const pips=Array.from({length:d.def},(_,i)=>`<circle cx="${d.x+8+i*7}" cy="${d.y+d.h-8}" r="2.2" fill="#fff" opacity=".85"/>`).join(``);
     return `<g data-d="${d.id}" style="cursor:pointer;opacity:${dim}"><rect x="${d.x}" y="${d.y}" width="${d.wd}" height="${d.h}" rx="4" fill="${locked?`#15152a`:ownerColor(o)}" fill-opacity="${o===`player`?.95:locked?.6:.6}" ${sel?`stroke="#fff" stroke-width="3"`:o===`player`?`stroke="#fcee0a" stroke-width="2"`:``}/>
-      <text x="${d.x+6}" y="${d.y+16}" style="font-size:10px">${d.n}${locked?` 🔒`:``}</text>
+      <text x="${d.x+6}" y="${d.y+17}" style="font-size:11.5px">${(d.id===`waterfront`?`Waterfront`:d.n)}${locked?` 🔒`:``}</text>
       <text x="${d.x+6}" y="${d.y+27}" style="font-size:6.5px;fill:#ffffffaa;font-weight:500;letter-spacing:.1em">${d.w.toUpperCase()}</text>${pips}
       ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text><rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*holdOf(d.id)/100}" height="3" fill="${holdOf(d.id)<=25?`#ff2a6d`:`#fcee0a`}" stroke="none"/>`:(G.ctl&&G.ctl[d.id]?`<rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*G.ctl[d.id]/100}" height="3" fill="#00f0ff" stroke="none"/>`:``)}</g>`;
   }).join(``);

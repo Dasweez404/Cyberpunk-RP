@@ -670,7 +670,7 @@ function openMap(keep){
     const dim=hl&&hl!==o?.25:1;
     const pips=Array.from({length:d.def},(_,i)=>`<circle cx="${d.x+8+i*7}" cy="${d.y+d.h-8}" r="2.2" fill="#fff" opacity=".85"/>`).join(``);
     return `<g data-d="${d.id}" style="cursor:pointer;opacity:${dim}"><rect x="${d.x}" y="${d.y}" width="${d.wd}" height="${d.h}" rx="4" fill="${locked?`#15152a`:ownerColor(o)}" fill-opacity="${o===`player`?.95:locked?.6:.6}" ${sel?`stroke="#fff" stroke-width="3"`:o===`player`?`stroke="#fcee0a" stroke-width="2"`:``}/>
-      <text x="${d.x+6}" y="${d.y+16}" style="font-size:10px">${d.n}${locked?` 🔒`:``}</text>
+      <text x="${d.x+6}" y="${d.y+17}" style="font-size:11.5px">${(d.id===`waterfront`?`Waterfront`:d.n)}${locked?` 🔒`:``}</text>
       <text x="${d.x+6}" y="${d.y+27}" style="font-size:6.5px;fill:#ffffffaa;font-weight:500;letter-spacing:.1em">${d.w.toUpperCase()}</text>${pips}
       ${o===`player`?`<text x="${d.x+d.wd-14}" y="${d.y+16}" style="font-size:11px">★</text><rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*holdOf(d.id)/100}" height="3" fill="${holdOf(d.id)<=25?`#ff2a6d`:`#fcee0a`}" stroke="none"/>`:(G.ctl&&G.ctl[d.id]?`<rect x="${d.x+2}" y="${d.y+d.h-5}" width="${(d.wd-4)*G.ctl[d.id]/100}" height="3" fill="#00f0ff" stroke="none"/>`:``)}</g>`;
   }).join(``);
