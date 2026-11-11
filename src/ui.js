@@ -394,7 +394,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -405,8 +405,8 @@ function askFactionName(kind,done){
   modal(`Nomme ta faction`,`<div class="log">${T[kind]} — le nom que Night City murmurera.</div><input class="txt" id="fn" maxlength="22" value="${sug[0]}"><div class="chips">${sug.map(s=>`<button class="chip i" data-s="${s}">${s}</button>`).join(``)}</div><button class="btn pri" id="fok">Fonder</button>`,{lock:true});
   document.querySelectorAll(`[data-s]`).forEach(b=>b.onclick=()=>{$(`#fn`).value=b.dataset.s;SFX.tap()});
   $(`#fok`).onclick=()=>{
-    const name=($(`#fn`).value.trim()||sug[0]); G.mine={name,type:kind,power:1};
-    G.log.unshift({d:dateStr(),m:`Tu fondes ${name} (${T[kind]}).`}); closeModal(); cere({k:`found`,c:`#fcee0a`,ic:`👑`,kick:`FONDATION`,t:name,sub:T[kind],lines:[`🏁 Tu es désormais à la tête de ta propre famille`,`⚔ Les rivaux testeront ta force`,`🏙 Prends des quartiers, tiens-les : tout dépend de toi`]}); showCere(done);
+    const name=($(`#fn`).value.trim()||sug[0]); const crew=REL_NAMES.filter(i=>relv(i)>=40&&!(G.dead||{})[i]); G.mine={name,type:kind,power:1+crew.length,crew}; if(crew.length) toast(`${crew.length} allié(s) te suivent dans ${name}`);
+    G.log.unshift({d:dateStr(),m:`Tu fondes ${name} (${T[kind]}).`}); closeModal(); cere({k:`found`,c:`#fcee0a`,ic:`👑`,kick:`FONDATION`,t:name,sub:T[kind],lines:[`🏁 Tu es désormais à la tête de ta propre famille`,(G.mine&&G.mine.crew&&G.mine.crew.length?`🤝 Tes alliés te suivent : ${G.mine.crew.map(i=>WHO[i].n.split(` `)[0]).join(`, `)}`:`🤝 Recrute tes alliés dans Contacts (lien ≥ 20)`),`⚔ Les rivaux testeront ta force`,`🏙 Prends des quartiers, tiens-les : tout dépend de toi`]}); showCere(done);
   };
 }
 
@@ -492,6 +492,7 @@ function openProfile(){
   ${hk?`<div class="sec">Quickhacks</div><div class="log">${hk}</div>`:``}
   <div class="sec">Équipement</div>${gear}
   ${relBlock()}
+  <div class="sec">Difficulté</div><div class="log">Le monde se durcit avec les années : <b style="color:var(--m)">+${dcBonus()}</b> à la difficulté des jets${G.age>=AGING_AGE?` · ton corps vieillit`:``}. Prix et loyers : ×${infl().toFixed(2)}.</div>
   <div class="sec">Statistiques</div><div class="log">Cartes jouées : ${G.stats.cards} · Gigs : ${G.stats.gigs} · Missions de faction : ${G.stats.jobs}</div>`);
 }
 
@@ -535,8 +536,8 @@ function openCitySub(k){
 }
 function doDown(k){
   CHIPS=[];
-  if(k===`heal`){ if(G.ed<200){toast(`Pas assez d'eddies`);return} applyFx({ed:-200,hp:35}); }
-  if(k===`therapy`){ if(G.ed<600){toast(`Pas assez d'eddies`);return} applyFx({ed:-600,hum:15}); }
+  if(k===`heal`){ if(G.ed<Math.round(200*infl())){toast(`Pas assez d'eddies`);return} applyFx({ed:-Math.round(200*infl()),hp:Math.round(35*Math.max(.5,1-Math.max(0,G.age-30)*0.012))}); }
+  if(k===`therapy`){ if(G.ed<Math.round(600*infl())){toast(`Pas assez d'eddies`);return} applyFx({ed:-Math.round(600*infl()),hum:15}); }
   if(k===`rest`){ applyFx({hp:15,hum:5}); }
   if(k===`trauma`){ if(G.flags.trauma||G.ed<1200){toast(`Impossible`);return} applyFx({ed:-1200,flag:[`trauma`]}); toast(`Abonnement Trauma Team activé`); }
   SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`,trauma:`Abonnement Trauma Team Platinum souscrit.`}[k]});
@@ -751,12 +752,12 @@ function rankPanel(){
     const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais encore ${p.jobs[1]-p.jobs[0]} mission(s)`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred`);
     body+=p.ready?`<div class="why" style="color:var(--g);padding:4px 0">✅ Conditions remplies : la promotion t'attend à la prochaine carte.</div>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
   }
-  const can=G.askP!==G.stats.cards;
+  const can=G.stats.cards-(G.askP===undefined?-9:G.askP)>=2;
   return `<div class="item own" style="border-color:${col};flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div class="in"><b style="color:${col}">${roleTitle()}</b><small>${f.perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>${body}
     <button class="btn" id="askm" ${can?``:`disabled`} style="text-align:center">📜 Demander une mission${can?``:` (déjà demandée)`}</button></div>`;
 }
 function askMission(){
-  if(!G.member||G.askP===G.stats.cards) return;
+  if(!G.member||G.stats.cards-(G.askP===undefined?-9:G.askP)<2) return;
   G.askP=G.stats.cards; G.queue.unshift(`fjob_${G.member}`); SFX.ok(); toast(`${FAC[G.member].n} te confiera une mission à la prochaine carte`); closeModal();
 }
 /* ----- CONTACTS ----- */
@@ -766,15 +767,19 @@ function openContacts(){
     const idle=G.stats.cards-((G.relT&&G.relT[id])||0);
     const next=REL_TIERS.find(t=>t[0]>v);
     const ally=Object.keys(ALLY).filter(a=>ALLY[a].includes(id)).map(a=>ATTRS[a].n);
-    return `<button class="ccard ${known?``:`unk`} ${dead?`dead`:``}" data-ct="${id}">
+    return `<div class="ccard ${known?``:`unk`} ${dead?`dead`:``}" data-ct="${id}" role="button" tabindex="0">
       <div class="cp">${known?portrait(id):`<div class="qm">?</div>`}</div>
       <div class="cinfo"><b style="color:${known?w.c:`var(--dim)`}">${dead?`† `:``}${known?esc(w.n):`Inconnu(e)`}${G.flags[`lover_`+id]?` ♥`:``}</b>
       <small>${dead?`Mort(e)`:known?relTier(v)+` · `+v:`Pas encore rencontré(e)`}</small>
       <div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};width:${Math.max(0,Math.abs(v))}%"></i></div></div>
-      <div class="cdet" id="cd-${id}" hidden>${esc(w.r)}<br>🎁 ${esc(CONTACTS[id])}${ally.length&&!dead?`<br>📞 Aide aux jets : ${ally.join(`, `)} (lien ≥ 25)`:``}${next&&!dead&&known?`<br>Prochain palier : ${next[1]} (${next[0]})`:``}${known&&!dead&&v>=10&&idle>=7?`<br><span style="color:var(--m)">⚠ Sans nouvelles depuis ${idle} périodes : il/elle s'éloigne</span>`:``}</div></button>`;
+      <div class="cdet" id="cd-${id}" hidden>${G.mine&&crewOf().includes(id)?`<span style="color:var(--g)">✓ Membre de ${esc(G.mine.name)} · +120 €$/période · défense</span><br>`:``}${canRecruit(id)?`<button class="buy" data-rc="${id}" style="margin:4px 0">🤝 Recruter dans ${esc(G.mine.name)} (${relv(id)>=35?`assuré`:`jet de SANG-FROID`})</button><br>`:``}${esc(w.r)}<br>🎁 ${esc(CONTACTS[id])}${ally.length&&!dead?`<br>📞 Aide aux jets : ${ally.join(`, `)} (lien ≥ 25)`:``}${next&&!dead&&known?`<br>Prochain palier : ${next[1]} (${next[0]})`:``}${known&&!dead&&v>=10&&idle>=7?`<br><span style="color:var(--m)">⚠ Sans nouvelles depuis ${idle} périodes : il/elle s'éloigne</span>`:``}</div></div>`;
   }).join(``);
-  modal(`Contacts`,`<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
-  document.querySelectorAll(`[data-ct]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#cd-`+b.dataset.ct);d.hidden=!d.hidden});
+  const elig=G.mine?REL_NAMES.filter(canRecruit):[];
+  modal(`Contacts`,`${G.mine?`<div class="vstat"><span>🤝 ${esc(G.mine.name)} : ${crewOf().length} membre(s)</span>${elig.length?`<button class="buy" id="rcall">Recruter (${elig.length})</button>`:``}</div>`:``}<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
+  document.querySelectorAll(`[data-ct]`).forEach(b=>b.onclick=(e)=>{ if(e.target.closest(`[data-rc]`)) return; SFX.tap();const d=$(`#cd-`+b.dataset.ct);d.hidden=!d.hidden});
+  const doRec=ids=>{ let n=0; ids.forEach(id=>{ const r=recruitAlly(id); if(r&&r.ok) n++; }); updateHud(); toast(n?`${n} recrue(s) dans ${G.mine.name} !`:`Personne n'a accepté…`); if(n){SFX.ok();burst(innerWidth/2,innerHeight*.4,[`#fcee0a`,`#05ffa1`],40);} openContacts(); };
+  document.querySelectorAll(`[data-rc]`).forEach(b=>b.onclick=ev=>{ev.stopPropagation();doRec([b.dataset.rc])});
+  const ra=$(`#rcall`); if(ra) ra.onclick=()=>doRec(elig);
 }
 function openMore(){
   modal(`Plus`,`<div class="tiles">

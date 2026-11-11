@@ -471,13 +471,13 @@ card({id:`edge_job`,who:`dex`,tag:`Gros coup`,w:7,cond:()=>G.flags.edge,
   ]});
 
 /* ============================ FACTION PROPRE ============================ */
-card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=32&&G.ed>=2500&&!G.mine&&!isLeader(),
+card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=20&&G.ed>=1500&&!G.mine&&!isLeader(),
   tx:`Tu ne veux plus suivre les ordres de personne. Tu as de l'argent, des alliés, une réputation. Il est temps de bâtir quelque chose à toi : une faction, une famille, un nom que les rues connaîtront.`,
   ch:[
-    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-2500,cred:6,bloc:{rue:10},role:{boss:3}}},
-    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-2500,cred:5,role:{boss:3,fixer:2}}},
-    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-2500,cred:5,role:{boss:3,nomad:2}}},
-    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=2500?``:`2500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-2500,cred:5,role:{boss:3,net:2}}},
+    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-1500,cred:6,bloc:{rue:10},role:{boss:3}}},
+    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-1500,cred:5,role:{boss:3,fixer:2}}},
+    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-1500,cred:5,role:{boss:3,nomad:2}}},
+    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=1500?``:`1500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-1500,cred:5,role:{boss:3,net:2}}},
     {t:`Plus tard…`,fx:{unonce:`found_faction`}}
   ]});
 card({id:`mine_raid`,who:`narr`,tag:`Ton territoire attaqué`,w:30,cond:()=>G.mine&&ownedList().length>=1&&yr()>=2071,
@@ -557,7 +557,7 @@ Object.keys(FAC).forEach(id=>{
       {t:`Refuser clairement`,s:`${f.n} le saura`,fx:{fac:{[id]:-10},cred:1,flagMark:id}}
     ]});
   const att = {gang:`body`,corp:`cool`,clan:`ref`,ncpd:`int`,mox:`cool`,trauma:`tech`}[f.k]||`cool`;
-  card({id:`fjob_${id}`,who:`@fac`,tag:`Mission · ${f.n}`,w:12,cond:()=>G.member===id,
+  card({id:`fjob_${id}`,who:`@fac`,tag:`Mission · ${f.n}`,w:22,cond:()=>G.member===id,
     who:`@fac`,tx:()=>{G.tmp={line:Math.floor(Math.random()*f.lines.length)};return f.lines[G.tmp.line]+` <em style="color:var(--dim)">(${rankTitle()})</em>`},
     ch:[
       {t:`Accomplir la mission`,s:ATTRS[att].n,chk:{a:att,k:att===`int`?`hck`:att===`body`||att===`ref`?`cmb`:null,dc:()=>7+Math.min(3,G.rank||0),

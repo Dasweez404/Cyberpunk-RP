@@ -21,7 +21,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -80,8 +80,8 @@ function bm(){ // multiplicateurs liés aux blocs et à l'origine
     hurt:(l===`lo`?1.1:1), rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(n===`hi`?.8:1)
   };
 }
-const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber);
-const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear);
+const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber*infl());
+const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear*infl());
 function blocPerkLines(b){
   const s=blocState(b), v=Math.round(G.bloc[b]);
   const L={
@@ -125,6 +125,22 @@ function promoInfo(){
   if(G.rank>=3){ const ok=G.jobs>=LEAD_NEED.jobs&&rep>=LEAD_NEED.rep&&G.cred>=LEAD_NEED.cred; return {lead:true,next:`${LEADER[f.k]} (prendre la tête)`,jobs:[G.jobs,LEAD_NEED.jobs],rep:[rep,LEAD_NEED.rep],cred:[G.cred,LEAD_NEED.cred],ready:ok}; }
   const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank];
   return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],ready:G.jobs>=jn&&rep>=rn};
+}
+function ageTick(){
+  if(G.age<AGING_AGE) return;
+  if(Math.random()<(hasCy(`biomon`)?.12:.24)){ const a=Math.random()<.5?`body`:`ref`; if(G.at[a]>3){ G.at[a]--; toast(`Ton corps vieillit : ${ATTRS[a].n} −1`); G.log.unshift({d:dateStr(),m:`Le temps passe : ${ATTRS[a].n} −1.`}); } }
+}
+/* ---------- famille : alliés recrutés dans ta faction ---------- */
+const crewOf = () => (G.mine&&G.mine.crew)||[];
+function canRecruit(id){ return !!G.mine && !crewOf().includes(id) && !(G.dead||{})[id] && relv(id)>=20; }
+function recruitAlly(id){
+  if(!canRecruit(id)) return null;
+  const r=rollInfo({a:`cool`,dc:6}), auto=relv(id)>=35;
+  const roll=rnd(1,10), ok=auto||roll===10||(roll!==1&&roll>=r.need);
+  CHIPS=[];
+  if(ok){ G.mine.crew=G.mine.crew||[]; G.mine.crew.push(id); G.mine.power++; applyFx({rel:{[id]:6},cred:2}); chip(`y`,`${WHO[id].n.split(` `)[0]} rejoint ${G.mine.name}`); G.log.unshift({d:dateStr(),m:`${WHO[id].n} rejoint ${G.mine.name}.`}); }
+  else { applyFx({rel:{[id]:-4}}); }
+  return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
 function addEcho(id,delay){ G.echo=G.echo||[]; G.echo.push({id,at:G.stats.cards+delay}); }
 function echoTick(){ G.echo=(G.echo||[]).filter(x=>{ if(G.stats.cards>=x.at){ if(!G.queue.includes(x.id)) G.queue.push(x.id); return false; } return true; }); }
@@ -186,11 +202,13 @@ function makeLoot(t){
   return out;
 }
 /* ---------- jets ---------- */
+const dcBonus = () => Math.min(6,Math.floor((G.age-18)/6)) + (G.cred>=70?1:0);
+const infl = () => 1+0.015*(yr()-START_YEAR);
 function rollInfo(c,bonus){
   const kk = c.k||(c.a===`cool`?`soc`:null);
   const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
-  const need = dc + 4 - tot;
+  const need = dc + 4 + dcBonus() - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
   return {tot,dc,need,chance:n/10};
 }
@@ -201,7 +219,7 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.hum){ const b=G.hum; G.hum=clamp(G.hum+fx.hum,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
@@ -284,7 +302,7 @@ const FN = {
   defendWin(){ if(G.mine) G.mine.power++; if(G.tmp&&G.tmp.d){G.hold=G.hold||{};G.hold[G.tmp.d]=clamp(holdOf(G.tmp.d)+20,0,100);} chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
-  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
+  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+9,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+9 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
   promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
@@ -295,6 +313,8 @@ const FN = {
     SFX.ok(); },
   betray(){ const old=G.member; const nw=FAC[old].foes[0]; const r=leaveFac(old,`betray`); G.fac[old]=-70; cere({k:`betray`,c:`#ff2a6d`,ic:`🗡`,kick:`TRAHISON`,t:`Tu trahis ${FAC[old].n}`,sub:`Tu perds ton rang de ${r.old}`,lines:[`💀 Un contrat est mis sur ta tête`,`📉 Réputation chez ${FAC[old].n} : −70`,`⚖ ${BLOCS[BLOC[old]].n} te tourne le dos`,`👥 Tes anciens frères te chercheront`]}); joinFac(nw); },
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
+  holdAll(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)+25,0,100)}); chip(`y`,`Quartiers renforcés`); },
+  holdLose(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)-25,0,100)}); chip(`n`,`Tes quartiers vacillent`); },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -308,15 +328,16 @@ function tick(months){
   let inc = 0;
   ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
+  inc+=crewOf().length*120;
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*BASE*bm().rent;
+  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*infl()*BASE*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
   if(reg) G.hp=clamp(G.hp+Math.round(reg*k),0,100);
-  G.hp = clamp(G.hp+Math.round(5*k),0,100);
+  G.hp = clamp(G.hp+Math.round(5*k*Math.max(.4,1-Math.max(0,G.age-30)*0.02)),0,100);
   if(G.flags.aging){ G.hp=clamp(G.hp-Math.max(1,Math.round(3*k)),0,100); }
   G.t += months;
   G.age = START_AGE + Math.floor(G.t/12);
@@ -414,7 +435,7 @@ function warTick(){
   G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
-    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2);
+    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewOf().length/2);
     G.hold[d.id]=clamp(holdOf(d.id)-Math.max(1,dec),0,100);
     if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n} faute de tenue.`}); }
     else if(G.hold[d.id]<=25) toast(`⚠ ${d.n} : tenue ${G.hold[d.id]} — renforce !`);
@@ -436,7 +457,7 @@ function computeScore(kind){
     [`Fortune`, Math.round(Math.max(0,G.ed)/12)],
     [`Humanité restante (${G.hum})`, G.hum*7],
     [`Quartiers contrôlés (${dN})`, dN*320],
-    [`Faction « ${G.mine?G.mine.name:`—`} »`, G.mine?G.mine.power*260+400:0],
+    [`Faction « ${G.mine?G.mine.name:`—`} »`, G.mine?G.mine.power*260+400+crewOf().length*180:0],
     [`Attributs (${attrSum})`, attrSum*25],
     [`Chrome installé (${G.cyber.length})`, G.cyber.length*80],
     [`Missions de faction (${G.stats.jobs})`, G.stats.jobs*60],

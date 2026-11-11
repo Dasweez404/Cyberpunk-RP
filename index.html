@@ -701,9 +701,11 @@ Object.assign(CONTACTS,{
 });
 ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
 /* ---------- conditions de promotion (affichées au joueur) ---------- */
-const JOB_NEED = [2,4,6];     // missions pour passer au rang 1,2,3
-const REP_NEED = [25,45,65];  // réputation dans la faction
-const LEAD_NEED = {jobs:8,rep:70,cred:45}; // pour prendre la tête
+const JOB_NEED = [2,3,4];     // missions pour passer au rang 1,2,3
+const REP_NEED = [20,35,50];  // réputation dans la faction
+const LEAD_NEED = {jobs:6,rep:60,cred:40}; // pour prendre la tête
+
+const AGING_AGE = 40;
 /* =====================================================================
    CARTES — événements. Utilise les helpers globaux de engine.js
    ===================================================================== */
@@ -1177,13 +1179,13 @@ card({id:`edge_job`,who:`dex`,tag:`Gros coup`,w:7,cond:()=>G.flags.edge,
   ]});
 
 /* ============================ FACTION PROPRE ============================ */
-card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=32&&G.ed>=2500&&!G.mine&&!isLeader(),
+card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=20&&G.ed>=1500&&!G.mine&&!isLeader(),
   tx:`Tu ne veux plus suivre les ordres de personne. Tu as de l'argent, des alliés, une réputation. Il est temps de bâtir quelque chose à toi : une faction, une famille, un nom que les rues connaîtront.`,
   ch:[
-    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-2500,cred:6,bloc:{rue:10},role:{boss:3}}},
-    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-2500,cred:5,role:{boss:3,fixer:2}}},
-    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-2500,cred:5,role:{boss:3,nomad:2}}},
-    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=2500?``:`2500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-2500,cred:5,role:{boss:3,net:2}}},
+    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-1500,cred:6,bloc:{rue:10},role:{boss:3}}},
+    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-1500,cred:5,role:{boss:3,fixer:2}}},
+    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(1500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-1500,cred:5,role:{boss:3,nomad:2}}},
+    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=1500?``:`1500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-1500,cred:5,role:{boss:3,net:2}}},
     {t:`Plus tard…`,fx:{unonce:`found_faction`}}
   ]});
 card({id:`mine_raid`,who:`narr`,tag:`Ton territoire attaqué`,w:30,cond:()=>G.mine&&ownedList().length>=1&&yr()>=2071,
@@ -1263,7 +1265,7 @@ Object.keys(FAC).forEach(id=>{
       {t:`Refuser clairement`,s:`${f.n} le saura`,fx:{fac:{[id]:-10},cred:1,flagMark:id}}
     ]});
   const att = {gang:`body`,corp:`cool`,clan:`ref`,ncpd:`int`,mox:`cool`,trauma:`tech`}[f.k]||`cool`;
-  card({id:`fjob_${id}`,who:`@fac`,tag:`Mission · ${f.n}`,w:12,cond:()=>G.member===id,
+  card({id:`fjob_${id}`,who:`@fac`,tag:`Mission · ${f.n}`,w:22,cond:()=>G.member===id,
     who:`@fac`,tx:()=>{G.tmp={line:Math.floor(Math.random()*f.lines.length)};return f.lines[G.tmp.line]+` <em style="color:var(--dim)">(${rankTitle()})</em>`},
     ch:[
       {t:`Accomplir la mission`,s:ATTRS[att].n,chk:{a:att,k:att===`int`?`hck`:att===`body`||att===`ref`?`cmb`:null,dc:()=>7+Math.min(3,G.rank||0),
@@ -2281,6 +2283,62 @@ H(`h_2103`,`narr`,`2103 · Les dernières braises`,[2103,0],`Il reste peu de mon
   {t:`Lui rendre un dernier salut`,s:`+Humanité`,fx:{hum:12,cred:4,msg:`Tu lèves un verre à l'Afterlife. Même les murs se souviennent.`}},
   {t:`Rentrer chez toi`,fx:{hum:5}}]);
 /* =====================================================================
+   CARTES 8 — menaces tardives (la difficulté monte avec les années)
+   et vie de ta famille
+   ===================================================================== */
+const LATE = () => G.age>=32;
+card({id:`lg_hit`,who:`corpo`,tag:`☠ Contrat sur ta tête`,w:9,cd:10,cond:()=>LATE()&&G.cred>=45,
+  tx:`Ta réputation ne passe plus inaperçue. Un message anonyme : « Une corporation a mis un prix sur ton nom. Des professionnels, pas des gamins. Ils seront là avant ce soir. » La liste de tes ennemis est longue ; ceux-là sont les plus patients.`,
+  ch:[
+    {t:`Les attendre et les affronter`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:10,ok:{cred:8,hum:-4,ed:1500,msg:`Une fusillade courte, précise. Ils ne s'attendaient pas à ça. Tu récupères leur matériel.`},ko:{hp:-50,ed:-800,msg:`Ils sont meilleurs que toi ce soir. Tu t'en sors en rampant.`}}},
+    {t:`Disparaître quelques jours`,s:`RÉFLEXES · furtivité`,chk:{a:`ref`,k:`stl`,dc:9,ok:{cred:-2,msg:`Tu quittes ta planque une heure avant leur arrivée. Ils fouillent un lit vide.`},ko:{hp:-32,ed:-500,msg:`Ils te retrouvent. L'issue est brutale.`}}},
+    {t:`Racheter le contrat`,s:`−4 000 €$`,req:R.ed(4000),fx:{ed:-4000,cred:-2,msg:`Un virement, une poignée de main sans chaleur. Le contrat est levé — jusqu'au prochain.`}},
+    {t:`Appeler ta famille à la rescousse`,s:`Requiert une faction avec membres`,req:()=>crewOf().length?``:`Aucun allié dans ta faction`,fx:{ed:-800,cred:3,hum:2,msg:`Tes alliés accourent. Ils paient un prix, toi aussi. Mais personne ne meurt cette nuit.`}}
+  ]});
+card({id:`lg_rival`,who:`@fac`,tag:`Un jeune loup`,w:8,cd:10,cond:()=>LATE()&&G.cred>=50,
+  tx:`Un jeune solo à l'air féroce t'attend devant l'Afterlife. Chrome neuf, regard vide. « On dit que tu es une légende. Les légendes, ça se dépasse. Je te défie. Ici, maintenant. »`,
+  ch:[
+    {t:`Relever le défi`,s:`RÉFLEXES · combat`,chk:{a:`ref`,k:`cmb`,dc:10,ok:{cred:6,hum:-4,msg:`Tu es plus lent qu'avant, mais plus malin. Il tombe à genoux, stupéfait.`},ko:{hp:-42,cred:-6,msg:`Il est plus rapide. Tu comprends que ton temps passe.`}}},
+    {t:`Décliner avec élégance`,s:`SANG-FROID`,chk:{a:`cool`,dc:9,ok:{cred:2,hum:3,msg:`Tu lui offres un verre. « Le jour où tu auras quelque chose à prouver, reviens. » Il baisse les yeux.`},ko:{cred:-5,msg:`On se moque de toi dans ton dos.`}}},
+    {t:`L'humilier devant tout le monde`,s:`INTELLECT`,chk:{a:`int`,dc:9,ok:{cred:7,msg:`Une phrase, deux pièges. Il se ridiculise seul.`},ko:{hp:-20,cred:-3,msg:`Ça se retourne contre toi.`}}}
+  ]});
+card({id:`lg_debt`,who:`fix`,tag:`Une vieille dette`,w:7,cd:12,cond:()=>G.age>=36,
+  tx:`Un visage du passé, plus vieux, plus dur : « Tu te souviens de moi ? Tu m'as laissé en plan, il y a des années. Pas de rancune. Juste une dette. Une grosse. Et les dettes ne s'éteignent pas à Night City. »`,
+  ch:[
+    {t:`Payer ce que tu dois`,s:`−3 500 €$`,req:R.ed(3500),fx:{ed:-3500,hum:5,msg:`Tu règles tout. Pour la première fois depuis longtemps, tu dors sans surveiller la porte.`}},
+    {t:`Nier avoir une dette`,s:`SANG-FROID`,chk:{a:`cool`,dc:10,ok:{cred:3,msg:`Tu le regardes droit dans les yeux. Il baisse les siens.`},ko:{hp:-32,ed:-1500,msg:`Il n'est pas venu seul.`}}},
+    {t:`Rembourser autrement : un service`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:9,ok:{hum:-3,cred:4,msg:`Un petit boulot sanglant. La dette est soldée.`},ko:{hp:-36,msg:`Le « petit boulot » tourne à la catastrophe.`}}}
+  ]});
+card({id:`lg_maxtac`,who:`maxtac`,tag:`Contrôle préventif MaxTac`,w:7,cd:12,cond:()=>G.age>=36&&G.cyber.length>=3,
+  tx:`Une camionnette noire se range à ta hauteur. MaxTac vérifie les niveaux de chrome dans ton quartier : « Procédure de routine. Passez votre scan. » Avec autant d'implants, tu n'es pas rassuré(e). Le calme de leurs voix est ce qui fait le plus peur.`,
+  ch:[
+    {t:`Passer le scan calmement`,s:`SANG-FROID`,chk:{a:`cool`,dc:10,ok:{cred:2,msg:`Tu respires lentement. Le scan affiche « stable ». Ils partent.`},ko:{hum:-12,hp:-14,msg:`Le scan hésite, ils te notent. Tu tiens à peine sur tes jambes.`}}},
+    {t:`Montrer des papiers médicaux en règle`,s:`Si tu as une thérapie récente`,req:()=>G.hum>=60?``:`Humanité ≥ 60`,fx:{cred:1,hum:3,msg:`Ton dossier est propre. Ils s'excusent presque.`}},
+    {t:`Fuir`,s:`RÉFLEXES`,chk:{a:`ref`,dc:11,ok:{cred:4,hum:-6,msg:`Un hasard, un toit, une chance. MaxTac te cherche encore.`},ko:{die:`psycho`,msg:`Ils ne vous donnent pas deux chances.`}}}
+  ]});
+card({id:`lg_coalition`,who:`narr`,tag:`⚔ Coalition contre toi`,w:7,cd:12,cond:()=>G.mine&&ownedList().length>=3&&LATE(),
+  tx:()=>`Tes rivaux se sont alliés. Une coalition de gangs et de corpos s'est formée pour reprendre ce que <strong>${G.mine.name}</strong> a pris. Les attaques vont pleuvoir sur tes quartiers en même temps.`,
+  ch:[
+    {t:`Renforcer toutes tes positions`,s:`−2 000 €$`,req:R.ed(2000),fx:{ed:-2000,fn:`holdAll`,cred:3,msg:`Des armes, des gardes, des promesses. Tes quartiers tiennent… pour l'instant.`}},
+    {t:`Frapper le chef de la coalition`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:10,ok:{cred:10,hum:-5,fn:`holdAll`,msg:`Une frappe chirurgicale. La coalition s'effondre.`},ko:{hp:-40,fn:`holdLose`,msg:`L'assaut échoue. Des quartiers vacillent.`}}},
+    {t:`Négocier une trêve`,s:`SANG-FROID`,chk:{a:`cool`,dc:10,ok:{cred:6,hum:3,msg:`Chacun garde ce qu'il a. Pour l'instant.`},ko:{fn:`holdLose`,ed:-1000,msg:`Les négociations échouent. Ils frappent.`}}}
+  ]});
+card({id:`lg_heart`,who:`doc`,tag:`⚠ Le corps lâche`,w:7,cd:15,cond:()=>G.age>=44,
+  tx:`Une douleur dans la poitrine, soudaine, violente. Tes jambes se dérobent au milieu de la rue. Les années, les excès, le chrome : tout se paie. Un passant appelle une ambulance.`,
+  ch:[
+    {t:`Te faire soigner d'urgence`,s:`−2 000 €$`,req:R.ed(2000),fx:{ed:-2000,hp:25,hum:3,msg:`Quelques heures, un scanner, un rapport sans détour : « Calmez-vous, ou vous ne verrez pas 60 ans. »`}},
+    {t:`Serrer les dents et repartir`,s:`CORPS`,chk:{a:`body`,dc:10,ok:{cred:2,msg:`Tu te redresses. L'éclair est passé. Cette fois.`},ko:{hp:-40,hum:-3,msg:`Tu tiens debout, mais pas pour longtemps.`}}}
+  ]});
+
+/* ---------- Vie de ta famille ---------- */
+card({id:`crew_favor`,who:`narr`,tag:`Ta famille`,w:7,cd:8,cond:()=>G.mine&&crewOf().length>=1,
+  tx:()=>{ const id=crewOf()[rnd(0,crewOf().length-1)]; G.tmp={ally:id}; return `<strong>${WHO[id].n}</strong>, un des tiens dans ${G.mine.name}, vient te trouver : « J'ai un problème, et personne d'autre ne peut le régler. Je ne te le demanderais pas si ce n'était pas important. »`; },
+  ch:[
+    {t:`L'aider sans poser de question`,s:`−500 €$ · +Lien`,fx:{ed:-500,hum:5,msg:`Il baisse les yeux, soulagé. Ta famille voit comment tu traites les tiens.`}},
+    {t:`Résoudre le problème toi-même`,s:`SANG-FROID`,chk:{a:`cool`,dc:9,ok:{cred:5,hum:4,msg:`Un coup de fil, un déplacement. Le problème n'existe plus.`},ko:{hp:-18,msg:`Ça se complique. Tu t'en sors de justesse.`}}},
+    {t:`Refuser`,s:`Ta famille s'en souviendra`,fx:{hum:-3,msg:`Il s'en va sans un mot. Ta famille a vu comment tu traites ses membres.`}}
+  ]});
+/* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
 let G = null;
@@ -2303,7 +2361,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -2362,8 +2420,8 @@ function bm(){ // multiplicateurs liés aux blocs et à l'origine
     hurt:(l===`lo`?1.1:1), rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(n===`hi`?.8:1)
   };
 }
-const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber);
-const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear);
+const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber*infl());
+const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear*infl());
 function blocPerkLines(b){
   const s=blocState(b), v=Math.round(G.bloc[b]);
   const L={
@@ -2407,6 +2465,22 @@ function promoInfo(){
   if(G.rank>=3){ const ok=G.jobs>=LEAD_NEED.jobs&&rep>=LEAD_NEED.rep&&G.cred>=LEAD_NEED.cred; return {lead:true,next:`${LEADER[f.k]} (prendre la tête)`,jobs:[G.jobs,LEAD_NEED.jobs],rep:[rep,LEAD_NEED.rep],cred:[G.cred,LEAD_NEED.cred],ready:ok}; }
   const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank];
   return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],ready:G.jobs>=jn&&rep>=rn};
+}
+function ageTick(){
+  if(G.age<AGING_AGE) return;
+  if(Math.random()<(hasCy(`biomon`)?.12:.24)){ const a=Math.random()<.5?`body`:`ref`; if(G.at[a]>3){ G.at[a]--; toast(`Ton corps vieillit : ${ATTRS[a].n} −1`); G.log.unshift({d:dateStr(),m:`Le temps passe : ${ATTRS[a].n} −1.`}); } }
+}
+/* ---------- famille : alliés recrutés dans ta faction ---------- */
+const crewOf = () => (G.mine&&G.mine.crew)||[];
+function canRecruit(id){ return !!G.mine && !crewOf().includes(id) && !(G.dead||{})[id] && relv(id)>=20; }
+function recruitAlly(id){
+  if(!canRecruit(id)) return null;
+  const r=rollInfo({a:`cool`,dc:6}), auto=relv(id)>=35;
+  const roll=rnd(1,10), ok=auto||roll===10||(roll!==1&&roll>=r.need);
+  CHIPS=[];
+  if(ok){ G.mine.crew=G.mine.crew||[]; G.mine.crew.push(id); G.mine.power++; applyFx({rel:{[id]:6},cred:2}); chip(`y`,`${WHO[id].n.split(` `)[0]} rejoint ${G.mine.name}`); G.log.unshift({d:dateStr(),m:`${WHO[id].n} rejoint ${G.mine.name}.`}); }
+  else { applyFx({rel:{[id]:-4}}); }
+  return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
 function addEcho(id,delay){ G.echo=G.echo||[]; G.echo.push({id,at:G.stats.cards+delay}); }
 function echoTick(){ G.echo=(G.echo||[]).filter(x=>{ if(G.stats.cards>=x.at){ if(!G.queue.includes(x.id)) G.queue.push(x.id); return false; } return true; }); }
@@ -2468,11 +2542,13 @@ function makeLoot(t){
   return out;
 }
 /* ---------- jets ---------- */
+const dcBonus = () => Math.min(6,Math.floor((G.age-18)/6)) + (G.cred>=70?1:0);
+const infl = () => 1+0.015*(yr()-START_YEAR);
 function rollInfo(c,bonus){
   const kk = c.k||(c.a===`cool`?`soc`:null);
   const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
   const dc = typeof c.dc===`function`?c.dc():c.dc;
-  const need = dc + 4 - tot;
+  const need = dc + 4 + dcBonus() - tot;
   let n=0; for(let r=1;r<=10;r++){ if(r===10||(r!==1&&r>=need)) n++; }
   return {tot,dc,need,chance:n/10};
 }
@@ -2483,7 +2559,7 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.3*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.hum){ const b=G.hum; G.hum=clamp(G.hum+fx.hum,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
@@ -2566,7 +2642,7 @@ const FN = {
   defendWin(){ if(G.mine) G.mine.power++; if(G.tmp&&G.tmp.d){G.hold=G.hold||{};G.hold[G.tmp.d]=clamp(holdOf(G.tmp.d)+20,0,100);} chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
-  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
+  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+9,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+9 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
   promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
@@ -2577,6 +2653,8 @@ const FN = {
     SFX.ok(); },
   betray(){ const old=G.member; const nw=FAC[old].foes[0]; const r=leaveFac(old,`betray`); G.fac[old]=-70; cere({k:`betray`,c:`#ff2a6d`,ic:`🗡`,kick:`TRAHISON`,t:`Tu trahis ${FAC[old].n}`,sub:`Tu perds ton rang de ${r.old}`,lines:[`💀 Un contrat est mis sur ta tête`,`📉 Réputation chez ${FAC[old].n} : −70`,`⚖ ${BLOCS[BLOC[old]].n} te tourne le dos`,`👥 Tes anciens frères te chercheront`]}); joinFac(nw); },
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
+  holdAll(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)+25,0,100)}); chip(`y`,`Quartiers renforcés`); },
+  holdLose(){ ownedList().forEach(d=>{G.hold[d.id]=clamp(holdOf(d.id)-25,0,100)}); chip(`n`,`Tes quartiers vacillent`); },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -2590,15 +2668,16 @@ function tick(months){
   let inc = 0;
   ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
+  inc+=crewOf().length*120;
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*BASE*bm().rent;
+  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*infl()*BASE*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
   if(reg) G.hp=clamp(G.hp+Math.round(reg*k),0,100);
-  G.hp = clamp(G.hp+Math.round(5*k),0,100);
+  G.hp = clamp(G.hp+Math.round(5*k*Math.max(.4,1-Math.max(0,G.age-30)*0.02)),0,100);
   if(G.flags.aging){ G.hp=clamp(G.hp-Math.max(1,Math.round(3*k)),0,100); }
   G.t += months;
   G.age = START_AGE + Math.floor(G.t/12);
@@ -2696,7 +2775,7 @@ function warTick(){
   G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
-    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2);
+    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewOf().length/2);
     G.hold[d.id]=clamp(holdOf(d.id)-Math.max(1,dec),0,100);
     if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n} faute de tenue.`}); }
     else if(G.hold[d.id]<=25) toast(`⚠ ${d.n} : tenue ${G.hold[d.id]} — renforce !`);
@@ -2718,7 +2797,7 @@ function computeScore(kind){
     [`Fortune`, Math.round(Math.max(0,G.ed)/12)],
     [`Humanité restante (${G.hum})`, G.hum*7],
     [`Quartiers contrôlés (${dN})`, dN*320],
-    [`Faction « ${G.mine?G.mine.name:`—`} »`, G.mine?G.mine.power*260+400:0],
+    [`Faction « ${G.mine?G.mine.name:`—`} »`, G.mine?G.mine.power*260+400+crewOf().length*180:0],
     [`Attributs (${attrSum})`, attrSum*25],
     [`Chrome installé (${G.cyber.length})`, G.cyber.length*80],
     [`Missions de faction (${G.stats.jobs})`, G.stats.jobs*60],
@@ -3152,7 +3231,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -3163,8 +3242,8 @@ function askFactionName(kind,done){
   modal(`Nomme ta faction`,`<div class="log">${T[kind]} — le nom que Night City murmurera.</div><input class="txt" id="fn" maxlength="22" value="${sug[0]}"><div class="chips">${sug.map(s=>`<button class="chip i" data-s="${s}">${s}</button>`).join(``)}</div><button class="btn pri" id="fok">Fonder</button>`,{lock:true});
   document.querySelectorAll(`[data-s]`).forEach(b=>b.onclick=()=>{$(`#fn`).value=b.dataset.s;SFX.tap()});
   $(`#fok`).onclick=()=>{
-    const name=($(`#fn`).value.trim()||sug[0]); G.mine={name,type:kind,power:1};
-    G.log.unshift({d:dateStr(),m:`Tu fondes ${name} (${T[kind]}).`}); closeModal(); cere({k:`found`,c:`#fcee0a`,ic:`👑`,kick:`FONDATION`,t:name,sub:T[kind],lines:[`🏁 Tu es désormais à la tête de ta propre famille`,`⚔ Les rivaux testeront ta force`,`🏙 Prends des quartiers, tiens-les : tout dépend de toi`]}); showCere(done);
+    const name=($(`#fn`).value.trim()||sug[0]); const crew=REL_NAMES.filter(i=>relv(i)>=40&&!(G.dead||{})[i]); G.mine={name,type:kind,power:1+crew.length,crew}; if(crew.length) toast(`${crew.length} allié(s) te suivent dans ${name}`);
+    G.log.unshift({d:dateStr(),m:`Tu fondes ${name} (${T[kind]}).`}); closeModal(); cere({k:`found`,c:`#fcee0a`,ic:`👑`,kick:`FONDATION`,t:name,sub:T[kind],lines:[`🏁 Tu es désormais à la tête de ta propre famille`,(G.mine&&G.mine.crew&&G.mine.crew.length?`🤝 Tes alliés te suivent : ${G.mine.crew.map(i=>WHO[i].n.split(` `)[0]).join(`, `)}`:`🤝 Recrute tes alliés dans Contacts (lien ≥ 20)`),`⚔ Les rivaux testeront ta force`,`🏙 Prends des quartiers, tiens-les : tout dépend de toi`]}); showCere(done);
   };
 }
 
@@ -3250,6 +3329,7 @@ function openProfile(){
   ${hk?`<div class="sec">Quickhacks</div><div class="log">${hk}</div>`:``}
   <div class="sec">Équipement</div>${gear}
   ${relBlock()}
+  <div class="sec">Difficulté</div><div class="log">Le monde se durcit avec les années : <b style="color:var(--m)">+${dcBonus()}</b> à la difficulté des jets${G.age>=AGING_AGE?` · ton corps vieillit`:``}. Prix et loyers : ×${infl().toFixed(2)}.</div>
   <div class="sec">Statistiques</div><div class="log">Cartes jouées : ${G.stats.cards} · Gigs : ${G.stats.gigs} · Missions de faction : ${G.stats.jobs}</div>`);
 }
 
@@ -3293,8 +3373,8 @@ function openCitySub(k){
 }
 function doDown(k){
   CHIPS=[];
-  if(k===`heal`){ if(G.ed<200){toast(`Pas assez d'eddies`);return} applyFx({ed:-200,hp:35}); }
-  if(k===`therapy`){ if(G.ed<600){toast(`Pas assez d'eddies`);return} applyFx({ed:-600,hum:15}); }
+  if(k===`heal`){ if(G.ed<Math.round(200*infl())){toast(`Pas assez d'eddies`);return} applyFx({ed:-Math.round(200*infl()),hp:Math.round(35*Math.max(.5,1-Math.max(0,G.age-30)*0.012))}); }
+  if(k===`therapy`){ if(G.ed<Math.round(600*infl())){toast(`Pas assez d'eddies`);return} applyFx({ed:-Math.round(600*infl()),hum:15}); }
   if(k===`rest`){ applyFx({hp:15,hum:5}); }
   if(k===`trauma`){ if(G.flags.trauma||G.ed<1200){toast(`Impossible`);return} applyFx({ed:-1200,flag:[`trauma`]}); toast(`Abonnement Trauma Team activé`); }
   SFX.ok(); tick(1); G.log.unshift({d:dateStr(),m:{heal:`Tu passes à la clinique.`,therapy:`Une séance de thérapie, un peu d'humanité récupéré.`,rest:`Un mois de repos.`,trauma:`Abonnement Trauma Team Platinum souscrit.`}[k]});
@@ -3509,12 +3589,12 @@ function rankPanel(){
     const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais encore ${p.jobs[1]-p.jobs[0]} mission(s)`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred`);
     body+=p.ready?`<div class="why" style="color:var(--g);padding:4px 0">✅ Conditions remplies : la promotion t'attend à la prochaine carte.</div>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
   }
-  const can=G.askP!==G.stats.cards;
+  const can=G.stats.cards-(G.askP===undefined?-9:G.askP)>=2;
   return `<div class="item own" style="border-color:${col};flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div class="in"><b style="color:${col}">${roleTitle()}</b><small>${f.perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>${body}
     <button class="btn" id="askm" ${can?``:`disabled`} style="text-align:center">📜 Demander une mission${can?``:` (déjà demandée)`}</button></div>`;
 }
 function askMission(){
-  if(!G.member||G.askP===G.stats.cards) return;
+  if(!G.member||G.stats.cards-(G.askP===undefined?-9:G.askP)<2) return;
   G.askP=G.stats.cards; G.queue.unshift(`fjob_${G.member}`); SFX.ok(); toast(`${FAC[G.member].n} te confiera une mission à la prochaine carte`); closeModal();
 }
 /* ----- CONTACTS ----- */
@@ -3524,15 +3604,19 @@ function openContacts(){
     const idle=G.stats.cards-((G.relT&&G.relT[id])||0);
     const next=REL_TIERS.find(t=>t[0]>v);
     const ally=Object.keys(ALLY).filter(a=>ALLY[a].includes(id)).map(a=>ATTRS[a].n);
-    return `<button class="ccard ${known?``:`unk`} ${dead?`dead`:``}" data-ct="${id}">
+    return `<div class="ccard ${known?``:`unk`} ${dead?`dead`:``}" data-ct="${id}" role="button" tabindex="0">
       <div class="cp">${known?portrait(id):`<div class="qm">?</div>`}</div>
       <div class="cinfo"><b style="color:${known?w.c:`var(--dim)`}">${dead?`† `:``}${known?esc(w.n):`Inconnu(e)`}${G.flags[`lover_`+id]?` ♥`:``}</b>
       <small>${dead?`Mort(e)`:known?relTier(v)+` · `+v:`Pas encore rencontré(e)`}</small>
       <div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};width:${Math.max(0,Math.abs(v))}%"></i></div></div>
-      <div class="cdet" id="cd-${id}" hidden>${esc(w.r)}<br>🎁 ${esc(CONTACTS[id])}${ally.length&&!dead?`<br>📞 Aide aux jets : ${ally.join(`, `)} (lien ≥ 25)`:``}${next&&!dead&&known?`<br>Prochain palier : ${next[1]} (${next[0]})`:``}${known&&!dead&&v>=10&&idle>=7?`<br><span style="color:var(--m)">⚠ Sans nouvelles depuis ${idle} périodes : il/elle s'éloigne</span>`:``}</div></button>`;
+      <div class="cdet" id="cd-${id}" hidden>${G.mine&&crewOf().includes(id)?`<span style="color:var(--g)">✓ Membre de ${esc(G.mine.name)} · +120 €$/période · défense</span><br>`:``}${canRecruit(id)?`<button class="buy" data-rc="${id}" style="margin:4px 0">🤝 Recruter dans ${esc(G.mine.name)} (${relv(id)>=35?`assuré`:`jet de SANG-FROID`})</button><br>`:``}${esc(w.r)}<br>🎁 ${esc(CONTACTS[id])}${ally.length&&!dead?`<br>📞 Aide aux jets : ${ally.join(`, `)} (lien ≥ 25)`:``}${next&&!dead&&known?`<br>Prochain palier : ${next[1]} (${next[0]})`:``}${known&&!dead&&v>=10&&idle>=7?`<br><span style="color:var(--m)">⚠ Sans nouvelles depuis ${idle} périodes : il/elle s'éloigne</span>`:``}</div></div>`;
   }).join(``);
-  modal(`Contacts`,`<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
-  document.querySelectorAll(`[data-ct]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#cd-`+b.dataset.ct);d.hidden=!d.hidden});
+  const elig=G.mine?REL_NAMES.filter(canRecruit):[];
+  modal(`Contacts`,`${G.mine?`<div class="vstat"><span>🤝 ${esc(G.mine.name)} : ${crewOf().length} membre(s)</span>${elig.length?`<button class="buy" id="rcall">Recruter (${elig.length})</button>`:``}</div>`:``}<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
+  document.querySelectorAll(`[data-ct]`).forEach(b=>b.onclick=(e)=>{ if(e.target.closest(`[data-rc]`)) return; SFX.tap();const d=$(`#cd-`+b.dataset.ct);d.hidden=!d.hidden});
+  const doRec=ids=>{ let n=0; ids.forEach(id=>{ const r=recruitAlly(id); if(r&&r.ok) n++; }); updateHud(); toast(n?`${n} recrue(s) dans ${G.mine.name} !`:`Personne n'a accepté…`); if(n){SFX.ok();burst(innerWidth/2,innerHeight*.4,[`#fcee0a`,`#05ffa1`],40);} openContacts(); };
+  document.querySelectorAll(`[data-rc]`).forEach(b=>b.onclick=ev=>{ev.stopPropagation();doRec([b.dataset.rc])});
+  const ra=$(`#rcall`); if(ra) ra.onclick=()=>doRec(elig);
 }
 function openMore(){
   modal(`Plus`,`<div class="tiles">
