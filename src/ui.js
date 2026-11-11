@@ -304,13 +304,14 @@ function resolveChoice(ch){
   } else fx=ch.fx;
   const before={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
   applyFx(fx||{});
-  if(info) gainXp(info.a,info.ok?2:1);
+  if(info){ gainXp(info.a,info.ok?2:1); G.lastA=info.a; if(info.ok){ const lt=lootTierEd(fx.ed||0); if(lt) G.pendingLoot=Math.max(G.pendingLoot||0,lt); } }
   const msg = fx&&fx.msg ? fx.msg : ``;
   G.log.unshift({d:dateStr(),m:msg||ch.t}); if(G.log.length>120)G.log.pop();
   const chips=CHIPS.slice();
   const dead = fx&&fx.die;
   const wasHP=G.hp;
-  showResult({msg,chips,info,die:dead,retire:fx&&fx.retire,quit:fx&&fx.quit,title:ch.t});
+  const loot=(dead||(fx&&(fx.retire||fx.quit)))?0:(G.pendingLoot||0); G.pendingLoot=0;
+  showResult({msg,chips,info,loot,die:dead,retire:fx&&fx.retire,quit:fx&&fx.quit,title:ch.t});
 }
 function showResult(r){
   const cw=$(`#cw`);
@@ -339,6 +340,7 @@ function showResult(r){
 }
 function finishCard(r){
   picking=false;
+  if(r.loot&&!G.over){ const t=r.loot; r.loot=0; return showLoot(t,()=>finishCard(r)); }
   if(G.pendingFound){ const kind=G.pendingFound; G.pendingFound=null; return askFactionName(kind,()=>afterCard(r)); }
   afterCard(r);
 }
@@ -363,6 +365,17 @@ function askFactionName(kind,done){
   };
 }
 
+/* ---------- butin ---------- */
+function showLoot(tier,cb){
+  const opts=makeLoot(tier); SFX.ok(); flash(`#fcee0a`);
+  modal(`★ Butin ${`★`.repeat(tier-1)}`,`<div class="log" style="color:var(--dim)">Mission accomplie. Choisis <b>une</b> récompense.</div><div class="tiles one">`+
+    opts.map((o,i)=>`<button class="tile rec" data-lo="${i}" style="animation:chin .4s ${i*.08}s both"><span class="ti">${o.ic}</span><b>${o.t}</b><small>${o.d}</small></button>`).join(``)+`</div>`,{lock:true});
+  document.querySelectorAll(`[data-lo]`).forEach(b=>b.onclick=()=>{
+    CHIPS=[]; opts[+b.dataset.lo].ap(); SFX.buy(); vib(40); updateHud();
+    G.log.unshift({d:dateStr(),m:`Butin : ${opts[+b.dataset.lo].t} — ${opts[+b.dataset.lo].d}.`});
+    toast(CHIPS.map(c=>c.txt).join(` · `)||opts[+b.dataset.lo].d); closeModal(); cb();
+  });
+}
 /* ---------- modales ---------- */
 let modalLock=false;
 function modal(title,body,o){
@@ -544,10 +557,11 @@ function openGigs(){
     const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[]; x.done=true; bd.left--;
     if(ok){ applyFx({ed:gigPay(g),cred:gigCr(g)}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${gigPay(g)} €$).`}); }
     else { applyFx({hp:-g.dm,ed:Math.round(gigPay(g)*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
-    gainXp(g.a,ok?2:1);
+    gainXp(g.a,ok?2:1); G.lastA=g.a;
     tick(1); updateHud();
-    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
-    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${ok?`Choisir ma récompense`:bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
+    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,back); else back(); };
   });
 }
 

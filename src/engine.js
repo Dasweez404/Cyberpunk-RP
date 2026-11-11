@@ -31,7 +31,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, pendingLoot:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -112,6 +112,35 @@ function blocFromFx(fx){
   if(fx.bloc) Object.entries(fx.bloc).forEach(([k,v])=>m[k]=(m[k]||0)+v);
   return m;
 }
+/* ---------- butin : récompenses au choix ---------- */
+const lootTierEd = ed => ed>=4000?3:ed>=2500?2:ed>=1200?1:0;
+function makeLoot(t){
+  const pool=[];
+  const ed=Math.round((350*t+rnd(0,250))/50)*50;
+  pool.push({k:`cash`,ic:`💰`,t:`Prime`,d:`+${money(ed)}`,ap:()=>applyFx({ed})});
+  pool.push({k:`cred`,ic:`★`,t:`Réputation`,d:`+${2+t} Street Cred`,ap:()=>applyFx({cred:2+t})});
+  const ats=Object.keys(ATTRS).filter(k=>G.at[k]<9);
+  if(ats.length){ const a=(G.lastA&&G.at[G.lastA]<9)?G.lastA:ats[rnd(0,ats.length-1)];
+    pool.push({k:`xp`,ic:`📈`,t:`Expérience`,d:`+${3+t} XP · ${ATTRS[a].n}`,ap:()=>gainXp(a,3+t)}); }
+  pool.push({k:`heal`,ic:`💊`,t:`Repos mérité`,d:`+${25+10*t} Santé · +${4+2*t} Humanité`,ap:()=>applyFx({hp:25+10*t,hum:4+2*t})});
+  const cands=Object.keys(WHO).filter(k=>REL_NAMES.includes(k));
+  if(cands.length){ const c=cands[rnd(0,cands.length-1)];
+    pool.push({k:`rel`,ic:`🤝`,t:`Faveur`,d:`+${8+3*t} lien · ${WHO[c].n}`,ap:()=>applyFx({rel:{[c]:8+3*t}})}); }
+  const worst=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
+  const dev=G.bloc[worst]-50;
+  if(Math.abs(dev)>=18) pool.push({k:`bal`,ic:`⚖`,t:`Rééquilibrer`,d:`${BLOCS[worst].n} ${dev<0?`+`:`−`}${8+4*t} (te rapproche du milieu)`,w:3,ap:()=>applyFx({bloc:{[worst]:dev<0?8+4*t:-(8+4*t)}})});
+  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&x.p<=2000+1800*t&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
+    pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
+  if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
+    pool.push({k:`hack`,ic:`💾`,t:`Quickhack`,d:`${x.n} (gratuit)`,w:2,ap:()=>{G.hacks.push(x.id);chip(`y`,`Chargé : ${x.n}`)}}); } }
+  const out=[];
+  while(out.length<3&&pool.length){
+    const tw=pool.reduce((a,o)=>a+(o.w||2),0); let r=Math.random()*tw, i=0;
+    for(;i<pool.length;i++){ r-=(pool[i].w||2); if(r<=0)break; }
+    out.push(pool.splice(Math.min(i,pool.length-1),1)[0]);
+  }
+  return out;
+}
 /* ---------- jets ---------- */
 function rollInfo(c){
   const tot = A(c.a) + (c.k?skill(c.k):0);
@@ -165,7 +194,7 @@ const FN = {
   defendWin(){ if(G.mine) G.mine.power++; chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
-  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
+  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
   promote(){ G.rank++; const f=FAC[G.member]; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}

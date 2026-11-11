@@ -1461,7 +1461,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, pendingLoot:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -1542,6 +1542,35 @@ function blocFromFx(fx){
   if(fx.bloc) Object.entries(fx.bloc).forEach(([k,v])=>m[k]=(m[k]||0)+v);
   return m;
 }
+/* ---------- butin : récompenses au choix ---------- */
+const lootTierEd = ed => ed>=4000?3:ed>=2500?2:ed>=1200?1:0;
+function makeLoot(t){
+  const pool=[];
+  const ed=Math.round((350*t+rnd(0,250))/50)*50;
+  pool.push({k:`cash`,ic:`💰`,t:`Prime`,d:`+${money(ed)}`,ap:()=>applyFx({ed})});
+  pool.push({k:`cred`,ic:`★`,t:`Réputation`,d:`+${2+t} Street Cred`,ap:()=>applyFx({cred:2+t})});
+  const ats=Object.keys(ATTRS).filter(k=>G.at[k]<9);
+  if(ats.length){ const a=(G.lastA&&G.at[G.lastA]<9)?G.lastA:ats[rnd(0,ats.length-1)];
+    pool.push({k:`xp`,ic:`📈`,t:`Expérience`,d:`+${3+t} XP · ${ATTRS[a].n}`,ap:()=>gainXp(a,3+t)}); }
+  pool.push({k:`heal`,ic:`💊`,t:`Repos mérité`,d:`+${25+10*t} Santé · +${4+2*t} Humanité`,ap:()=>applyFx({hp:25+10*t,hum:4+2*t})});
+  const cands=Object.keys(WHO).filter(k=>REL_NAMES.includes(k));
+  if(cands.length){ const c=cands[rnd(0,cands.length-1)];
+    pool.push({k:`rel`,ic:`🤝`,t:`Faveur`,d:`+${8+3*t} lien · ${WHO[c].n}`,ap:()=>applyFx({rel:{[c]:8+3*t}})}); }
+  const worst=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
+  const dev=G.bloc[worst]-50;
+  if(Math.abs(dev)>=18) pool.push({k:`bal`,ic:`⚖`,t:`Rééquilibrer`,d:`${BLOCS[worst].n} ${dev<0?`+`:`−`}${8+4*t} (te rapproche du milieu)`,w:3,ap:()=>applyFx({bloc:{[worst]:dev<0?8+4*t:-(8+4*t)}})});
+  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&x.p<=2000+1800*t&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
+    pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
+  if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
+    pool.push({k:`hack`,ic:`💾`,t:`Quickhack`,d:`${x.n} (gratuit)`,w:2,ap:()=>{G.hacks.push(x.id);chip(`y`,`Chargé : ${x.n}`)}}); } }
+  const out=[];
+  while(out.length<3&&pool.length){
+    const tw=pool.reduce((a,o)=>a+(o.w||2),0); let r=Math.random()*tw, i=0;
+    for(;i<pool.length;i++){ r-=(pool[i].w||2); if(r<=0)break; }
+    out.push(pool.splice(Math.min(i,pool.length-1),1)[0]);
+  }
+  return out;
+}
 /* ---------- jets ---------- */
 function rollInfo(c){
   const tot = A(c.a) + (c.k?skill(c.k):0);
@@ -1595,7 +1624,7 @@ const FN = {
   defendWin(){ if(G.mine) G.mine.power++; chip(`y`,`Territoire défendu`); },
   defendLose(){ const d=G.tmp&&G.tmp.d; if(d&&G.dist[d]===`player`){ G.dist[d]=G.tmp.rival||`neutral`; chip(`n`,`Perdu : ${DMAP[d].n}`); } },
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
-  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
+  facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
   promote(){ G.rank++; const f=FAC[G.member]; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
@@ -2046,13 +2075,14 @@ function resolveChoice(ch){
   } else fx=ch.fx;
   const before={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
   applyFx(fx||{});
-  if(info) gainXp(info.a,info.ok?2:1);
+  if(info){ gainXp(info.a,info.ok?2:1); G.lastA=info.a; if(info.ok){ const lt=lootTierEd(fx.ed||0); if(lt) G.pendingLoot=Math.max(G.pendingLoot||0,lt); } }
   const msg = fx&&fx.msg ? fx.msg : ``;
   G.log.unshift({d:dateStr(),m:msg||ch.t}); if(G.log.length>120)G.log.pop();
   const chips=CHIPS.slice();
   const dead = fx&&fx.die;
   const wasHP=G.hp;
-  showResult({msg,chips,info,die:dead,retire:fx&&fx.retire,quit:fx&&fx.quit,title:ch.t});
+  const loot=(dead||(fx&&(fx.retire||fx.quit)))?0:(G.pendingLoot||0); G.pendingLoot=0;
+  showResult({msg,chips,info,loot,die:dead,retire:fx&&fx.retire,quit:fx&&fx.quit,title:ch.t});
 }
 function showResult(r){
   const cw=$(`#cw`);
@@ -2081,6 +2111,7 @@ function showResult(r){
 }
 function finishCard(r){
   picking=false;
+  if(r.loot&&!G.over){ const t=r.loot; r.loot=0; return showLoot(t,()=>finishCard(r)); }
   if(G.pendingFound){ const kind=G.pendingFound; G.pendingFound=null; return askFactionName(kind,()=>afterCard(r)); }
   afterCard(r);
 }
@@ -2105,6 +2136,17 @@ function askFactionName(kind,done){
   };
 }
 
+/* ---------- butin ---------- */
+function showLoot(tier,cb){
+  const opts=makeLoot(tier); SFX.ok(); flash(`#fcee0a`);
+  modal(`★ Butin ${`★`.repeat(tier-1)}`,`<div class="log" style="color:var(--dim)">Mission accomplie. Choisis <b>une</b> récompense.</div><div class="tiles one">`+
+    opts.map((o,i)=>`<button class="tile rec" data-lo="${i}" style="animation:chin .4s ${i*.08}s both"><span class="ti">${o.ic}</span><b>${o.t}</b><small>${o.d}</small></button>`).join(``)+`</div>`,{lock:true});
+  document.querySelectorAll(`[data-lo]`).forEach(b=>b.onclick=()=>{
+    CHIPS=[]; opts[+b.dataset.lo].ap(); SFX.buy(); vib(40); updateHud();
+    G.log.unshift({d:dateStr(),m:`Butin : ${opts[+b.dataset.lo].t} — ${opts[+b.dataset.lo].d}.`});
+    toast(CHIPS.map(c=>c.txt).join(` · `)||opts[+b.dataset.lo].d); closeModal(); cb();
+  });
+}
 /* ---------- modales ---------- */
 let modalLock=false;
 function modal(title,body,o){
@@ -2286,10 +2328,11 @@ function openGigs(){
     const ok=roll===10||(roll!==1&&roll>=r.need); CHIPS=[]; x.done=true; bd.left--;
     if(ok){ applyFx({ed:gigPay(g),cred:gigCr(g)}); G.stats.gigs++; SFX.ok(); flash(`#05ffa1`); G.log.unshift({d:dateStr(),m:`Gig réussi : ${g.n} (+${gigPay(g)} €$).`}); }
     else { applyFx({hp:-g.dm,ed:Math.round(gigPay(g)*.1)}); SFX.ko(); G.log.unshift({d:dateStr(),m:`Gig raté : ${g.n}.`}); }
-    gainXp(g.a,ok?2:1);
+    gainXp(g.a,ok?2:1); G.lastA=g.a;
     tick(1); updateHud();
-    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
-    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    modal(ok?`Gig réussi`:`Gig raté`,`<div class="dice"><div class="die ${ok?`ok`:`ko`}"><span>${roll}</span></div><div class="info">${ATTRS[g.a].n} ${r.tot} + d10<b style="color:${ok?`var(--g)`:`var(--m)`}">${ok?`RÉUSSITE`:`ÉCHEC`}</b></div></div><div class="chips">${CHIPS.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="gok">${ok?`Choisir ma récompense`:bd.left?`Retour au tableau`:`Retour à la ville`}</button>`);
+    const back=()=>{ if(checkEnd()){closeModal();showEnd()} else (bd.left?openGigs:openCity)(); };
+    $(`#gok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd();return} if(ok) showLoot(gigPay(g)>=4000?3:gigPay(g)>=1800?2:1,back); else back(); };
   });
 }
 
