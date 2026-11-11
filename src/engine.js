@@ -304,19 +304,20 @@ const FN = {
 
 /* ---------- temps & économie ---------- */
 function tick(months){
-  const k = months/STEP;
+  const k = months/BASE;
   let inc = 0;
   ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
-  if(G.flags.corpjob) inc+=140*STEP;
-  if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*STEP*.6; }
+  if(G.flags.corpjob) inc+=140*BASE;
+  if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*STEP*bm().rent;
+  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*BASE*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
   if(reg) G.hp=clamp(G.hp+Math.round(reg*k),0,100);
   G.hp = clamp(G.hp+Math.round(5*k),0,100);
+  if(G.flags.aging){ G.hp=clamp(G.hp-Math.max(1,Math.round(3*k)),0,100); }
   G.t += months;
   G.age = START_AGE + Math.floor(G.t/12);
   if(ownedList().length){ G.cred=clamp(G.cred+ownedList().length*0.3*k|0,0,100); }
@@ -469,6 +470,7 @@ function checkEnd(){
   if(G.hum<=0){ endGame(`psycho`); return true; }
   if(G.ed<=-4000){ endGame(`debt`); return true; }
   for(const b of Object.keys(BLOCS)){ const v=(G.bloc||{})[b]; if(v<=0){ endGame(`bloc_${b}_lo`); return true; } if(v>=100){ endGame(`bloc_${b}_hi`); return true; } }
-  if(G.age>=RETIRE_AGE){ endGame(`retire`); return true; }
+  if(G.age>=HARD_AGE){ endGame(`retire`); return true; }
+  if(G.age>=RETIRE_AGE&&!G.flags.retireAsked){ G.flags.retireAsked=true; G.queue.unshift(`retire_offer`); }
   return false;
 }

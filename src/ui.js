@@ -104,7 +104,7 @@ document.addEventListener(`pointerdown`,e=>{ const b=e.target.closest&&e.target.
 function showTitle(){
   const save=store.get(`ncl_save`), best=store.get(`ncl_best`)||[];
   root().innerHTML=`<div class="screen title">${skyline()}
-   <div class="mono" style="color:var(--m);letter-spacing:.3em;font-size:12px">NIGHT CITY · 2070 — 2092</div>
+   <div class="mono" style="color:var(--m);letter-spacing:.3em;font-size:12px">NIGHT CITY · 2070 — 2128</div>
    <h1 class="hd"><small>Cyberpunk · Roguelike narratif</small><span class="glitch" data-t="NIGHT CITY">NIGHT CITY</span><br><span class="glitch" data-t="LEGEND" style="color:var(--m);text-shadow:0 0 18px #ff2a6d88">LEGEND</span></h1>
    <p>Naître dans la rue, la corpo ou les Badlands. Bâtir ta légende. Survivre à Night City. Ou brûler vite et brûler fort.</p>
    <div class="stack">
@@ -127,7 +127,7 @@ function showHow(){
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
   <div class="log"><b>4.</b> Dans <b>VILLE</b> : ripperdoc, marché noir, gigs, soins, entraînement. Dans <b>CARTE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
-  <div class="log"><b>6.</b> Survis jusqu'à la retraite (${RETIRE_AGE} ans) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
+  <div class="log"><b>6.</b> Survis jusqu'à la retraite (dès ${RETIRE_AGE} ans, à toi de décider de continuer) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
 }
 
 /* ---------- création ---------- */
@@ -393,7 +393,7 @@ function afterCard(r){
   if(r.retire){ endGame(`retire`); return showEnd(); }
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
-  if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
+  if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
   const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);

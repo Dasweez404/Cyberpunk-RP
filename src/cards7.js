@@ -96,3 +96,17 @@ card({id:`river_job`,who:`river`,tag:`River · La famille`,once:true,w:7,cond:()
     {t:`Retrouver le garçon`,s:`CORPS/RÉFLEXES`,chk:{a:`ref`,k:`cmb`,dc:8,ok:{hum:12,cred:7,rel:{river:16},bloc:{loi:5},msg:`Une cave de Wellsprings, un garçon terrorisé. Tu le ramènes à sa mère en pleurs.`},ko:{hp:-24,hum:6,rel:{river:8},msg:`Il est vivant, mais tu paies cher.`}}},
     {t:`Payer pour qu'il le relâche`,s:`−1 500 €$`,req:R.ed(1500),fx:{ed:-1500,hum:6,rel:{river:10},msg:`Les ravisseurs prennent l'argent. Le garçon revient, muet.`}}
   ]});
+
+/* ---------- Années tardives ---------- */
+H(`h_2088`,`narr`,`2088 · Une nouvelle génération`,[2088,3],`Les gamins que tu croisais dans les rues sont devenus des fixers, des solos, des chefs de gang. Night City change de visages. Les anciens s'effacent, les enseignes aussi. Les légendes se racontent dans les bars, déformées, magnifiées.`,[
+  {t:`Prendre un jeune sous ton aile`,s:`+Humanité · mentor`,fx:{hum:8,cred:3,xp:{cool:3},msg:`Tu lui apprends ce que personne ne t'a appris : survivre sans se perdre.`}},
+  {t:`Les laisser se débrouiller`,fx:{cred:1,msg:`Tu observes de loin. Ils font les mêmes erreurs que toi.`}}]);
+H(`h_2092`,`narr`,`2092 · Les anciens territoires`,[2092,6],`Les corporations réorganisent encore la ville : nouveaux quartiers, nouveaux contrats, nouvelles guerres. Les gangs d'hier sont des vitrines. Un frisson te traverse : le monde que tu as connu s'efface.`,[
+  {t:`Saisir les nouvelles opportunités`,s:`Gain`,fx:{ed:3000,cred:4,msg:`Tu te places entre les anciens et les nouveaux. Les affaires sont les affaires.`}},
+  {t:`Rendre visite aux vieux amis`,s:`+Humanité`,fx:{hum:10,msg:`Certains sont partis. D'autres sont encore là, plus gris, plus sages.`}}]);
+H(`h_2097`,`narr`,`2097 · Un corps qui parle`,[2097,2],`Tes articulations craquent, ton chrome se fatigue, tes réflexes ne sont plus ce qu'ils étaient. Un doc te le dit sans détour : si tu continues, il faudra choisir entre la gloire et la santé.`,[
+  {t:`Ralentir, soigner ton corps`,s:`−1 000 €$ · +Santé`,req:R.ed(1000),fx:{ed:-1000,hp:30,hum:6,msg:`Tu apprends à dormir. Ça fait du bien.`}},
+  {t:`Ignorer l'avertissement`,fx:{cred:2,hum:-2,msg:`Tu sers les dents. Les légendes ne s'arrêtent pas.`}}]);
+H(`h_2103`,`narr`,`2103 · Les dernières braises`,[2103,0],`Il reste peu de monde de ton époque. Les rues ont changé, les néons aussi. Mais quelque part, quelqu'un prononce encore ton nom. Ce n'est pas rien, à Night City.`,[
+  {t:`Lui rendre un dernier salut`,s:`+Humanité`,fx:{hum:12,cred:4,msg:`Tu lèves un verre à l'Afterlife. Même les murs se souviennent.`}},
+  {t:`Rentrer chez toi`,fx:{hum:5}}]);

@@ -503,9 +503,10 @@ card({id:`legend`,who:`rogue`,tag:`Légende de Night City`,once:true,w:200,cond:
     {t:`Faire un dernier run, sortir en flammes`,s:`Fin glorieuse`,fx:{die:`blaze`}},
     {t:`Prendre ta retraite maintenant`,s:`Fin paisible`,fx:{retire:true}}
   ]});
-card({id:`retire_offer`,who:`you`,tag:`Une vie derrière toi`,once:true,w:100,cond:()=>G.age>=36,
+card({id:`retire_offer`,who:`you`,tag:`Une vie derrière toi`,once:true,w:100,cond:()=>G.age>=RETIRE_AGE-3,
   tx:`Les années ont passé. Ton corps te le fait sentir : cicatrices, chrome vieillissant, nuits sans sommeil. Dans un coin de ta tête, une idée : plier bagage, quitter les néons, vivre quelque part où le ciel est vraiment bleu.`,
   ch:[
+    {t:`Continuer encore quelques années`,s:`Plus de score · le corps vieillit (Santé −)`,fx:{flag:[`aging`,`retireAsked`],msg:`Tu refuses de raccrocher. Mais le corps ne pardonne plus : chaque période te coûte un peu de Santé, et la retraite finira par t'être imposée.`}},
     {t:`Prendre ta retraite à Night City`,s:`Fin paisible`,fx:{retire:true}},
     {t:`Partir pour les Badlands, disparaître`,s:`Fin discrète`,fx:{quit:true}},
     {t:`Un dernier gros coup avant la fin`,s:`Risque total`,chk:{a:`ref`,k:`cmb`,dc:9,ok:{ed:8000,cred:15,msg:`Le coup réussit. Tu comptes ton butin, puis tu rentres vivre. Qui ose dire que le passé ne paie pas ?`},ko:{hp:-55,hum:-8,msg:`Un dernier coup de trop. Tu es blessé(e), mais en vie.`}}}

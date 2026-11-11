@@ -1,7 +1,7 @@
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
    ===================================================================== */
-const START_YEAR = 2070, START_AGE = 18, RETIRE_AGE = 40, STEP = 5; // mois par carte
+const START_YEAR = 2070, START_AGE = 18, RETIRE_AGE = 48, HARD_AGE = 60, STEP = 4, BASE = 5; // STEP = mois par carte ; BASE = période de référence des revenus
 
 const ATTRS = {
   body:{n:`CORPS`,d:`Force, endurance, encaisser les coups`},

@@ -1,7 +1,7 @@
 # NIGHT CITY LEGEND
 
 Jeu à choix façon *Reigns* dans l'univers de **Cyberpunk 2077** (lore 2020 / RED / 2077 / Edgerunners).
-Fais une carrière de 18 à 40 ans à Night City **sans mourir** avec le meilleur score — ou choisis ton **Dernier Run**.
+Fais une carrière de 18 à 48 ans (retraite à choisir, jusqu'à 60 en vieillissant) à Night City **sans mourir** avec le meilleur score — ou choisis ton **Dernier Run**.
 
 ▶ Ouvre simplement `index.html` dans un navigateur (fichier autonome, mobile & desktop).
 

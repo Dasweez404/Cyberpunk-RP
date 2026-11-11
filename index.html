@@ -373,7 +373,7 @@ html,body{overscroll-behavior:none;touch-action:manipulation}
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
    ===================================================================== */
-const START_YEAR = 2070, START_AGE = 18, RETIRE_AGE = 40, STEP = 5; // mois par carte
+const START_YEAR = 2070, START_AGE = 18, RETIRE_AGE = 48, HARD_AGE = 60, STEP = 4, BASE = 5; // STEP = mois par carte ; BASE = période de référence des revenus
 
 const ATTRS = {
   body:{n:`CORPS`,d:`Force, endurance, encaisser les coups`},
@@ -1209,9 +1209,10 @@ card({id:`legend`,who:`rogue`,tag:`Légende de Night City`,once:true,w:200,cond:
     {t:`Faire un dernier run, sortir en flammes`,s:`Fin glorieuse`,fx:{die:`blaze`}},
     {t:`Prendre ta retraite maintenant`,s:`Fin paisible`,fx:{retire:true}}
   ]});
-card({id:`retire_offer`,who:`you`,tag:`Une vie derrière toi`,once:true,w:100,cond:()=>G.age>=36,
+card({id:`retire_offer`,who:`you`,tag:`Une vie derrière toi`,once:true,w:100,cond:()=>G.age>=RETIRE_AGE-3,
   tx:`Les années ont passé. Ton corps te le fait sentir : cicatrices, chrome vieillissant, nuits sans sommeil. Dans un coin de ta tête, une idée : plier bagage, quitter les néons, vivre quelque part où le ciel est vraiment bleu.`,
   ch:[
+    {t:`Continuer encore quelques années`,s:`Plus de score · le corps vieillit (Santé −)`,fx:{flag:[`aging`,`retireAsked`],msg:`Tu refuses de raccrocher. Mais le corps ne pardonne plus : chaque période te coûte un peu de Santé, et la retraite finira par t'être imposée.`}},
     {t:`Prendre ta retraite à Night City`,s:`Fin paisible`,fx:{retire:true}},
     {t:`Partir pour les Badlands, disparaître`,s:`Fin discrète`,fx:{quit:true}},
     {t:`Un dernier gros coup avant la fin`,s:`Risque total`,chk:{a:`ref`,k:`cmb`,dc:9,ok:{ed:8000,cred:15,msg:`Le coup réussit. Tu comptes ton butin, puis tu rentres vivre. Qui ose dire que le passé ne paie pas ?`},ko:{hp:-55,hum:-8,msg:`Un dernier coup de trop. Tu es blessé(e), mais en vie.`}}}
@@ -2265,6 +2266,20 @@ card({id:`river_job`,who:`river`,tag:`River · La famille`,once:true,w:7,cond:()
     {t:`Retrouver le garçon`,s:`CORPS/RÉFLEXES`,chk:{a:`ref`,k:`cmb`,dc:8,ok:{hum:12,cred:7,rel:{river:16},bloc:{loi:5},msg:`Une cave de Wellsprings, un garçon terrorisé. Tu le ramènes à sa mère en pleurs.`},ko:{hp:-24,hum:6,rel:{river:8},msg:`Il est vivant, mais tu paies cher.`}}},
     {t:`Payer pour qu'il le relâche`,s:`−1 500 €$`,req:R.ed(1500),fx:{ed:-1500,hum:6,rel:{river:10},msg:`Les ravisseurs prennent l'argent. Le garçon revient, muet.`}}
   ]});
+
+/* ---------- Années tardives ---------- */
+H(`h_2088`,`narr`,`2088 · Une nouvelle génération`,[2088,3],`Les gamins que tu croisais dans les rues sont devenus des fixers, des solos, des chefs de gang. Night City change de visages. Les anciens s'effacent, les enseignes aussi. Les légendes se racontent dans les bars, déformées, magnifiées.`,[
+  {t:`Prendre un jeune sous ton aile`,s:`+Humanité · mentor`,fx:{hum:8,cred:3,xp:{cool:3},msg:`Tu lui apprends ce que personne ne t'a appris : survivre sans se perdre.`}},
+  {t:`Les laisser se débrouiller`,fx:{cred:1,msg:`Tu observes de loin. Ils font les mêmes erreurs que toi.`}}]);
+H(`h_2092`,`narr`,`2092 · Les anciens territoires`,[2092,6],`Les corporations réorganisent encore la ville : nouveaux quartiers, nouveaux contrats, nouvelles guerres. Les gangs d'hier sont des vitrines. Un frisson te traverse : le monde que tu as connu s'efface.`,[
+  {t:`Saisir les nouvelles opportunités`,s:`Gain`,fx:{ed:3000,cred:4,msg:`Tu te places entre les anciens et les nouveaux. Les affaires sont les affaires.`}},
+  {t:`Rendre visite aux vieux amis`,s:`+Humanité`,fx:{hum:10,msg:`Certains sont partis. D'autres sont encore là, plus gris, plus sages.`}}]);
+H(`h_2097`,`narr`,`2097 · Un corps qui parle`,[2097,2],`Tes articulations craquent, ton chrome se fatigue, tes réflexes ne sont plus ce qu'ils étaient. Un doc te le dit sans détour : si tu continues, il faudra choisir entre la gloire et la santé.`,[
+  {t:`Ralentir, soigner ton corps`,s:`−1 000 €$ · +Santé`,req:R.ed(1000),fx:{ed:-1000,hp:30,hum:6,msg:`Tu apprends à dormir. Ça fait du bien.`}},
+  {t:`Ignorer l'avertissement`,fx:{cred:2,hum:-2,msg:`Tu sers les dents. Les légendes ne s'arrêtent pas.`}}]);
+H(`h_2103`,`narr`,`2103 · Les dernières braises`,[2103,0],`Il reste peu de monde de ton époque. Les rues ont changé, les néons aussi. Mais quelque part, quelqu'un prononce encore ton nom. Ce n'est pas rien, à Night City.`,[
+  {t:`Lui rendre un dernier salut`,s:`+Humanité`,fx:{hum:12,cred:4,msg:`Tu lèves un verre à l'Afterlife. Même les murs se souviennent.`}},
+  {t:`Rentrer chez toi`,fx:{hum:5}}]);
 /* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
@@ -2571,19 +2586,20 @@ const FN = {
 
 /* ---------- temps & économie ---------- */
 function tick(months){
-  const k = months/STEP;
+  const k = months/BASE;
   let inc = 0;
   ownedList().forEach(d=>inc+=d.inc*3*(.4+.6*holdOf(d.id)/100)*(G.mine&&G.mine.type===`gang`?1.2:1));
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
-  if(G.flags.corpjob) inc+=140*STEP;
-  if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*STEP*.6; }
+  if(G.flags.corpjob) inc+=140*BASE;
+  if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*STEP*bm().rent;
+  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*BASE*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
   if(reg) G.hp=clamp(G.hp+Math.round(reg*k),0,100);
   G.hp = clamp(G.hp+Math.round(5*k),0,100);
+  if(G.flags.aging){ G.hp=clamp(G.hp-Math.max(1,Math.round(3*k)),0,100); }
   G.t += months;
   G.age = START_AGE + Math.floor(G.t/12);
   if(ownedList().length){ G.cred=clamp(G.cred+ownedList().length*0.3*k|0,0,100); }
@@ -2736,7 +2752,8 @@ function checkEnd(){
   if(G.hum<=0){ endGame(`psycho`); return true; }
   if(G.ed<=-4000){ endGame(`debt`); return true; }
   for(const b of Object.keys(BLOCS)){ const v=(G.bloc||{})[b]; if(v<=0){ endGame(`bloc_${b}_lo`); return true; } if(v>=100){ endGame(`bloc_${b}_hi`); return true; } }
-  if(G.age>=RETIRE_AGE){ endGame(`retire`); return true; }
+  if(G.age>=HARD_AGE){ endGame(`retire`); return true; }
+  if(G.age>=RETIRE_AGE&&!G.flags.retireAsked){ G.flags.retireAsked=true; G.queue.unshift(`retire_offer`); }
   return false;
 }
 /* =====================================================================
@@ -2845,7 +2862,7 @@ document.addEventListener(`pointerdown`,e=>{ const b=e.target.closest&&e.target.
 function showTitle(){
   const save=store.get(`ncl_save`), best=store.get(`ncl_best`)||[];
   root().innerHTML=`<div class="screen title">${skyline()}
-   <div class="mono" style="color:var(--m);letter-spacing:.3em;font-size:12px">NIGHT CITY · 2070 — 2092</div>
+   <div class="mono" style="color:var(--m);letter-spacing:.3em;font-size:12px">NIGHT CITY · 2070 — 2128</div>
    <h1 class="hd"><small>Cyberpunk · Roguelike narratif</small><span class="glitch" data-t="NIGHT CITY">NIGHT CITY</span><br><span class="glitch" data-t="LEGEND" style="color:var(--m);text-shadow:0 0 18px #ff2a6d88">LEGEND</span></h1>
    <p>Naître dans la rue, la corpo ou les Badlands. Bâtir ta légende. Survivre à Night City. Ou brûler vite et brûler fort.</p>
    <div class="stack">
@@ -2868,7 +2885,7 @@ function showHow(){
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
   <div class="log"><b>4.</b> Dans <b>VILLE</b> : ripperdoc, marché noir, gigs, soins, entraînement. Dans <b>CARTE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
-  <div class="log"><b>6.</b> Survis jusqu'à la retraite (${RETIRE_AGE} ans) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
+  <div class="log"><b>6.</b> Survis jusqu'à la retraite (dès ${RETIRE_AGE} ans, à toi de décider de continuer) pour le meilleur score, ou choisis ton <b>Dernier Run</b> : sortir en flammes avec une Street Cred élevée rapporte un bonus.</div>`);
 }
 
 /* ---------- création ---------- */
@@ -3134,7 +3151,7 @@ function afterCard(r){
   if(r.retire){ endGame(`retire`); return showEnd(); }
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
-  if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
+  if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
   const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
