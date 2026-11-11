@@ -283,3 +283,42 @@ const CONTACTS = {
   delamain:`Transport sûr · fuite`, claire:`Mécanique · conduite`
 };
 const REL_TIERS = [[0,`Inconnu`],[5,`Connaissance`],[20,`Ami`],[40,`Allié`],[65,`Famille`]];
+
+/* ---------- titres de chef & générateur de personnages ---------- */
+const LEADER = {gang:`Chef`,corp:`PDG`,clan:`Chef de clan`,ncpd:`Commissaire`,mox:`Voix des Mox`,trauma:`Directeur général`};
+const RANK_PERKS = [`Missions de faction mieux payées`,`Arcs de faction & salaire accru`,`Obligations de la famille · prise de pouvoir possible`];
+const NAMES = {
+  m:[`Rook`,`Kiko`,`Dante`,`Mateo`,`Ravi`,`Jonas`,`Tariq`,`Luca`,`Kenji`,`Andrei`,`Bao`,`Idris`,`Silas`,`Marek`,`Teo`,`Gaspard`,`Omar`,`Yuri`],
+  f:[`Nadja`,`Imani`,`Yuki`,`Carmen`,`Zhen`,`Anouk`,`Dalia`,`Mireille`,`Sana`,`Reva`,`Ingrid`,`Ayo`,`Lena`,`Soraya`,`Mei`,`Paloma`,`Noor`,`Vera`],
+  s:[`Reyes`,`Tanaka`,`Okoye`,`Volkov`,`Delacroix`,`Chen`,`Haddad`,`Morales`,`Kowalski`,`Nakamura`,`Silva`,`Ito`,`Brandt`,`Mbeki`,`Vargas`,`Park`,`Lindqvist`,`Moreau`],
+  n:[`Chrome`,`Gato`,`Vipère`,`Ombre`,`Spark`,`Bitume`,`Ghost`,`Néon`,`Rasoir`,`Corbeau`]
+};
+const GENT = {
+  fix:{r:`Contact de la rue`,st:[`hood`,`shades`,`cap`,`short`],c:`#00f0ff`},
+  corpo:{r:`Cadre corpo`,st:[`shades`,`short`,`long`],c:`#05ffa1`},
+  scav:{r:`Charognard`,st:[`mask`,`hood`],c:`#ff9f1c`},
+  doc:{r:`Ripperdoc de quartier`,st:[`mask`,`short`,`bald`],c:`#05ffa1`},
+  ncpd:{r:`Agent NCPD`,st:[`helmet`,`cap`],c:`#3b8bff`},
+  nomad:{r:`Nomade des Badlands`,st:[`cap`,`hood`,`short`],c:`#ff9f1c`},
+  claws:{r:`Lieutenant Tyger Claws`,st:[`mask`,`mohawk`],c:`#ff4d6d`},
+  sixth:{r:`Vétéran de la 6th Street`,st:[`helmet`,`cap`],c:`#00f0ff`},
+  gang:{r:`Lieutenant`,st:[`mohawk`,`visor`,`mask`,`cap`,`bald`],c:`#ff2a6d`},
+  corp:{r:`Cadre`,st:[`shades`,`short`,`long`],c:`#05ffa1`},
+  clan:{r:`Éclaireur`,st:[`cap`,`hood`,`short`],c:`#ff9f1c`},
+  mox:{r:`Membre des Mox`,st:[`mohawk`,`short`,`long`],c:`#ff6ec7`},
+  trauma:{r:`Paramedic Trauma Team`,st:[`helmet`,`short`],c:`#ff2a6d`}
+};
+const pickR = a => a[Math.floor(Math.random()*a.length)];
+function genNpc(type,color,role){
+  const t=GENT[type]||GENT.fix, g=Math.random()<.5?`m`:`f`;
+  let n=`${pickR(NAMES[g])} ${pickR(NAMES.s)}`;
+  if(Math.random()<.3) n=`${pickR(NAMES[g])} « ${pickR(NAMES.n)} » ${pickR(NAMES.s)}`;
+  return {n,r:role||t.r,c:color||t.c,st:pickR(t.st),sk:14+Math.floor(Math.random()*22),gen:1};
+}
+const GENERIC_WHO = {fix:`fix`,corpo:`corpo`,scav:`scav`,doc:`doc`,ncpd:`ncpd`,nomad:`nomad`,claws:`claws`,sixth:`sixth`};
+const FIXERS = [`dex`,`wakako`,`regina`,`padre`,`hands`];
+Object.assign(ALLY,{body:[`jackie`,`panam`,`chino`],ref:[`claire`,`panam`],tech:[`vik`,`claire`,`mika`,`hiro`],int:[`lucy`,`dex`,`judy`,`nadia`,`eli`],cool:[`rogue`,`kerry`,`misty`,`hands`]});
+Object.assign(CONTACTS,{
+  chino:`Frère d'armes · Valentinos`, nadia:`Netrunneuse · intel Maelstrom`, mika:`Doc de rue · soins discrets`,
+  hiro:`Ingénieur Kang Tao · armes`, eli:`Informateur NetWatch`, hands:`Fixer · contrats discrets`
+});

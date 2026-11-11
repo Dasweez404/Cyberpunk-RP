@@ -156,5 +156,5 @@ card({id:`q6_2`,who:`kerry`,tag:`Quête · La bande volée (2/2)`,once:true,
   tx:`Tu tiens enfin la bande. Un type du label te rattrape : « Ces bandes valent des millions. Si tu les rends à Kerry, il garde son album. Si tu me les vends, tu deviens riche. » Tu hésites.`,
   ch:[
     {t:`Les rendre à Kerry`,s:`+Lien · +Humanité`,fx:{...qend(`q6`),hum:12,cred:8,rel:{kerry:18},role:{rocker:2},gear:`samurai`,msg:`Kerry te serre contre lui. Il te laisse une veste Samurai en cadeau, en souvenir de ses amis.`}},
-    {t:`Les vendre au label`,s:`Gros gain · −Humanité`,fx:{...qend(`q6`),ed:5500,hum:-12,rel:{kerry:-20},msg:`Une fortune. Kerry n'adressera plus jamais la parole à celui/celle qui l'a trahi.`}}
+    {t:`Les vendre au label`,s:`Gros gain · −Humanité`,heavy:`Tu trahis Kerry pour de l'argent. Il ne te le pardonnera pas.`,fx:{...qend(`q6`),ed:5500,hum:-12,rel:{kerry:-20},msg:`Une fortune. Kerry n'adressera plus jamais la parole à celui/celle qui l'a trahi.`}}
   ]});

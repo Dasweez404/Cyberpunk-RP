@@ -75,7 +75,7 @@ card({id:`no_intro2`,who:`panam`,tag:`Convoi sous attaque`,once:true,
   ]});
 
 /* ============================ FIXERS & BOULOTS ============================ */
-card({id:`dex_gig`,who:`dex`,tag:`Afterlife · Boulot`,w:7,cond:()=>G.cred>=3,
+card({id:`dex_gig`,who:`@fixer`,tag:`Afterlife · Boulot`,w:7,cond:()=>G.cred>=3,
   tx:`« Un client veut qu'un colis arrive à bon port avant l'aube. Il y a du monde sur le trajet, des gars qui n'aiment pas les inconnus. La paie : <strong>1 200 €$</strong>. Tu en es ? »`,
   ch:[
     {t:`Y aller, plein gaz`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:7,ok:{ed:1200,cred:5,bloc:{rue:3},flag:[`dex`],rel:{dex:6},role:{fixer:1},msg:`Livraison parfaite. Dex hoche la tête : « Pas mal. »`},ko:{hp:-20,ed:300,cred:1,msg:`Une embuscade te coûte du sang et la moitié du pognon.`}}},
@@ -471,13 +471,13 @@ card({id:`edge_job`,who:`dex`,tag:`Gros coup`,w:7,cond:()=>G.flags.edge,
   ]});
 
 /* ============================ FACTION PROPRE ============================ */
-card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=32&&G.ed>=2500&&!G.mine,
+card({id:`found_faction`,who:`you`,tag:`Ton empire`,once:true,cond:()=>G.cred>=32&&G.ed>=2500&&!G.mine&&!isLeader(),
   tx:`Tu ne veux plus suivre les ordres de personne. Tu as de l'argent, des alliés, une réputation. Il est temps de bâtir quelque chose à toi : une faction, une famille, un nom que les rues connaîtront.`,
   ch:[
-    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(2500),fx:{found:`gang`,ed:-2500,cred:6,bloc:{rue:10},role:{boss:3}}},
-    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(2500),fx:{found:`fixers`,ed:-2500,cred:5,role:{boss:3,fixer:2}}},
-    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(2500),fx:{found:`nomads`,ed:-2500,cred:5,role:{boss:3,nomad:2}}},
-    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=2500?``:`2500 €$`):`Cyberdeck requis`,fx:{found:`runners`,ed:-2500,cred:5,role:{boss:3,net:2}}},
+    {t:`Fonder un gang de rue`,s:`−2 500 €$ · Prestige de rue`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`gang`,ed:-2500,cred:6,bloc:{rue:10},role:{boss:3}}},
+    {t:`Créer un réseau de fixers`,s:`−2 500 €$ · Revenus passifs`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`fixers`,ed:-2500,cred:5,role:{boss:3,fixer:2}}},
+    {t:`Monter un clan nomade`,s:`−2 500 €$ · Mobilité`,req:R.ed(2500),heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`nomads`,ed:-2500,cred:5,role:{boss:3,nomad:2}}},
+    {t:`Fonder un collectif de netrunners`,s:`−2 500 €$ · Cyberguerre`,req:()=>hasDeck()?(G.ed>=2500?``:`2500 €$`):`Cyberdeck requis`,heavy:`Tu fondes ta propre faction. Si tu es encore membre d'une autre, tu devras la quitter avec toutes les conséquences.`,fx:{found:`runners`,ed:-2500,cred:5,role:{boss:3,net:2}}},
     {t:`Plus tard…`,fx:{unonce:`found_faction`}}
   ]});
 card({id:`mine_raid`,who:`narr`,tag:`Ton territoire attaqué`,w:30,cond:()=>G.mine&&ownedList().length>=1&&yr()>=2071,
@@ -548,16 +548,16 @@ const FACREQ = {
 Object.keys(FAC).forEach(id=>{
   const f=FAC[id], L=WHO[f.leader]||WHO.fix;
   card({id:`fj_${id}`,who:f.leader,tag:`Offre · ${f.n}`,w:5,
-    cond:()=>!G.member&&(G.fac[id]||0)>-25&&FACREQ[id]()&&!G.joinedOnce[id],
+    cond:()=>!G.member&&!G.mine&&(G.fac[id]||0)>-25&&FACREQ[id]()&&!G.joinedOnce[id],
     tx:`<strong>${L.n}</strong> te regarde d'un œil neuf. « ${f.d} On aurait besoin de gens comme toi. Alors, tu rejoins ${f.n} ? »<br><br><em style="color:var(--dim)">Avantage : ${f.perk}</em>`,
     ch:[
-      {t:`Rejoindre ${f.n}`,s:`Tu seras ${RANKS[f.k][0]}`,fx:{join:id,cred:3,msg:`Tu serres la main, tu rejoins la famille. Désormais, tes ennemis seront ceux de ${f.n}.`}},
+      {t:`Rejoindre ${f.n}`,s:`Tu seras ${RANKS[f.k][0]}`,heavy:`Tu prêtes serment à ${f.n}. Ses ennemis deviennent les tiens, et tu ne pourras plus fonder ta propre faction.`,fx:{join:id,cred:3,msg:`Tu serres la main, tu rejoins la famille. Désormais, tes ennemis seront ceux de ${f.n}.`}},
       {t:`Réfléchir encore`,fx:{fac:{[id]:2},msg:`« Prends ton temps. Mais pas trop. »`}},
       {t:`Refuser clairement`,s:`${f.n} le saura`,fx:{fac:{[id]:-10},cred:1,flagMark:id}}
     ]});
   const att = {gang:`body`,corp:`cool`,clan:`ref`,ncpd:`int`,mox:`cool`,trauma:`tech`}[f.k]||`cool`;
-  card({id:`fjob_${id}`,who:f.leader,tag:`Mission · ${f.n}`,w:12,cond:()=>G.member===id,
-    tx:()=>{G.tmp={line:Math.floor(Math.random()*f.lines.length)};return f.lines[G.tmp.line]+` <em style="color:var(--dim)">(rang : ${RANKS[f.k][G.rank]})</em>`},
+  card({id:`fjob_${id}`,who:`@fac`,tag:`Mission · ${f.n}`,w:12,cond:()=>G.member===id,
+    who:`@fac`,tx:()=>{G.tmp={line:Math.floor(Math.random()*f.lines.length)};return f.lines[G.tmp.line]+` <em style="color:var(--dim)">(${rankTitle()})</em>`},
     ch:[
       {t:`Accomplir la mission`,s:ATTRS[att].n,chk:{a:att,k:att===`int`?`hck`:att===`body`||att===`ref`?`cmb`:null,dc:()=>7+Math.min(3,G.rank||0),
         ok:{fn:`facJobWin`,msg:`Mission accomplie. ${f.n} se souvient de ceux qui font le job.`},
@@ -568,11 +568,11 @@ Object.keys(FAC).forEach(id=>{
 });
 card({id:`fac_promo`,who:`narr`,tag:`Promotion`,w:50,cond:()=>G.member&&G.rank<3&&G.jobs>=(G.rank+1)*2,
   tx:()=>`Après plusieurs missions réussies, <strong>${FAC[G.member].n}</strong> reconnaît ta valeur. Tu es sur le point de devenir <em>${RANKS[FAC[G.member].k][G.rank+1]}</em>.`,
-  ch:[{t:`Accepter la promotion`,s:`Rang supérieur`,fx:{fn:`promote`,msg:`Un nouveau titre, un nouveau salaire. Ta famille te félicite.`}},
+  ch:[{t:`Accepter la promotion`,s:`Rang supérieur · plus de devoirs`,heavy:`Monter en grade te donne du pouvoir, mais la famille attendra sa part et tes ennemis te verront.`,fx:{fn:`promote`,msg:`Un nouveau titre, un nouveau salaire. Ta famille te félicite.`}},
       {t:`Décliner, tu préfères rester discret(e)`,fx:{hum:3}}]});
 card({id:`fac_betray`,who:`fix`,tag:`Trahison possible`,w:3,once:true,cond:()=>G.member&&G.rank>=1&&FAC[G.member].foes.length>0,
   tx:()=>`Un émissaire de ${FAC[FAC[G.member].foes[0]]?.n} te prend à part : « ${FAC[G.member].n} ne t'apportera rien de bon. Nous offrons plus : de l'argent, du chrome, un meilleur siège. Rejoins-nous. »`,
   ch:[
-    {t:`Trahir et changer de camp`,s:`Rep − · Gros gain`,fx:{fn:`betray`,ed:3000,cred:-3,hum:-5,msg:`Tu coupes tous les ponts. Les anciens frères te promettent une mort lente.`}},
+    {t:`Trahir et changer de camp`,s:`Rep − · Gros gain`,heavy:`Tu trahis ta famille : tu perds ton rang, un contrat sera mis sur ta tête et tes anciens frères te traqueront.`,fx:{fn:`betray`,ed:3000,cred:-3,hum:-5,msg:`Tu coupes tous les ponts. Les anciens frères te promettent une mort lente.`}},
     {t:`Refuser, loyal(e) jusqu'au bout`,s:`Rep +`,fx:{fn:`facLoyal`,hum:4,cred:2,msg:`Tu retournes la proposition et restes fidèle. Tes chefs te respectent encore plus.`}}
   ]});

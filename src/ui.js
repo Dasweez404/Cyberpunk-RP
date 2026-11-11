@@ -46,8 +46,9 @@ const ICON = {
 };
 
 /* ---------- portraits procéduraux ---------- */
+let PGI=0;
 function portrait(id){
-  const w=WHO[id]||WHO.narr, c=w.c, bot=w.sk<8;
+  const w=(typeof id===`object`)?id:(WHO[id]||WHO.narr), c=w.c, bot=w.sk<8; id=(typeof id===`object`)?`g`+(PGI++):id;
   const skin=bot?`#5a5f6e`:`hsl(${22+(w.sk%7)*2},${28+w.sk}%,${22+w.sk}%)`;
   const dark=`#0b0b16`;
   let hair=``,face=``;
@@ -115,7 +116,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -195,7 +196,7 @@ function renderCreate(){
 
 /* ---------- écran de jeu ---------- */
 function renderGame(){
-  root().innerHTML=`<div class="screen" id="gs">
+  root().innerHTML=`<div class="screen" id="gs"><div class="amb" aria-hidden="true">${skyline()}<div class="rain"></div></div>
     <div class="hud">
       <div class="meters">
         <div class="meter m-hp" id="m-hp"><div class="lb">Santé<b id="v-hp"></b></div><div class="bar"><i id="b-hp"></i></div><span class="dot"></span></div>
@@ -220,14 +221,19 @@ function renderGame(){
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
   updateHud(true);
 }
-let lastVals=null;
+let lastVals=null, edShown=null;
+function tweenEd(to){
+  const el=$(`#v-ed`); if(!el) return; if(edShown===null||Math.abs(to-edShown)<2){ edShown=to; el.textContent=to.toLocaleString(`fr`); return; }
+  const from=edShown, t0=performance.now(); edShown=to;
+  (function f(t){ const k=Math.min(1,(t-t0)/450); const v=Math.round(from+(to-from)*(1-Math.pow(1-k,3))); el.textContent=v.toLocaleString(`fr`); if(k<1) requestAnimationFrame(f); })(t0);
+}
 function updateHud(init){
   const v={hp:G.hp,hum:G.hum,cred:G.cred,ed:G.ed};
   [`hp`,`hum`,`cred`].forEach(k=>{ $(`#b-${k}`).style.width=v[k]+`%`; $(`#v-${k}`).textContent=Math.round(v[k]); });
-  $(`#v-ed`).textContent=v.ed.toLocaleString(`fr`); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
+  tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
   $(`#hdate`).textContent=`${dateStr()} · ${G.name}, ${G.age} ans`;
-  $(`#hrole`).textContent=roleTitle()+(rankTitle()?` · ${rankTitle()}`:``);
+  $(`#hrole`).textContent=roleTitle();
   const cb=document.querySelector(`.dock [data-d=city]`); if(cb)cb.classList.toggle(`alert`,G.hp<45||G.hum<45);
   $(`#m-hp`).classList.toggle(`warn`,G.hp<=25);
   $(`#m-hum`).classList.toggle(`warn`,G.hum<=30);
@@ -276,9 +282,9 @@ function nextCard(){
   const c=drawCard(); prepCard(c); save(); updateHud(); showCardView();
 }
 function showCardView(){
-  const c=byId[G.cur.id], w=WHO[c.who]||WHO.narr;
+  const c=byId[G.cur.id], w=whoCur(c);
   const stage=$(`#stage`), chs=$(`#choices`);
-  stage.innerHTML=`<div class="speaker">${portrait(c.who)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}</div></div></div>
+  stage.innerHTML=`<div class="speaker">${w.scene?`<div class="portrait scene">${w.ic}</div>`:portrait(w)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}</div></div></div>
     <div class="cardwrap" id="cw"><div class="card" id="card" style="--ac:${w.c}">
       <div class="tag">${esc(c.tag||``)}</div><div class="tx">${G.cur.text}</div></div></div>`;
   chs.innerHTML=visChoices(c).map(({h,i},pos)=>{
@@ -295,18 +301,31 @@ function showCardView(){
     b.onmouseleave=b.onblur=()=>previewDots(null);
     b.addEventListener(`touchstart`,()=>previewDots(c.ch[i]),{passive:true});
   });
+  revealText($(`.card .tx`)); showTip();
   SFX.swoosh();
 }
+function revealText(el){
+  if(!el||matchMedia(`(prefers-reduced-motion:reduce)`).matches) return;
+  const words=[]; const walk=n=>{ n.childNodes.forEach(ch=>{ if(ch.nodeType===3){ const frag=document.createDocumentFragment(); ch.textContent.split(/(\s+)/).forEach(t=>{ if(!t) return; if(/^\s+$/.test(t)){ frag.appendChild(document.createTextNode(t)); return; } const s=document.createElement(`span`); s.className=`w`; s.textContent=t; words.push(s); frag.appendChild(s); }); ch.replaceWith(frag); } else if(ch.nodeType===1) walk(ch); }); };
+  walk(el); const step=Math.min(28,700/Math.max(1,words.length)); words.forEach((s,i)=>s.style.animationDelay=(i*step)+`ms`);
+}
+const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🧭 VILLE : boutique & repos · EMPIRE : quartiers · CONTACTS : tes alliés.`];
+function showTip(){
+  const seen=store.get(`ncl_tips`)||0; if(seen>=TIPS.length||G.stats.cards>=TIPS.length*2+2||G.stats.cards%2) return;
+  const i=seen; store.set(`ncl_tips`,seen+1);
+  const t=document.createElement(`div`); t.className=`tip`; t.textContent=TIPS[i]; $(`#stage`).appendChild(t); setTimeout(()=>t.remove(),5200);
+}
 let picking=false;
-function pick(i,dir,al){
+function pick(i,dir,al,ok){
   if(picking||G.over)return;
   const c=byId[G.cur.id], ch=c.ch[i];
   if(ch.req&&ch.req()) { SFX.ko(); shake(); return; }
-  picking=true; SFX.tap(); previewDots(null);
+  if(ch.heavy&&!ok) return confirmHeavy(ch,()=>pick(i,dir,al,true));
+  picking=true; SFX.tap(); vib(15); previewDots(null);
   const card=$(`#card`);
   if(card){ const d=dir||(i===0?-1:1); card.style.setProperty(`--ox`,(d*120)+`px`); card.style.setProperty(`--or`,(d*10)+`deg`); card.classList.add(`out`); }
   $(`#choices`).innerHTML=``;
-  setTimeout(()=>resolveChoice(ch,al),260);
+  setTimeout(()=>resolveChoice(ch,al),170);
 }
 function resolveChoice(ch,al){
   CHIPS=[]; let fx, info=null;
@@ -344,10 +363,10 @@ function showResult(r){
   const key=e=>{ if(e.key===`Enter`||e.key===` `){ e.preventDefault(); go(); } };
   if(r.info){
     const die=$(`#die`); let n=0;
-    const iv=setInterval(()=>{ die.firstChild.textContent=rnd(1,10); SFX.roll(); if(++n>9){ clearInterval(iv);
+    const iv=setInterval(()=>{ die.firstChild.textContent=rnd(1,10); SFX.roll(); if(++n>6){ clearInterval(iv);
       die.classList.remove(`roll`); die.classList.add(r.info.ok?`ok`:`ko`); die.firstChild.textContent=r.info.roll;
       $(`#dinfo`).innerHTML=`${ATTRS[r.info.a].n} ${r.info.tot} + d10<b style="color:${r.info.ok?`var(--g)`:`var(--m)`}">${r.info.ok?`RÉUSSITE`:`ÉCHEC`}</b><span>Il fallait ${Math.max(2,r.info.need)}+ · tu as fait ${r.info.roll}</span>`;
-      r.info.ok?(SFX.ok(),flash(`#05ffa1`),vib(30)):(SFX.ko(),shake());
+      r.info.ok?(SFX.ok(),flash(`#05ffa1`),vib(30),r.info.roll===10&&burst(innerWidth/2,innerHeight*.4,[`#05ffa1`,`#fcee0a`,`#fff`],50)):(SFX.ko(),shake());
       reveal();
     } },60);
   } else { setTimeout(reveal,150); }
@@ -355,9 +374,10 @@ function showResult(r){
 }
 function finishCard(r){
   picking=false;
+  if(CERE.length&&!G.over) return showCere(()=>finishCard(r));
   if(r.loot&&!G.over){ const t=r.loot; r.loot=0; G.trainLast=-99; return showLoot(t,()=>finishCard(r)); }
   if(!G.over&&!r.die&&!r.retire&&!r.quit&&trainDue()) return showTrainPicker(()=>finishCard(r));
-  if(G.pendingFound){ const kind=G.pendingFound; G.pendingFound=null; return askFactionName(kind,()=>afterCard(r)); }
+  if(G.pendingFound){ const kind=G.pendingFound; G.pendingFound=null; if(G.member){ const l=leaveFac(G.member,`found`); cere({k:`leave`,c:`#8a8aa8`,ic:`🚪`,kick:`RUPTURE`,t:`Tu quittes ${l.f.n}`,sub:`Tu abandonnes ton rang de ${l.old}`,lines:[`📉 Réputation chez ${l.f.n} : −20`,`🏳 Tu repars de zéro à la tête de ta propre faction`]}); return showCere(()=>askFactionName(kind,()=>afterCard(r))); } return askFactionName(kind,()=>afterCard(r)); }
   afterCard(r);
 }
 function afterCard(r){
@@ -366,7 +386,7 @@ function afterCard(r){
   if(r.quit){ endGame(`quit`); return showEnd(); }
   if(checkEnd()) return showEnd();
   if(G.cred>50){ G.cred-=(G.cred>80?2:1); }
-  const net=tick(STEP); G.stats.cards++; relDecay(); warTick();
+  const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick();
   if(net>=600) toast(`Revenus passifs : +${net} €$`);
   else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   nextCard();
@@ -378,10 +398,35 @@ function askFactionName(kind,done){
   document.querySelectorAll(`[data-s]`).forEach(b=>b.onclick=()=>{$(`#fn`).value=b.dataset.s;SFX.tap()});
   $(`#fok`).onclick=()=>{
     const name=($(`#fn`).value.trim()||sug[0]); G.mine={name,type:kind,power:1};
-    G.log.unshift({d:dateStr(),m:`Tu fondes ${name} (${T[kind]}).`}); closeModal(); toast(`${name} est née !`); SFX.ok(); flash(`#fcee0a`); done();
+    G.log.unshift({d:dateStr(),m:`Tu fondes ${name} (${T[kind]}).`}); closeModal(); cere({k:`found`,c:`#fcee0a`,ic:`👑`,kick:`FONDATION`,t:name,sub:T[kind],lines:[`🏁 Tu es désormais à la tête de ta propre famille`,`⚔ Les rivaux testeront ta force`,`🏙 Prends des quartiers, tiens-les : tout dépend de toi`]}); showCere(done);
   };
 }
 
+/* ---------- particules ---------- */
+function burst(x,y,colors,n){
+  let cv=$(`#pcv`); if(!cv){ cv=document.createElement(`canvas`); cv.id=`pcv`; cv.style.cssText=`position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95`; document.body.appendChild(cv); }
+  const W=cv.width=innerWidth, H=cv.height=innerHeight, ctx=cv.getContext(`2d`); n=n||60;
+  if(x===undefined){ x=W/2; y=H/2; }
+  const ps=Array.from({length:n},()=>({x,y,vx:(Math.random()-.5)*10,vy:(Math.random()-.8)*10,r:2+Math.random()*3,c:colors[Math.floor(Math.random()*colors.length)],l:1}));
+  let run=true; (function f(){ ctx.clearRect(0,0,W,H); let alive=0; ps.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=.28; p.vx*=.985; p.l-=.016; if(p.l>0){ alive++; ctx.globalAlpha=Math.max(0,p.l); ctx.fillStyle=p.c; ctx.shadowColor=p.c; ctx.shadowBlur=8; ctx.fillRect(p.x,p.y,p.r,p.r*1.6); } }); if(alive&&run) requestAnimationFrame(f); else ctx.clearRect(0,0,W,H); })();
+}
+/* ---------- cérémonies ---------- */
+function showCere(cb){
+  const o=CERE.shift(); if(!o){ cb&&cb(); return; }
+  const el=document.createElement(`div`); el.className=`cere`; el.style.setProperty(`--cc`,o.c);
+  el.innerHTML=`<div class="cinner"><div class="cic">${o.ic}</div><div class="ckick hd">${o.kick}</div><h2 class="hd glitch" data-t="${esc(o.t)}">${esc(o.t)}</h2><div class="csub">${esc(o.sub)}</div>
+    <ul>${o.lines.map((l,i)=>`<li style="animation-delay:${.5+i*.35}s">${esc(l)}</li>`).join(``)}</ul><button class="btn pri" id="cok" style="visibility:hidden">Continuer ›</button></div>`;
+  document.body.appendChild(el);
+  const bad=o.k===`betray`||o.k===`leave`;
+  bad?(SFX.ko(),shake(),flash(`#ff2a6d`),vib([60,40,80])):(SFX.ok(),vib([30,40,30,40,60]));
+  if(!bad) setTimeout(()=>burst(innerWidth/2,innerHeight*.35,[o.c,`#fcee0a`,`#fff`,`#00f0ff`],90),350);
+  setTimeout(()=>{ const b=$(`#cok`); if(b){ b.style.visibility=`visible`; b.onclick=()=>{ SFX.tap(); el.classList.add(`out`); setTimeout(()=>{el.remove(); showCere(cb)},260); }; } },900+o.lines.length*350);
+}
+function confirmHeavy(ch,onYes){
+  modal(`⚠ Décision décisive`,`<div class="rt" style="font-size:18px;line-height:1.4">${esc(ch.heavy)}</div><div class="log" style="color:var(--dim)">Ce choix aura des conséquences durables.</div><div class="row" style="max-width:none"><button class="btn" id="hno" style="text-align:center">‹ Revenir</button><button class="btn pri" id="hyes" style="background:linear-gradient(180deg,#ff2a6d,#c4194f);color:#fff">Assumer</button></div>`,{lock:true});
+  SFX.glitch(); vib([20,30,20]);
+  $(`#hno`).onclick=()=>{SFX.tap();closeModal()}; $(`#hyes`).onclick=()=>{closeModal();onYes()};
+}
 /* ---------- entraînement imposé ---------- */
 const trainDue=()=>G.stats.cards-(G.trainLast||0)>=4;
 function showTrainPicker(cb){
@@ -400,7 +445,7 @@ function showLoot(tier,cb){
   modal(`★ Butin ${`★`.repeat(tier-1)}`,`<div class="log" style="color:var(--dim)">Mission accomplie. Choisis <b>une</b> récompense.</div><div class="tiles one">`+
     opts.map((o,i)=>`<button class="tile rec" data-lo="${i}" style="animation:chin .4s ${i*.08}s both"><span class="ti">${o.ic}</span><b>${o.t}</b><small>${o.d}</small></button>`).join(``)+`</div>`,{lock:true});
   document.querySelectorAll(`[data-lo]`).forEach(b=>b.onclick=()=>{
-    CHIPS=[]; opts[+b.dataset.lo].ap(); SFX.buy(); vib(40); updateHud();
+    CHIPS=[]; opts[+b.dataset.lo].ap(); SFX.buy(); vib(40); const rc=b.getBoundingClientRect(); burst(rc.left+rc.width/2,rc.top+rc.height/2,[`#fcee0a`,`#05ffa1`,`#00f0ff`],60); updateHud();
     G.log.unshift({d:dateStr(),m:`Butin : ${opts[+b.dataset.lo].t} — ${opts[+b.dataset.lo].d}.`});
     toast(CHIPS.map(c=>c.txt).join(` · `)||opts[+b.dataset.lo].d); closeModal(); cb();
   });
@@ -432,7 +477,7 @@ function openProfile(){
   const cy=G.cyber.map(id=>CY(id)).map(c=>`<div class="item own"><div class="in"><b>${c.n}</b><small>${SLOTS[c.slot]} · ${c.d}</small></div></div>`).join(``)||`<div class="log">Aucun implant. Chair pure.</div>`;
   const gear=G.gear.map(id=>GEARMAP[id]).map(c=>`<div class="item own"><div class="in"><b>${c.n}</b><small>${c.t} · ${c.d}</small></div></div>`).join(``)||`<div class="log">Aucun équipement notable.</div>`;
   const hk=G.hacks.map(id=>HACKS.find(h=>h.id===id).n).join(` · `);
-  modal(esc(G.name),`<div class="item"><div class="in"><b>${titleRole}${rankTitle()?` · ${G.member?FAC[G.member].n:``} (${rankTitle()})`:``}</b><small>${ORIGINS[G.origin].n} · ${G.age} ans · ${dateStr()}${G.mine?` · Fondateur de ${esc(G.mine.name)}`:``}</small></div></div>
+  modal(esc(G.name),`<div class="item"><div class="in"><b>${titleRole}</b><small>${ORIGINS[G.origin].n} · ${G.age} ans · ${dateStr()}${G.mine?` · Fondateur de ${esc(G.mine.name)}`:``}</small></div></div>
   <div class="sec">Attributs (vert = bonus)</div>${rows}
   <div class="sec">Chrome · réduction dégâts ${Math.round(mitigation()*100)}%</div>${cy}
   ${hk?`<div class="sec">Quickhacks</div><div class="log">${hk}</div>`:``}
@@ -680,8 +725,9 @@ function openFactions(){
   bindEmp();
   document.querySelectorAll(`[data-fx]`).forEach(b=>b.onclick=()=>{SFX.tap();const d=$(`#fd-`+b.dataset.fx);d.hidden=!d.hidden});
   const lf=$(`#lfac`); if(lf) lf.onclick=()=>{
-    if(!confirm(`Quitter ${FAC[G.member].n} ? Ils ne l'oublieront pas.`))return;
-    G.fac[G.member]=(G.fac[G.member]||0)-35; G.joinedOnce[G.member]=true; G.log.unshift({d:dateStr(),m:`Tu quittes ${FAC[G.member].n}.`}); G.member=null; G.rank=0; G.jobs=0; updateHud(); SFX.ko(); openFactions();
+    const f=FAC[G.member];
+    confirmHeavy({heavy:`Tu quittes ${f.n} : tu perds ton rang (${rankTitle()}), ta réputation chute de 35, ${BLOCS[BLOC[G.member]].n} te regardera de travers, et d'anciens frères pourraient te le faire payer.`,t:`Quitter ${f.n}`},()=>{
+      const l=leaveFac(G.member,`quit`); cere({k:`leave`,c:`#8a8aa8`,ic:`🚪`,kick:`RUPTURE`,t:`Tu quittes ${l.f.n}`,sub:`Fin de ton rang de ${l.old}`,lines:[`📉 Réputation : −35`,`⚖ ${BLOCS[BLOC[l.f.id||G.lastEx]]?BLOCS[BLOC[G.lastEx]].n:``} se refroidit`,`👥 Tes anciens frères s'en souviendront`]}); closeModal(); updateHud(); showCere(()=>openFactions()); });
   };
 }
 /* ----- CONTACTS ----- */

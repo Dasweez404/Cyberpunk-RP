@@ -11,8 +11,14 @@ Object.assign(WHO,{
   rache:{n:`Rache Bartmoss`,r:`Légende du Net`,c:`#05ffa1`,st:`hood`,sk:12},
   alt:{n:`Alt Cunningham`,r:`Présence dans le Net`,c:`#c77dff`,st:`long`,sk:8},
   reed:{n:`Songbird`,r:`Fantôme de la NUSA`,c:`#c77dff`,st:`long`,sk:30},
+  hands:{n:`Mr. Hands`,r:`Fixer · Discret`,c:`#00f0ff`,st:`shades`,sk:22},
+  chino:{n:`Tomás « Chino » Reyes`,r:`Valentinos · Soldado`,c:`#ffb000`,st:`short`,sk:26},
+  nadia:{n:`Nadia Volkov`,r:`Ex-Maelstrom · Netrunneuse`,c:`#c77dff`,st:`mohawk`,sk:30},
+  mika:{n:`Mika Tanabe`,r:`Doc de rue · Kabuki`,c:`#05ffa1`,st:`short`,sk:32},
+  hiro:{n:`Hiro Sato`,r:`Ingénieur · Kang Tao`,c:`#ffd166`,st:`cap`,sk:30},
+  eli:{n:`Eli Okoye`,r:`Agent NetWatch · Informateur`,c:`#05ffa1`,st:`shades`,sk:20},
 });
-const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`];
+const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`];
 
 /* ============================ RELATIONS ============================ */
 // Jackie
@@ -164,8 +170,8 @@ Object.keys(ARCS).forEach(id=>{
 card({id:`fac_coup`,who:`fix`,tag:`Prendre la tête`,once:true,w:20,cond:()=>G.member&&G.rank>=3&&G.jobs>=8,
   tx:()=>`Tu es le bras droit de ${FAC[G.member].n}. Le chef vieillit, les rivaux se multiplient. Dans les couloirs, on murmure ton nom. Si tu veux la première place, c'est maintenant. Sinon, tu resteras dans l'ombre.`,
   ch:[
-    {t:`Prendre le pouvoir par la force`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:10,ok:{cred:12,ed:3000,role:{boss:3},fn:`seizeFaction`,msg:`Un duel, un coup décisif. Le chef s'incline. Tu es désormais à la tête de ${`la famille`}.`},ko:{hp:-50,cred:-3,fac:{},msg:`Ta tentative échoue. Tu survis, mais ta position est fragilisée.`}}},
-    {t:`Le convaincre de te céder sa place`,s:`SANG-FROID`,chk:{a:`cool`,dc:9,ok:{cred:10,ed:2000,role:{boss:3},fn:`seizeFaction`,msg:`Sans sang versé, tu deviens leader. Les loyautés se rallient.`},ko:{cred:-2,hum:-2,msg:`Il se méfie. Tu devras patienter.`}}},
+    {t:`Prendre le pouvoir par la force`,s:`CORPS · combat`,heavy:`Tu renverses ton chef. Si tu échoues, tu le paieras cher ; si tu réussis, tu porteras la couronne — et ses ennemis.`,chk:{a:`body`,k:`cmb`,dc:10,ok:{cred:12,ed:3000,role:{boss:3},fn:`seizeFaction`,msg:`Un duel, un coup décisif. Le chef s'incline. Tu es désormais à la tête de ${`la famille`}.`},ko:{hp:-50,cred:-3,fac:{},msg:`Ta tentative échoue. Tu survis, mais ta position est fragilisée.`}}},
+    {t:`Le convaincre de te céder sa place`,s:`SANG-FROID`,heavy:`Tu réclames la place du chef. Un refus brisera la confiance.`,chk:{a:`cool`,dc:9,ok:{cred:10,ed:2000,role:{boss:3},fn:`seizeFaction`,msg:`Sans sang versé, tu deviens leader. Les loyautés se rallient.`},ko:{cred:-2,hum:-2,msg:`Il se méfie. Tu devras patienter.`}}},
     {t:`Rester loyal au chef`,s:`Sécurité`,fx:{hum:5,cred:2,fac:{},fn:`facLoyal`,msg:`Tu prouves ta loyauté. Le chef te remercie et te garde à ses côtés.`}}
   ]});
 

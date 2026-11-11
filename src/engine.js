@@ -21,7 +21,7 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {fix_board:10,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -32,7 +32,7 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
@@ -105,14 +105,20 @@ function pickFoe(d){
   const pool = Object.keys(FAC).filter(f=>f!==G.member&&f!==home);
   return pool[rnd(0,pool.length-1)];
 }
+const isLeader = () => G.member&&G.flags[`leader_`+G.member];
 function roleTitle(){
-  if(G.mine&&G.role.boss>=3) return ROLES.boss;
+  if(isLeader()) return `${LEADER[FAC[G.member].k]} · ${FAC[G.member].n}`;
+  if(G.member) return `${RANKS[FAC[G.member].k][G.rank]} · ${FAC[G.member].n}`;
+  if(G.mine) return `Fondateur · ${G.mine.name}`;
   let best=null,bv=2;
   Object.entries(G.role).forEach(([k,v])=>{if(k!==`boss`&&v>bv){bv=v;best=k}});
   if(best) return ROLES[best];
   return {street:`Street Kid`,corpo:`Corpo`,nomad:`Nomade`}[G.origin];
 }
-function rankTitle(){ return G.member?RANKS[FAC[G.member].k][G.rank]:null; }
+function rankTitle(){ return G.member?(isLeader()?LEADER[FAC[G.member].k]:RANKS[FAC[G.member].k][G.rank]):null; }
+let CERE=[]; const cere=o=>CERE.push(o);
+function addEcho(id,delay){ G.echo=G.echo||[]; G.echo.push({id,at:G.stats.cards+delay}); }
+function echoTick(){ G.echo=(G.echo||[]).filter(x=>{ if(G.stats.cards>=x.at){ if(!G.queue.includes(x.id)) G.queue.push(x.id); return false; } return true; }); }
 
 /* ---------- expérience : on progresse en pratiquant ---------- */
 const xpNeed = lv => 6+3*Math.max(0,lv-3);
@@ -206,13 +212,27 @@ function applyFx(fx){
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
   if(fx.found) G.pendingFound = fx.found;
+  if(fx.echo) Object.entries(fx.echo).forEach(([id,d])=>addEcho(id,d));
   if(fx.next) (Array.isArray(fx.next)?fx.next:[fx.next]).forEach(n=>G.queue.push(n));
 }
 function joinFac(id){
   if(G.member&&G.member!==id) G.fac[G.member]=(G.fac[G.member]||0)-10;
   G.member=id; G.rank=0; G.jobs=0; G.fac[id]=Math.max(20,(G.fac[id]||0)+20);
   FAC[id].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)-15,-100,100));
-  chip(`y`,`Membre : ${FAC[id].n}`); toast(`Tu rejoins ${FAC[id].n}`); SFX.ok();
+  chip(`y`,`Membre : ${FAC[id].n}`); SFX.ok();
+  const f=FAC[id];
+  cere({k:`join`,c:f.c,ic:`🛡`,kick:`SERMENT`,t:f.n,sub:`Bienvenue, ${RANKS[f.k][0]}`,lines:[`🎯 ${f.perk}`,f.foes.length?`⚔ Désormais tes ennemis : ${f.foes.map(x=>FAC[x]?FAC[x].n:x).join(`, `)}`:`⚔ Aucun ennemi déclaré`,`🔒 Tu ne peux plus fonder ta propre faction tant que tu portes leurs couleurs`]});
+}
+function leaveFac(id,why){
+  const f=FAC[id], old=RANKS[f.k][G.rank], wasLeader=!!G.flags[`leader_`+id];
+  const pen = why===`betray`?45:why===`found`?20:35;
+  G.fac[id]=clamp((G.fac[id]||0)-pen,-100,100); G.joinedOnce[id]=true; G.flags[`exfac_`+id]=true; delete G.flags[`leader_`+id];
+  moveBloc(BLOC[id], why===`betray`?-14:why===`found`?-4:-9);
+  G.lastEx=id; G.member=null; G.rank=0; G.jobs=0;
+  G.log.unshift({d:dateStr(),m:why===`betray`?`Tu trahis ${f.n}.`:`Tu quittes ${f.n}.`});
+  if(why===`betray`){ G.flags.hunted=true; addEcho(`hunt_1`,2); addEcho(`hunt_2`,7); }
+  else if(why===`quit`){ addEcho(`ex_grudge`,5); }
+  return {old:wasLeader?LEADER[f.k]:old,f};
 }
 function removeCy(id){ G.cyber=G.cyber.filter(x=>x!==id); }
 function installCy(id,free){
@@ -257,13 +277,19 @@ const FN = {
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
   facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+6,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+6 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
-  promote(){ G.rank++; const f=FAC[G.member]; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
+  promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
     if(G.member===`maelstrom`){G.hum=clamp(G.hum-6,0,100);chip(`n`,`−6 Humanité`)}
     if(f.k===`trauma`){G.hp=100;chip(`p`,`Soins gratuits`)}
+    if(G.rank>=2) G.flags.duty=true;
+    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
     SFX.ok(); },
-  betray(){ const old=G.member; const nw=FAC[old].foes[0]; G.fac[old]=-70; joinFac(nw); },
-  seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
+  betray(){ const old=G.member; const nw=FAC[old].foes[0]; const r=leaveFac(old,`betray`); G.fac[old]=-70; cere({k:`betray`,c:`#ff2a6d`,ic:`🗡`,kick:`TRAHISON`,t:`Tu trahis ${FAC[old].n}`,sub:`Tu perds ton rang de ${r.old}`,lines:[`💀 Un contrat est mis sur ta tête`,`📉 Réputation chez ${FAC[old].n} : −70`,`⚖ ${BLOCS[BLOC[old]].n} te tourne le dos`,`👥 Tes anciens frères te chercheront`]}); joinFac(nw); },
+  seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
+  cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
+  loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
+  facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
+  mineLose(){ if(G.mine&&G.mine.power>1){ G.mine.power--; chip(`n`,`Puissance −1`);} },
   facLoyal(){ G.fac[G.member]=clamp((G.fac[G.member]||0)+12,-100,100); }
 };
 
@@ -290,6 +316,7 @@ function tick(months){
 
 /* ---------- tirage ---------- */
 function safe(fn,d){ try{return fn()}catch(e){return d} }
+function whoCur(c){ return (G.cur&&G.cur.id===c.id&&(G.cur.npc||(G.cur.who&&WHO[G.cur.who])))?(G.cur.npc||WHO[G.cur.who]):(WHO[c.who]||WHO.narr); }
 function drawCard(){
   while(G.queue.length){ const c=byId[G.queue.shift()]; if(c) return c; }
   const T=G.t;
@@ -308,6 +335,13 @@ function prepCard(c){
   G.tmp={};
   const raw = typeof c.tx===`function`?c.tx():c.tx;
   G.cur = {id:c.id, text:raw.replace(/\{n\}/g,G.name)};
+  let npc=null;
+  if(c.who===`@fac`&&G.member){ const f=FAC[G.member]; npc=(Math.random()<.3&&WHO[f.leader])?null:genNpc(f.k,f.c,`${RANKS[f.k][Math.min(3,G.rank+1)]} · ${f.n}`); if(!npc) G.cur.who=f.leader; }
+  else if(c.who===`@ex`){ const f=FAC[G.lastEx]; npc=f?genNpc(f.k,f.c,`Ex-frère · ${f.n}`):genNpc(`gang`); }
+  else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
+  else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
+  else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:d.n,r:`${d.w} · ${dateStr()}`,c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
+  if(npc) G.cur.npc=npc;
 }
 
 /* ---------- guerre de territoire ---------- */
