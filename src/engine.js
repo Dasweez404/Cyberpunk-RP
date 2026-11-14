@@ -538,14 +538,13 @@ const opsLeft=()=>{ if(!G.ops) G.ops={left:OPS_PER}; return G.ops.left; };
 const holdOf=id=>{ if(!G.hold) G.hold={}; return G.hold[id]===undefined?65:G.hold[id]; };
 function warDc(d,base){ return base - 1.5 + ownedList().length*.7 + Math.floor((yr()-START_YEAR)/6) - Math.min(3,Math.floor(crewN()/2)); }
 function conquestChoices(d){
-  const o=[];
-  const prev=G.dist[d.id], ally=Object.keys(G.allies||{}).find(a=>FAC[a]&&(FAC[a].foes||[]).includes(prev));
-  if(ally&&!(G.allyUsed||{})[ally]) o.push({k:`ally`,ally,t:`Appeler ${FAC[ally].n} en renfort`,s:`Gratuit · ${FAC[ally].n} frappe ${FAC[prev]?FAC[prev].n:`l'ennemi`} avec toi · +40`});
-  o.push({k:`assault`,t:`Par la force`,s:`${ATTRS.body.n} + combat · +55`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
-  o.push({k:`hack`,t:`Par le Net`,s:`${ATTRS.int.n} + hack · +50`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Cyberdeck ou formation au hack`});
-  o.push({k:`talk`,t:`Par la parole`,s:`${ATTRS.cool.n} · +45 · sans danger`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
-  const price=d.def*1000;
-  o.push({k:`buy`,t:`Par l'argent`,s:`${price} €$ · +70, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
+  const o=[], prev=G.dist[d.id], ally=Object.keys(G.allies||{}).find(a=>FAC[a]&&(FAC[a].foes||[]).includes(prev));
+  if(ally&&!(G.allyUsed||{})[ally]) o.push({k:`ally`,ally,t:`Appeler ${FAC[ally].n} en renfort`,s:`${FAC[ally].n} frappe avec toi · jet facilité`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)-3});
+  o.push({k:`assault`,t:`Par la force`,s:`${ATTRS.body.n} + combat`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
+  o.push({k:`hack`,t:`Par le Net`,s:`${ATTRS.int.n} + hack`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Cyberdeck ou formation au hack`});
+  o.push({k:`talk`,t:`Par la parole`,s:`${ATTRS.cool.n} · sans danger physique`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
+  const price=d.def*2000;
+  o.push({k:`buy`,t:`Par l'argent`,s:`${price.toLocaleString(`fr`)} €$ · sans jet`,price,req:G.ed>=price?``:`${price.toLocaleString(`fr`)} €$ requis`});
   return o;
 }
 function canConquer(d){
@@ -560,33 +559,25 @@ function canConquer(d){
 }
 function doOperation(d,opt){
   CHIPS=[]; G.ctl=G.ctl||{}; G.hold=G.hold||{}; opsLeft(); G.ops.left--;
-  const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
-  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=70; }
-  else if(opt.k===`ally`){ G.allyUsed=G.allyUsed||{}; G.allyUsed[opt.ally]=true; G.fac[opt.ally]=clamp((G.fac[opt.ally]||0)+3,-100,100); chip(`y`,`${FAC[opt.ally].n} combat à tes côtés`); gain=40; }
+  const prev=G.dist[d.id]; let ok=true, info=null;
+  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); }
   else {
+    if(opt.k===`ally`){ G.allyUsed=G.allyUsed||{}; G.allyUsed[opt.ally]=true; G.fac[opt.ally]=clamp((G.fac[opt.ally]||0)+3,-100,100); chip(`y`,`${FAC[opt.ally].n} combat à tes côtés`); }
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0) - (Object.keys(G.allies||{}).some(a=>FAC[a].foes.includes(prev))?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
-    gain = ok ? ({assault:55,hack:50,talk:45}[opt.k]+(roll===10?20:0)) : -5;
   }
-  const before=G.ctl[d.id]||0; G.ctl[d.id]=clamp(before+gain,0,100);
-  chip(gain>0?`y`:`n`,`${sgn(G.ctl[d.id]-before)} influence`);
   if(!ok){ if(opt.k!==`talk`) applyFx({hp:-(d.def*7)}); G.cred=clamp(G.cred-2,0,100); chip(`n`,`−2 Street Cred`); }
   if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-3,-100,100); }
   let captured=false, riposte=null;
-  if(G.ctl[d.id]>=100){
-    captured=true; delete G.ctl[d.id]; G.dist[d.id]=`player`; G.hold[d.id]=65;
-    G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
-    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-12,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
-    if(G.mine) G.mine.power++;
-    G.log.unshift({d:dateStr(),m:`Tu prends le contrôle de ${d.n}.`}); chip(`y`,`${d.n} conquis`);
-  } else if(Math.random()<.45){
+  if(ok){ captureD(d.id); captured=true; if(FAC[prev]) moveBloc(BLOC[prev],-8); }
+  else if(Math.random()<.45){
     const mine=ownedList();
-    if(mine.length){ const t=mine[rnd(0,mine.length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-15,0,100); riposte=`Riposte ennemie sur ${t.n} (−15 tenue)`; chip(`n`,`⚔ ${riposte}`); }
+    if(mine.length){ const t=mine[rnd(0,mine.length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-15,0,100); riposte=`Riposte ennemie sur ${t.n}`; chip(`n`,`⚔ ${riposte}`); }
     else { applyFx({hp:-10}); riposte=`Riposte : embuscade sur toi`; }
   }
   tick(1);
-  return {ok,info,gain,captured,riposte,chips:CHIPS.slice()};
+  return {ok,info,gain:ok?100:0,captured,riposte,chips:CHIPS.slice()};
 }
 const doConquer = doOperation;
 function reinforce(d){
@@ -612,11 +603,9 @@ function warTick(){
   G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.allyUsed={}; gangWars(); G.ctl=G.ctl||{}; G.hold=G.hold||{};
   Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-20&&[`gang`,`clan`].includes(FAC[k].k)&&ownedList().length&&Math.random()<((G.fac[k]||0)<=-60?.4:.2)){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
-  ownedList().forEach(d=>{
-    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewN()/2);
-    G.hold[d.id]=clamp(holdOf(d.id)-Math.max(1,dec),0,100);
-    if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n} faute de tenue.`}); }
-    else if(G.hold[d.id]<=25) toast(`⚠ ${d.n} : tenue ${G.hold[d.id]} — renforce !`);
+  ownedList().forEach(d=>{   // entretien automatique : tes hommes tiennent le quartier, les attaques seules l'érodent
+    G.hold[d.id]=clamp(holdOf(d.id)+10+Math.floor((G.mine?G.mine.power:0)/2),0,100);
+    if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n}.`}); }
   });
 }
 

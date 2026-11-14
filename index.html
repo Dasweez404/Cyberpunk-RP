@@ -3784,14 +3784,13 @@ const opsLeft=()=>{ if(!G.ops) G.ops={left:OPS_PER}; return G.ops.left; };
 const holdOf=id=>{ if(!G.hold) G.hold={}; return G.hold[id]===undefined?65:G.hold[id]; };
 function warDc(d,base){ return base - 1.5 + ownedList().length*.7 + Math.floor((yr()-START_YEAR)/6) - Math.min(3,Math.floor(crewN()/2)); }
 function conquestChoices(d){
-  const o=[];
-  const prev=G.dist[d.id], ally=Object.keys(G.allies||{}).find(a=>FAC[a]&&(FAC[a].foes||[]).includes(prev));
-  if(ally&&!(G.allyUsed||{})[ally]) o.push({k:`ally`,ally,t:`Appeler ${FAC[ally].n} en renfort`,s:`Gratuit · ${FAC[ally].n} frappe ${FAC[prev]?FAC[prev].n:`l'ennemi`} avec toi · +40`});
-  o.push({k:`assault`,t:`Par la force`,s:`${ATTRS.body.n} + combat · +55`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
-  o.push({k:`hack`,t:`Par le Net`,s:`${ATTRS.int.n} + hack · +50`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Cyberdeck ou formation au hack`});
-  o.push({k:`talk`,t:`Par la parole`,s:`${ATTRS.cool.n} · +45 · sans danger`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
-  const price=d.def*1000;
-  o.push({k:`buy`,t:`Par l'argent`,s:`${price} €$ · +70, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
+  const o=[], prev=G.dist[d.id], ally=Object.keys(G.allies||{}).find(a=>FAC[a]&&(FAC[a].foes||[]).includes(prev));
+  if(ally&&!(G.allyUsed||{})[ally]) o.push({k:`ally`,ally,t:`Appeler ${FAC[ally].n} en renfort`,s:`${FAC[ally].n} frappe avec toi · jet facilité`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)-3});
+  o.push({k:`assault`,t:`Par la force`,s:`${ATTRS.body.n} + combat`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
+  o.push({k:`hack`,t:`Par le Net`,s:`${ATTRS.int.n} + hack`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Cyberdeck ou formation au hack`});
+  o.push({k:`talk`,t:`Par la parole`,s:`${ATTRS.cool.n} · sans danger physique`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
+  const price=d.def*2000;
+  o.push({k:`buy`,t:`Par l'argent`,s:`${price.toLocaleString(`fr`)} €$ · sans jet`,price,req:G.ed>=price?``:`${price.toLocaleString(`fr`)} €$ requis`});
   return o;
 }
 function canConquer(d){
@@ -3806,33 +3805,25 @@ function canConquer(d){
 }
 function doOperation(d,opt){
   CHIPS=[]; G.ctl=G.ctl||{}; G.hold=G.hold||{}; opsLeft(); G.ops.left--;
-  const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
-  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=70; }
-  else if(opt.k===`ally`){ G.allyUsed=G.allyUsed||{}; G.allyUsed[opt.ally]=true; G.fac[opt.ally]=clamp((G.fac[opt.ally]||0)+3,-100,100); chip(`y`,`${FAC[opt.ally].n} combat à tes côtés`); gain=40; }
+  const prev=G.dist[d.id]; let ok=true, info=null;
+  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); }
   else {
+    if(opt.k===`ally`){ G.allyUsed=G.allyUsed||{}; G.allyUsed[opt.ally]=true; G.fac[opt.ally]=clamp((G.fac[opt.ally]||0)+3,-100,100); chip(`y`,`${FAC[opt.ally].n} combat à tes côtés`); }
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0) - (Object.keys(G.allies||{}).some(a=>FAC[a].foes.includes(prev))?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
-    gain = ok ? ({assault:55,hack:50,talk:45}[opt.k]+(roll===10?20:0)) : -5;
   }
-  const before=G.ctl[d.id]||0; G.ctl[d.id]=clamp(before+gain,0,100);
-  chip(gain>0?`y`:`n`,`${sgn(G.ctl[d.id]-before)} influence`);
   if(!ok){ if(opt.k!==`talk`) applyFx({hp:-(d.def*7)}); G.cred=clamp(G.cred-2,0,100); chip(`n`,`−2 Street Cred`); }
   if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-3,-100,100); }
   let captured=false, riposte=null;
-  if(G.ctl[d.id]>=100){
-    captured=true; delete G.ctl[d.id]; G.dist[d.id]=`player`; G.hold[d.id]=65;
-    G.cred=clamp(G.cred+d.def*2,0,100); chip(`y`,`+${d.def*2} Street Cred`);
-    if(FAC[prev]){ G.fac[prev]=clamp((G.fac[prev]||0)-12,-100,100); moveBloc(BLOC[prev],-8); FAC[prev].foes.forEach(f=>G.fac[f]=clamp((G.fac[f]||0)+5,-100,100)); }
-    if(G.mine) G.mine.power++;
-    G.log.unshift({d:dateStr(),m:`Tu prends le contrôle de ${d.n}.`}); chip(`y`,`${d.n} conquis`);
-  } else if(Math.random()<.45){
+  if(ok){ captureD(d.id); captured=true; if(FAC[prev]) moveBloc(BLOC[prev],-8); }
+  else if(Math.random()<.45){
     const mine=ownedList();
-    if(mine.length){ const t=mine[rnd(0,mine.length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-15,0,100); riposte=`Riposte ennemie sur ${t.n} (−15 tenue)`; chip(`n`,`⚔ ${riposte}`); }
+    if(mine.length){ const t=mine[rnd(0,mine.length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-15,0,100); riposte=`Riposte ennemie sur ${t.n}`; chip(`n`,`⚔ ${riposte}`); }
     else { applyFx({hp:-10}); riposte=`Riposte : embuscade sur toi`; }
   }
   tick(1);
-  return {ok,info,gain,captured,riposte,chips:CHIPS.slice()};
+  return {ok,info,gain:ok?100:0,captured,riposte,chips:CHIPS.slice()};
 }
 const doConquer = doOperation;
 function reinforce(d){
@@ -3858,11 +3849,9 @@ function warTick(){
   G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.allyUsed={}; gangWars(); G.ctl=G.ctl||{}; G.hold=G.hold||{};
   Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-20&&[`gang`,`clan`].includes(FAC[k].k)&&ownedList().length&&Math.random()<((G.fac[k]||0)<=-60?.4:.2)){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
-  ownedList().forEach(d=>{
-    const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewN()/2);
-    G.hold[d.id]=clamp(holdOf(d.id)-Math.max(1,dec),0,100);
-    if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n} faute de tenue.`}); }
-    else if(G.hold[d.id]<=25) toast(`⚠ ${d.n} : tenue ${G.hold[d.id]} — renforce !`);
+  ownedList().forEach(d=>{   // entretien automatique : tes hommes tiennent le quartier, les attaques seules l'érodent
+    G.hold[d.id]=clamp(holdOf(d.id)+10+Math.floor((G.mine?G.mine.power:0)/2),0,100);
+    if(G.hold[d.id]<=0){ const prev=FAC[d.o]?d.o:`neutral`; G.dist[d.id]=prev; delete G.hold[d.id]; toast(`${d.n} t'échappe !`); G.log.unshift({d:dateStr(),m:`Tu perds le contrôle de ${d.n}.`}); }
   });
 }
 
@@ -4624,28 +4613,24 @@ function renderDistrictPanel(id){
   const d=DMAP[id], o=G.dist[id], why=canConquer(d), mine=o===`player`;
   const ctl=(G.ctl&&G.ctl[id])||0, hold=holdOf(id), left=opsLeft();
   let act=``;
-  if(mine){ const price=d.def*350; act=`<div class="vstat"><span>Tenue</span><b style="color:${hold<=25?`var(--m)`:`var(--g)`}">${hold}/100</b></div><div class="bigbar"><i style="background:${hold<=25?`var(--m)`:`var(--y)`};width:${hold}%"></i></div>
-    <button class="btn pri" id="goreinf" ${G.ed<price||hold>=100?`disabled`:``}>🛡 Renforcer · ${money(price)} (+35 tenue)</button><div class="log" style="color:var(--dim)">La tenue baisse à chaque période. À 0, le quartier t'échappe. Revenu : ${Math.round(d.inc*3*(.4+.6*hold/100))} €$ / période.</div>`; }
+  if(mine){ const net=Math.round(d.inc*3*(.4+.6*hold/100)*(G.mine&&G.mine.type===`gang`?1.2:1)); act=`<div class="mrow"><span>Revenu par période</span><b style="color:var(--g)">+${net.toLocaleString(`fr`)} €$</b></div><div class="mrow"><span>Entretien</span><b>${hold>=60?`🛡 Tes hommes tiennent le quartier`:`⚠ Fragile après une attaque, il se rétablit seul`}</b></div>`; }
   else if(why) act=`<div class="why">${why===`Verrouillé`?`🔒 Verrouillé`:`🔒 ${why}`}</div>`;
-  else act=`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
-    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Attaquer ce quartier`:`Plus d'action pour l'instant`}</button><div class="log" style="color:var(--dim)">Deux opérations réussies suffisent en général. Ta progression retombe un peu à chaque période.</div>`;
+  else act=`<button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Prendre ce quartier`:`Plus d'action pour l'instant`}</button><div class="log" style="color:var(--dim)">Une opération réussie suffit : le quartier est à toi. Un échec coûte de la santé et de la réputation.</div>`;
   const rival=FAC[o]?`<div class="mrow"><span>Gang en place</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div>`:``;
   $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)};flex-direction:column;align-items:stretch;gap:4px"><b style="font-size:17px">${d.n} <span style="color:var(--dim);font-size:13px;font-weight:500">· ${d.w}</span></b><span class="mtx">${d.d}</span>
     <div class="mrow"><span>Contrôle</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div><div class="mrow"><span>Défense</span><b>${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</b></div></div>${act}`;
   const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
-  const rf=$(`#goreinf`); if(rf) rf.onclick=()=>{ const p=reinforce(d); if(p){SFX.buy();toast(`${d.n} renforcé`);updateHud();openMap(true)} };
   const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
 }
 function openConquest(d){
-  const prev=G.dist[d.id], ctl=(G.ctl&&G.ctl[d.id])||0;
-  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
-   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Choisis ta méthode.</div>`+
+  const prev=G.dist[d.id];
+  modal(`Prendre ${d.n}`,`<div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Choisis ta méthode : un succès et le quartier est à toi.</div>`+
    conquestChoices(d).map((c,i)=>{ const ch=c.a?rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance:0; return `<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${ch>=.7?`hi`:ch<=.35?`lo`:``}">${Math.round(ch*100)}%</span>`:``}</button>`; }).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
     const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req||!opsLeft()){SFX.ko();return}
     const r=doOperation(d,opt); updateHud();
     modal(r.captured?`${d.n} est à toi !`:r.ok?`Opération réussie`:`Opération ratée`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
-      <div class="rt">${r.captured?`Les rues changent de couleur. ${d.n} porte désormais ton nom — mais il faudra le garder.`:r.ok?`Tu grignotes du terrain. L'influence monte, mais l'ennemi n'a pas dit son dernier mot.`:opt.k===`talk`?`Les négociations échouent. Ils se méfient de toi.`:`L'opération tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
+      <div class="rt">${r.captured?`Les rues changent de couleur. ${d.n} porte désormais ton nom.`:opt.k===`talk`?`Les négociations échouent. Ils se méfient de toi.`:`L'opération tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
     r.ok?(SFX.ok(),flash(r.captured?`#fcee0a`:`#05ffa1`),vib(80)):(SFX.ko(),shake());
     $(`#qok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else {MAPSEL=d.id;openMap(true)} };
   });

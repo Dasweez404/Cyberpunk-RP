@@ -636,28 +636,24 @@ function renderDistrictPanel(id){
   const d=DMAP[id], o=G.dist[id], why=canConquer(d), mine=o===`player`;
   const ctl=(G.ctl&&G.ctl[id])||0, hold=holdOf(id), left=opsLeft();
   let act=``;
-  if(mine){ const price=d.def*350; act=`<div class="vstat"><span>Tenue</span><b style="color:${hold<=25?`var(--m)`:`var(--g)`}">${hold}/100</b></div><div class="bigbar"><i style="background:${hold<=25?`var(--m)`:`var(--y)`};width:${hold}%"></i></div>
-    <button class="btn pri" id="goreinf" ${G.ed<price||hold>=100?`disabled`:``}>🛡 Renforcer · ${money(price)} (+35 tenue)</button><div class="log" style="color:var(--dim)">La tenue baisse à chaque période. À 0, le quartier t'échappe. Revenu : ${Math.round(d.inc*3*(.4+.6*hold/100))} €$ / période.</div>`; }
+  if(mine){ const net=Math.round(d.inc*3*(.4+.6*hold/100)*(G.mine&&G.mine.type===`gang`?1.2:1)); act=`<div class="mrow"><span>Revenu par période</span><b style="color:var(--g)">+${net.toLocaleString(`fr`)} €$</b></div><div class="mrow"><span>Entretien</span><b>${hold>=60?`🛡 Tes hommes tiennent le quartier`:`⚠ Fragile après une attaque, il se rétablit seul`}</b></div>`; }
   else if(why) act=`<div class="why">${why===`Verrouillé`?`🔒 Verrouillé`:`🔒 ${why}`}</div>`;
-  else act=`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
-    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Attaquer ce quartier`:`Plus d'action pour l'instant`}</button><div class="log" style="color:var(--dim)">Deux opérations réussies suffisent en général. Ta progression retombe un peu à chaque période.</div>`;
+  else act=`<button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Prendre ce quartier`:`Plus d'action pour l'instant`}</button><div class="log" style="color:var(--dim)">Une opération réussie suffit : le quartier est à toi. Un échec coûte de la santé et de la réputation.</div>`;
   const rival=FAC[o]?`<div class="mrow"><span>Gang en place</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div>`:``;
   $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)};flex-direction:column;align-items:stretch;gap:4px"><b style="font-size:17px">${d.n} <span style="color:var(--dim);font-size:13px;font-weight:500">· ${d.w}</span></b><span class="mtx">${d.d}</span>
     <div class="mrow"><span>Contrôle</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div><div class="mrow"><span>Défense</span><b>${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</b></div></div>${act}`;
   const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
-  const rf=$(`#goreinf`); if(rf) rf.onclick=()=>{ const p=reinforce(d); if(p){SFX.buy();toast(`${d.n} renforcé`);updateHud();openMap(true)} };
   const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
 }
 function openConquest(d){
-  const prev=G.dist[d.id], ctl=(G.ctl&&G.ctl[d.id])||0;
-  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
-   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Choisis ta méthode.</div>`+
+  const prev=G.dist[d.id];
+  modal(`Prendre ${d.n}`,`<div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Choisis ta méthode : un succès et le quartier est à toi.</div>`+
    conquestChoices(d).map((c,i)=>{ const ch=c.a?rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance:0; return `<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${ch>=.7?`hi`:ch<=.35?`lo`:``}">${Math.round(ch*100)}%</span>`:``}</button>`; }).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
     const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req||!opsLeft()){SFX.ko();return}
     const r=doOperation(d,opt); updateHud();
     modal(r.captured?`${d.n} est à toi !`:r.ok?`Opération réussie`:`Opération ratée`,`${r.info?`<div class="dice"><div class="die ${r.ok?`ok`:`ko`}"><span>${r.info.roll}</span></div><div class="info">${r.ok?`<b style="color:var(--g)">RÉUSSITE</b>`:`<b style="color:var(--m)">ÉCHEC</b>`}</div></div>`:``}
-      <div class="rt">${r.captured?`Les rues changent de couleur. ${d.n} porte désormais ton nom — mais il faudra le garder.`:r.ok?`Tu grignotes du terrain. L'influence monte, mais l'ennemi n'a pas dit son dernier mot.`:opt.k===`talk`?`Les négociations échouent. Ils se méfient de toi.`:`L'opération tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
+      <div class="rt">${r.captured?`Les rues changent de couleur. ${d.n} porte désormais ton nom.`:opt.k===`talk`?`Les négociations échouent. Ils se méfient de toi.`:`L'opération tourne mal. Les défenseurs te repoussent.`}</div><div class="chips">${r.chips.map(c=>`<span class="chip ${c.cls}">${esc(c.txt)}</span>`).join(``)}</div><button class="btn pri" id="qok">Retour à la carte</button>`);
     r.ok?(SFX.ok(),flash(r.captured?`#fcee0a`:`#05ffa1`),vib(80)):(SFX.ko(),shake());
     $(`#qok`).onclick=()=>{ if(checkEnd()){closeModal();showEnd()} else {MAPSEL=d.id;openMap(true)} };
   });
