@@ -13,7 +13,10 @@ Fais une carrière de 18 à 48 ans (retraite à choisir, jusqu'à 60 en vieillis
 - Carte de Night City : 18 quartiers à conquérir (assaut, hack, diplomatie ou argent)
 - Cyberware (Sandevistan, Mantis, Monowire, Gorilla Arms, cyberdecks…), quickhacks, armes, véhicules
 - Voies de carrière : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic, Chef de faction
-- Équilibre à la Reigns : 4 blocs d'influence (Rue, Corpos, Loi, Badlands) à garder au milieu
+- 4 actes de vie, avec une ambition par acte, des traits permanents et une époque tirée au sort
+- Poursuites : Police, Corpos, Gangs et Badlands te traquent ; à 100, capture (prison, exécution, désert)
+- La Street Cred ouvre les grades de faction et les grandes actions
+- Chaque vie est différente : événements tirés au sort, coup du sort de départ, missions secondaires générées, héritage de la vie précédente
 - Score final, Hall of Fame (localStorage), sauvegarde automatique
 
 ## Dev

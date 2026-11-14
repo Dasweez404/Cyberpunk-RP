@@ -120,14 +120,14 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
 function showHow(){
   modal(`Comment jouer`,`<div class="log"><b>1.</b> Chaque carte est un événement. Choisis une réponse (touche simplement un choix, ou les touches 1-2-3).</div>
   <div class="log"><b>2.</b> Surveille ta <b style="color:var(--hp)">Santé</b>, ton <b style="color:var(--hum)">Humanité</b> (trop de chrome = cyberpsychose), ta <b style="color:var(--cred)">Street Cred</b> et tes <b style="color:var(--ed)">€$</b>.</div>
-  <div class="log"><b>⚖</b> <b>Équilibre :</b> les 4 barres RUE · CORPOS · LOI · BADLANDS (sous les jauges) doivent rester <b>au milieu</b>. Trop bas, ils te traquent ; trop haut, ils te possèdent — dans les deux cas, ça peut te coûter la vie. Les points sur les barres montrent ce qu'un choix va changer.</div>
+  <div class="log"><b>🚔</b> <b>Poursuites :</b> Police, Corpos, Gangs et Badlands te repèrent quand tu fais du bruit. À 40 ils te cherchent, à 70 ils te traquent, à 100 c'est la capture. Plus ta Street Cred est haute, plus elles retombent lentement. La <b>Street Cred</b> ouvre aussi les grades et les grandes actions (touche la date en haut pour voir les paliers, ton acte et ton ambition).</div>
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
   <div class="log"><b>4.</b> Toutes les ~5 cartes, une halte à l'<b>Afterlife</b> (🍸) : tu choisis boutique, contrat ou repos — mais pas le moment. Pas assez d'argent ? L'option est verrouillée. Blessé, tu es moins efficace. <b>EMPIRE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
@@ -194,14 +194,15 @@ function renderCreate(){
     const o=ORIGINS[CR.origin], s=o.subs[CR.sub];
     G=newState({name:nm,origin:CR.origin,sub:CR.sub,cred:o.cred,ed:o.ed,at:o.at,alloc:CR.alloc,fac:s.fac,flags:o.flags});
     (o.gear||[]).forEach(g=>G.gear.push(g));
-    if(CR.origin===`corpo`){G.bloc.corpo=62;G.bloc.rue=40}
-    if(CR.origin===`nomad`){G.bloc.nomad=62;G.bloc.corpo=40}
-    if(CR.origin===`street`){G.bloc.rue=60;G.bloc.loi=40}
+    if(CR.origin===`corpo`){G.heat.rue=10}
+    if(CR.origin===`nomad`){G.heat.loi=8}
+    if(CR.origin===`street`){G.heat.loi=12}
     if(CR.origin===`corpo`){ G.role.corpo=2; }
     if(CR.origin===`nomad`){ G.role.nomad=2; }
     if(CR.origin===`street`){ G.role.fixer=1; }
     G.log.unshift({d:dateStr(),m:`${nm} débute sa vie à Night City (${o.n}).`});
-    renderGame(); nextCard();
+    addEcho(`life_twist`,1);
+    renderGame(); legacyStep(()=>startAct(()=>nextCard()));
   };
   if(CR.step===3){ $(`#rnd`).onclick=()=>{SFX.tap();$(`#nm`).value=randomName();CR.name=$(`#nm`).value}; setTimeout(()=>{const n=$(`#nm`);if(n&&!n.value)n.focus()},100); }
 }
@@ -217,7 +218,7 @@ function renderGame(){
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
       <div class="blocs" id="blocs"></div>
-      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hhub">🍸 <b id="hhn">5</b></button><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
+      <div class="sub-hud"><button id="hdate"></button><button class="hbtn" id="hhub">🍸 <b id="hhn">5</b></button><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
     </div>
     <div class="stage" id="stage"></div>
     <div class="choices" id="choices"></div>
@@ -230,6 +231,7 @@ function renderGame(){
     </nav></div>`;
   document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
+  $(`#hdate`).onclick=()=>{SFX.tap();openAct()};
   $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
   $(`#hrole`).onclick=()=>{SFX.tap();openEmpire(`fac`)};
   updateHud(true);
@@ -255,7 +257,7 @@ function updateHud(init){
   document.body.classList.toggle(`lowhp`,G.hp<=30);
   tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
-  $(`#hdate`).textContent=`${dateStr()} · ${G.age} ans`;
+  $(`#hdate`).textContent=`${ROMAN[G.act||0]} · ${yr()} · ${G.age} ans`;
   { const pi=promoInfo(), hr=$(`#hrole`); hr.textContent=roleTitle()+(pi&&pi.jobs&&!pi.ready?` · ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`:pi&&pi.ready?` ⬆`:``); hr.classList.toggle(`ready`,!!(pi&&pi.ready)); }
   const cb=document.querySelector(`.dock [data-d=city]`); if(cb)cb.classList.toggle(`alert`,G.hp<45||G.hum<45);
   $(`#m-hp`).classList.toggle(`warn`,G.hp<=25);
@@ -269,23 +271,25 @@ function updateHud(init){
   renderBlocs();
   $(`#hhn`).textContent=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));
   const nc=REL_NAMES.filter(i=>relv(i)>=5&&!(G.dead||{})[i]).length; $(`#hbn`).textContent=nc;
-  const ad=adviceNow(), urgent=ad&&[`heal`,`therapy`,`empire`].includes(ad.go);
+  const ad=adviceNow(), urgent=!!ad;
   $(`#advice`).innerHTML=urgent?`<button class="adv" id="advb">${ad.ic} ${ad.t} <b>›</b></button>`:``;
   const ab=$(`#advb`); if(ab) ab.onclick=()=>{SFX.tap();goAdvice(ad.go)};
   lastVals=v;
 }
 function renderBlocs(){
-  const b=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
+  const h=G.heat||{};
   $(`#blocs`).innerHTML=Object.keys(BLOCS).map(k=>{
-    const v=Math.round(b[k]), danger=v<=20||v>=80;
-    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-bl="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
+    const v=Math.round(h[k]||0), st=v>=70?`hunt`:v>=40?`want`:``;
+    return `<button class="bloc heat ${st}" id="bl-${k}" data-bl="${k}"><span>${BLOCS[k].ic} ${BLOCS[k].n}</span><div class="hb"><i style="width:${v}%"></i></div></button>`;
   }).join(``);
   document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{SFX.tap();openBloc(e.dataset.bl)});
 }
 function openBloc(k){
-  const rows=Object.keys(BLOCS).map(b=>{ const p=blocPerkLines(b); return `<div class="item ${b===k?`own`:``}" style="border-color:${BLOCS[b].c}${b===k?``:`55`}"><div class="in"><b style="color:${BLOCS[b].c}">${BLOCS[b].n} · ${p.v}/100 ${p.s===`hi`?`<span class="tagx g">FAVEUR</span>`:p.s===`lo`?`<span class="tagx">HOSTILE</span>`:``}</b><small>${BLOCS[b].d}</small>
-    <small style="color:${p.s===`hi`?`var(--g)`:`var(--dim)`}">▲ 65+ : ${p.hi}</small><small style="color:${p.s===`lo`?`var(--m)`:`var(--dim)`}">▼ 35− : ${p.lo}</small></div></div>`; }).join(``);
-  modal(`Équilibre`,`<div class="log" style="color:var(--dim)">Garde les barres <b>près du milieu</b>. Une faveur (65+) donne des avantages, mais à 100 ils te possèdent. Une hostilité (35−) te coûte, et à 0 ils te tuent. Un bloc qui monte fait baisser son opposé : Rue ↔ Loi, Corpos ↔ Badlands.</div>${rows}`);
+  const dcy=(G.cred<20?2:G.cred<50?1:0.5)+(tr(`fantome`)?2:0);
+  const rows=Object.keys(BLOCS).map(b=>{ const v=Math.round(G.heat[b]||0), st=v>=70?[`TRAQUÉ(E)`,`m`]:v>=40?[`RECHERCHÉ(E)`,`y`]:[`TRANQUILLE`,`g`];
+    return `<div class="item ${b===k?`own`:``}" style="border-color:${BLOCS[b].c}${b===k?``:`55`}"><div class="in"><b style="color:${BLOCS[b].c}">${BLOCS[b].ic} ${BLOCS[b].n} · ${v}/100 <span class="fst ${st[1]}">${st[0]}</span></b><small>${BLOCS[b].d}</small><div class="bigbar" style="margin-top:6px"><i style="background:${v>=70?`var(--m)`:v>=40?`var(--y)`:BLOCS[b].c};width:${v}%"></i></div></div></div>`; }).join(``);
+  modal(`Poursuites`,`<div class="log" style="color:var(--dim)">Chaque coup d'éclat fait monter une poursuite. <b>40</b> : tu es recherché(e), ils te tombent dessus. <b>70</b> : ils te traquent. <b>100</b> : capture — prison, exécution ou désert.</div>${rows}
+   <div class="log">Elles retombent de <b style="color:${dcy<=2?`var(--m)`:`var(--g)`}">${dcy}</b> par période. <b>Plus ta Street Cred est haute, plus on se souvient de toi</b> (Cred ${G.cred}).<br>Pour les faire baisser : profil bas à l'Afterlife, pots-de-vin, services rendus aux factions, et le rang dans une faction.</div>`);
 }
 function previewDots(ch){
   const keys=new Set(); const add=f=>{if(!f)return;[`hp`,`hum`,`cred`,`ed`].forEach(k=>{if(f[k])keys.add(k)});};
@@ -314,7 +318,7 @@ function showCardView(){
   chs.innerHTML=visChoices(c).map(({h,i},pos)=>{
     const lock=h.req?h.req():``; let badge=``;
     if(h.chk){ const r=rollInfo(h.chk); const p=Math.round(r.chance*100); badge=`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`; }
-    let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(WHO[al].n)}">📞<small>${esc(WHO[al].n.split(` `)[0])}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
+    let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a)||facBackup(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ const an=al===`@fac`?`Renfort`:WHO[al].n.split(` `)[0]; help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(an)}">${al===`@fac`?`🛡`:`📞`}<small>${esc(an)}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
     return `<div class="crow"><button class="btn choice ${lock?`lock`:``} ${h.exp?`exp`:``}" data-i="${i}"><span class="k">${pos+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
   }).join(``);
   chs.querySelectorAll(`.help`).forEach(b=>b.onclick=()=>pick(+b.dataset.h,0,b.dataset.al));
@@ -327,6 +331,7 @@ function showCardView(){
   });
   revealText($(`.card .tx`)); showTip();
   if(c.id===`afterlife_hub`&&G.hubLeft>=2) neonFx(`AFTERLIFE`);
+  if(G.empNext){ G.empNext=false; neonFx(`EMPIRE`); }
   SFX.swoosh();
 }
 function revealText(el){
@@ -334,7 +339,7 @@ function revealText(el){
   const words=[]; const walk=n=>{ n.childNodes.forEach(ch=>{ if(ch.nodeType===3){ const frag=document.createDocumentFragment(); ch.textContent.split(/(\s+)/).forEach(t=>{ if(!t) return; if(/^\s+$/.test(t)){ frag.appendChild(document.createTextNode(t)); return; } const s=document.createElement(`span`); s.className=`w`; s.textContent=t; words.push(s); frag.appendChild(s); }); ch.replaceWith(frag); } else if(ch.nodeType===1) walk(ch); }); };
   walk(el); const step=Math.min(22,420/Math.max(1,words.length)); words.forEach((s,i)=>s.style.animationDelay=(i*step)+`ms`);
 }
-const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🍸 L'Afterlife revient régulièrement (compteur 🍸) : boutique, contrat ou repos. EMPIRE : quartiers · CONTACTS : tes alliés.`];
+const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`🚔 Les 4 jauges de poursuite montent quand tu fais du bruit. À 100 : capture.`,`🍸 L'Afterlife revient régulièrement (compteur 🍸) : boutique, contrat ou repos. EMPIRE : quartiers · CONTACTS : tes alliés.`];
 function showTip(){
   const seen=store.get(`ncl_tips`)||0; if(seen>=TIPS.length||G.stats.cards>=TIPS.length*2+2||G.stats.cards%2) return;
   const i=seen; store.set(`ncl_tips`,seen+1);
@@ -355,10 +360,13 @@ function pick(i,dir,al,ok){
 }
 function resolveChoice(ch,al){
   CHIPS=[]; let fx, info=null;
-  if(al){ G.helpP=G.stats.cards; chip(`y`,`📞 ${WHO[al].n.split(` `)[0]} t'aide (+3)`); applyFx({rel:{[al]:2}}); }
+  if(al===`@fac`){ G.facHelpP=G.stats.cards; chip(`y`,`🛡 Renfort de ${FAC[G.member].n} (+3)`); }
+  else if(al){ G.helpP=G.stats.cards; chip(`y`,`📞 ${WHO[al].n.split(` `)[0]} t'aide (+3)`); applyFx({rel:{[al]:2}}); }
   if(ch.chk){
-    const c=ch.chk, r=rollInfo(c,al?3:0), roll=rnd(1,10);
-    const ok = roll===10 || (roll!==1 && roll>=r.need);
+    const c=ch.chk, r=rollInfo(c,al?3:0); let roll=rnd(1,10);
+    let ok = roll===10 || (roll!==1 && roll>=r.need);
+    if(!ok&&tr(`chance`)&&G.luckP!==G.stats.cards){ G.luckP=G.stats.cards; roll=rnd(1,10); ok=roll===10||(roll!==1&&roll>=r.need); chip(`y`,`🍀 Veinard : jet relancé`); }
+    heatFromCheck(c,ok,ok?c.ok:c.ko);
     fx = ok?c.ok:c.ko; info={roll,ok,a:c.a,...r};
     if(ok)G.stats.fights+=0;
   } else fx=ch.fx;
@@ -417,12 +425,15 @@ function afterCard(r){
     tick(2);
     if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
   } else {
-    if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
+    if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); hubTick(); empireTick();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
   if(yr()!==y0) yearFx(yr());
+  const tier=credTierCheck(); if(tier) tierFx(tier);
+  if(checkEnd()) return showEnd();
+  if(actOf(G.age)>(G.act||0)) return actTransition(()=>nextCard());
   nextCard();
 }
 function askFactionName(kind,done){
@@ -436,6 +447,55 @@ function askFactionName(kind,done){
   };
 }
 
+/* ---------- actes, ambitions, traits, héritage ---------- */
+function tierFx(t){ overlayFx(`lvlfx`,`<span>STREET CRED ${t[0]}</span><b class="hd" style="font-size:22px;line-height:1.2;padding:0 20px">${esc(t[1])}</b>`,2000); SFX.ok(); G.log.unshift({d:dateStr(),m:`Palier de Street Cred ${t[0]} : ${t[1]}.`}); }
+function startAct(cb){
+  const a=G.act||0, A_=ACTS[a], er=rollEra();
+  cere({k:`found`,c:`#00f0ff`,ic:`🎬`,kick:`ACTE ${ROMAN[a]}`,t:A_.n,sub:A_.s,lines:[`🌆 Époque : ${er.n}`,er.d,a===0?`🎯 Choisis ton ambition : la réussir te donne un trait permanent`:`🎯 Une nouvelle ambition t'attend`]});
+  G.log.unshift({d:dateStr(),m:`Acte ${ROMAN[a]} — ${A_.n}. Époque : ${er.n}.`});
+  showCere(()=>pickAmbition(cb));
+}
+function pickAmbition(cb){
+  const a=G.act||0, opts=pickAmbs(a);
+  if(!opts.length){ G.amb=null; return cb(); }
+  modal(`🎯 Ton ambition · Acte ${ROMAN[a]}`,`<div class="log" style="color:var(--dim)">Choisis ce que tu vises avant la fin de l'acte (${ACTS[a+1]?`à ${ACTS[a+1].from} ans`:`la fin de ta carrière`}). Réussie : tu gagnes un <b>trait permanent</b>.</div><div class="tiles one">`+
+    opts.map((o,i)=>`<button class="tile rec" data-am="${o.id}" style="min-height:auto;animation:chin .4s ${i*.08}s both"><b>${o.t(a)}</b></button>`).join(``)+`</div>`,{lock:true});
+  document.querySelectorAll(`[data-am]`).forEach(b=>b.onclick=()=>{ G.amb=b.dataset.am; SFX.buy(); G.log.unshift({d:dateStr(),m:`Ambition : ${ambNow().t(a)}.`}); closeModal(); updateHud(); cb(); });
+}
+function actTransition(cb){
+  const a=G.act||0, am=ambNow(), ok=am?am.ok(a):false;
+  const next=()=>{ G.act=a+1; G.amb=null; save(); startAct(cb); };
+  if(!am) return next();
+  if(ok){
+    G.ambDone=(G.ambDone||0)+1; const ts=pickTraits();
+    cere({k:`found`,c:`#05ffa1`,ic:`🏆`,kick:`AMBITION ACCOMPLIE`,t:`Acte ${ROMAN[a]} bouclé`,sub:am.t(a),lines:[`✨ Tu gagnes un trait permanent`,`📈 +800 au score final`]});
+    showCere(()=>{ if(!ts.length) return next();
+      modal(`✨ Choisis un trait`,`<div class="log" style="color:var(--dim)">Ce que cet acte a fait de toi. Permanent.</div><div class="tiles one">`+ts.map((t,i)=>`<button class="tile rec" data-tt="${t}" style="flex-direction:row;align-items:center;gap:12px;min-height:auto;animation:chin .4s ${i*.08}s both"><span class="ti">${TRAITS[t][0]}</span><span><b style="display:block">${TRAITS[t][1]}</b><small>${TRAITS[t][2]}</small></span></button>`).join(``)+`</div>`,{lock:true});
+      document.querySelectorAll(`[data-tt]`).forEach(b=>b.onclick=()=>{ G.traits.push(b.dataset.tt); SFX.buy(); burst(innerWidth/2,innerHeight*.4,[`#05ffa1`,`#fcee0a`,`#fff`],50); G.log.unshift({d:dateStr(),m:`Trait acquis : ${TRAITS[b.dataset.tt][1]}.`}); closeModal(); next(); });
+    });
+  } else {
+    CHIPS=[]; applyFx({hum:-4});
+    cere({k:`leave`,c:`#8a8aa8`,ic:`⌛`,kick:`AMBITION MANQUÉE`,t:`Acte ${ROMAN[a]} terminé`,sub:am.t(a),lines:[`Tu n'y es pas arrivé(e) à temps`,`😔 Un peu d'amertume : Humanité en baisse`,`Un nouvel acte commence`]});
+    showCere(next);
+  }
+}
+function openAct(){
+  const a=G.act||0, am=ambNow(), er=eraNow();
+  modal(`Acte ${ROMAN[a]} · ${ACTS[a].n}`,`<div class="item"><div class="in"><b style="color:var(--c)">${ACTS[a].s}</b><small>${ACTS[a+1]?`Prochain acte à ${ACTS[a+1].from} ans (tu en as ${G.age})`:`Dernier acte`}</small></div></div>
+   <div class="sec">Ambition</div><div class="item ${am&&am.ok(a)?`own`:``}"><div class="in"><b>${am?am.t(a):`Aucune`}</b><small>${am?(am.ok(a)?`✓ Condition remplie pour l'instant — tiens jusqu'à la fin de l'acte`:`En cours`):``}</small></div></div>
+   <div class="sec">Époque</div><div class="item"><div class="in"><b style="color:var(--y)">${er.n||`—`}</b><small>${er.d||``}</small></div></div>
+   <div class="sec">Traits</div>${(G.traits||[]).map(t=>`<div class="item own"><div class="in"><b>${TRAITS[t][0]} ${TRAITS[t][1]}</b><small>${TRAITS[t][2]}</small></div></div>`).join(``)||`<div class="log">Aucun trait pour l'instant. Réussis une ambition.</div>`}
+   <div class="sec">Paliers de Street Cred (tu as ${G.cred})</div>${CRED_TIERS.map(([v,t])=>`<div class="log" style="color:${G.cred>=v?`var(--g)`:`var(--dim)`}"><b style="color:inherit">${G.cred>=v?`✓`:`🔒`} ${v}</b>${t}</div>`).join(``)}`,{full:true});
+}
+function legacyStep(cb){
+  const L=store.get(`ncl_legacy`); if(!L||!L.name) return cb();
+  const ids=REL_NAMES.filter(i=>WHO[i]), who=ids[rnd(0,ids.length-1)];
+  modal(`Héritage de ${esc(L.name)}`,`<div class="log">${esc(L.name)}, ${esc(L.title||``)} — ${esc(L.end||``)} à ${L.age||`?`} ans. Night City n'a pas tout oublié. Qu'est-ce qui te revient ?</div><div class="tiles one">
+    <button class="tile rec" data-lg="ed" style="min-height:auto"><b>💰 Une cache d'eddies</b><small>+800 €$</small></button>
+    <button class="tile rec" data-lg="rel" style="min-height:auto"><b>🤝 Un contact fidèle</b><small>${esc(WHO[who].n)} se souvient de ${esc(L.name)} (+25 de lien)</small></button>
+    <button class="tile rec" data-lg="cred" style="min-height:auto"><b>📖 Sa légende</b><small>+6 Street Cred : on te compare déjà à ${esc(L.name)}</small></button></div>`,{lock:true});
+  document.querySelectorAll(`[data-lg]`).forEach(b=>b.onclick=()=>{ CHIPS=[]; const k=b.dataset.lg; applyFx(k===`ed`?{ed:800}:k===`rel`?{rel:{[who]:25}}:{cred:6}); G.log.unshift({d:dateStr(),m:`Héritage de ${L.name}.`}); store.del(`ncl_legacy`); SFX.buy(); closeModal(); updateHud(); cb(); });
+}
 /* ---------- particules ---------- */
 function burst(x,y,colors,n){
   let cv=$(`#pcv`); if(!cv){ cv=document.createElement(`canvas`); cv.id=`pcv`; cv.style.cssText=`position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95`; document.body.appendChild(cv); }
@@ -531,7 +591,7 @@ function relBlock(){
 /* ----- contrats : gains ----- */
 const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function goAdvice(go){
-  if(go===`empire`) return openEmpire(`map`);
+  if(go===`heat`) return openBloc(hottestHeat());
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);
 }
 /* ----- EMPIRE ----- */
@@ -642,8 +702,8 @@ function openFaction(id){
     acts+=`<button class="btn choice ${left?``:`lock`}" id="ffav"><span class="tt"><b>🤝 Rendre un service</b><small>${left?`+10 réputation · +400 €$ · ${ATTRS[facAttr(f)].n}`:`🔒 Plus d'action cette période`}</small></span>${bd(pct(`favor`))}</button>`;
     acts+=`<button class="btn choice ${left&&!ally?``:`lock`}" id="fraid"><span class="tt"><b>⚔ Attaquer ${f.n}</b><small>${ally?`🔒 C'est ton allié`:left?`Butin · −22 réputation · représailles assurées`:`🔒 Plus d'action cette période`}</small></span>${bd(pct(`raid`))}</button>`;
     if(ally) acts+=`<button class="btn choice" id="fbreak"><span class="tt"><b>💔 Rompre le pacte</b><small>−35 réputation · ils se vengeront</small></span></button>`;
-    else { const n=Object.keys(G.allies||{}).length, okp=r>=40&&G.ed>=1500&&n<2;
-      acts+=`<button class="btn choice ${okp?``:`lock`}" id="fpact"><span class="tt"><b>📜 Sceller un pacte</b><small>${okp?`1 500 €$ · tribut, +2 contre leurs ennemis`:`🔒 ${r<40?`Réputation 40 requise (${r})`:n>=2?`2 pactes maximum`:`1 500 €$ requis`}`}</small></span></button>`; }
+    else { const n=Object.keys(G.allies||{}).length, okp=r>=40&&G.ed>=1500&&n<2&&G.cred>=25;
+      acts+=`<button class="btn choice ${okp?``:`lock`}" id="fpact"><span class="tt"><b>📜 Sceller un pacte</b><small>${okp?`1 500 €$ · tribut, +2 contre leurs ennemis`:`🔒 ${G.cred<25?`Street Cred 25 requise`:r<40?`Réputation 40 requise (${r})`:n>=2?`2 pactes maximum`:`1 500 €$ requis`}`}</small></span></button>`; }
   }
   modal(f.n,`<div class="item" style="border-color:${f.c}"><div class="in"><b style="color:${f.c}">${f.n} <span class="fst ${st[1]}">${st[0]}</span></b><small>${f.d}</small><small style="color:var(--c)">${f.perk}</small>
      <small>Réputation : <span style="font-weight:700;color:${r>=0?`var(--g)`:`var(--m)`}">${r}</span> · Territoires : ${terr.length?terr.join(`, `):`aucun`}</small><small>Ennemis : ${f.foes.length?f.foes.map(x=>FAC[x]?FAC[x].n:x).join(`, `):`aucun déclaré`}</small></div></div>${acts}`,{back:openFactions});
@@ -655,7 +715,7 @@ function openFaction(id){
   on(`#fjoin`,()=>confirmHeavy({heavy:`Tu prêtes serment à ${f.n}. Ses ennemis deviennent les tiens, et tu ne pourras plus fonder ta propre faction tant que tu portes leurs couleurs.`},()=>{ CHIPS=[]; joinFac(id); applyFx({cred:3}); G.log.unshift({d:dateStr(),m:`Tu rejoins ${f.n}.`}); updateHud(); closeModal(); showCere(()=>openFactions()); }));
   on(`#ffav`,()=>{ if(!opsLeft()){SFX.ko();return} const r2=facAct(id,`favor`); res(r2.ok?`Service rendu`:`Service raté`,r2,r2.text); });
   on(`#fraid`,()=>{ if(!opsLeft()||ally){SFX.ko();return} confirmHeavy({heavy:`Attaquer ${f.n} : tu peux gagner gros, mais ils riposteront. À −30 ils deviennent hostiles, à −60 c'est la guerre ouverte sur tes quartiers.`},()=>{ const r2=facAct(id,`raid`); res(r2.ok?`Raid réussi`:`Raid raté`,r2,r2.text); }); });
-  on(`#fpact`,()=>{ if(!(r>=40&&G.ed>=1500&&Object.keys(G.allies||{}).length<2)){SFX.ko();return} facPact(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); });
+  on(`#fpact`,()=>{ if(!(r>=40&&G.ed>=1500&&G.cred>=25&&Object.keys(G.allies||{}).length<2)){SFX.ko();return} facPact(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); });
   on(`#fbreak`,()=>confirmHeavy({heavy:`Rompre le pacte avec ${f.n} : −35 de réputation, et ils viendront se venger.`},()=>{ facBreak(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); }));
 }
 function openFound(){
@@ -677,9 +737,10 @@ function rankPanel(){
   else {
     const row=(ic,l,a,b)=>`<div class="rk"><span>${ic} ${l}</span><b style="color:${a>=b?`var(--g)`:`var(--t)`}">${Math.min(a,b)}/${b}${a>=b?` ✓`:``}</b></div>${bar(a,b,a>=b?`var(--g)`:col)}`;
     body=`<small>Prochain grade : <b style="color:${col}">${p.next}</b></small>`+row(`📜`,`Missions`,p.jobs[0],p.jobs[1])+row(`🤝`,`Réputation ${f.n}`,p.rep[0],p.rep[1])+(p.cred?row(`★`,`Street Cred`,p.cred[0],p.cred[1]):``);
-    const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais encore ${p.jobs[1]-p.jobs[0]} mission(s)`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred`);
+    const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais une mission pour ta faction`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred à ${p.cred[1]}`);
     body+=p.ready?`<button class="btn pri" id="claim">⬆ ${p.lead?`Prendre la tête maintenant`:`Réclamer ma promotion`}</button>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
   }
+  body+=`<div class="pw">${facPowers().map(x=>`<small style="color:${x.ok?`var(--t)`:`var(--dim)`}">${x.ok?`✓`:`🔒`} ${x.t}</small>`).join(``)}</div>`;
   const can=G.stats.cards-(G.askP===undefined?-9:G.askP)>=2;
   return `<div class="item own" style="border-color:${col};flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div class="in"><b style="color:${col}">${roleTitle()}</b><small>${f.perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>${body}
     <button class="btn" id="askm" ${can?``:`disabled`} style="text-align:center">📜 Demander une mission${can?``:` (déjà demandée)`}</button></div>`;

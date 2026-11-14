@@ -21,7 +21,8 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+CARDS.filter(c=>/^b[cp]_/.test(c.id)).forEach(c=>{ c.cond=()=>false; });
+const CD = {sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -32,13 +33,15 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, allies:{}, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, heat:{rue:0,corpo:0,loi:0,nomad:0}, act:0, amb:null, era:null, traits:[], ambDone:0, skip:{}, credTier:0, allies:{}, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
   DIST.forEach(d=>s.dist[d.id]=d.o);
   Object.entries(o.fac||{}).forEach(([k,v])=>s.fac[k]=v);
   (o.flags||[]).forEach(f=>s.flags[f]=true); s.flags.basichack=true;
+  // chaque vie est différente : une partie des événements n'aura pas lieu
+  CARDS.forEach(c=>{ if(/intro|retire_offer|legend|found_faction|fac_coup|fac_promo/.test(c.id)) return; if(c.story?Math.random()<.35:(c.once&&Math.random()<.22)) s.skip[c.id]=1; });
   return s;
 }
 const yr = () => START_YEAR + Math.floor(G.t/12);
@@ -68,36 +71,28 @@ function skill(k){
   if(G.origin===`corpo`&&k===`soc`) v++;
   if(k===`soc`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).soc||0});
   if(k===`stl`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).stl||0});
-  if(k===`drv`){ const bs=blocState(`nomad`); if(bs===`hi`)v++; if(bs===`lo`)v--; }
+  v+=({cmb:tr(`tueur`),hck:tr(`code`),drv:tr(`pilote`),soc:tr(`froid`),stl:tr(`ombre`)}[k])?1:0;
   return v;
 }
-function blocState(b){ const v=(G.bloc||{})[b]; return v>=65?`hi`:v<=35?`lo`:null; }
-function bm(){ // multiplicateurs liés aux blocs et à l'origine
-  const r=blocState(`rue`), c=blocState(`corpo`), l=blocState(`loi`), n=blocState(`nomad`);
+const tr = id => !!(G.traits&&G.traits.includes(id));
+const eraNow = () => ERAS[G.era]||{};
+const heatState = b => { const v=(G.heat||{})[b]||0; return v>=70?`hunt`:v>=40?`want`:null; };
+function bm(){ // multiplicateurs : origine, traits, époque
+  const er=eraNow(), rich=tr(`riche`);
   return {
-    gear:(r===`hi`?.85:r===`lo`?1.15:1), cyber:(c===`hi`?.9:c===`lo`?1.15:1)*(G.origin===`corpo`?.9:1),
-    gig:(r===`hi`?1.1:r===`lo`?.9:1), income:(c===`hi`?1.2:c===`lo`?.9:1),
-    hurt:(l===`lo`?1.1:1), rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(n===`hi`?.8:1)
+    gear:(rich?.9:1)*(er.gear||1), cyber:(G.origin===`corpo`?.9:1)*(rich?.9:1)*(er.cyber||1),
+    gig:(er.gig||1), income:(rich?1.2:1)*(er.income||1), hurt:(er.hurt||1),
+    rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(er.rent||1)
   };
 }
 const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber*infl());
 const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear*infl());
-function blocPerkLines(b){
-  const s=blocState(b), v=Math.round(G.bloc[b]);
-  const L={
-    rue:[`Marché noir −15 % · gigs +10 %`,`Marché noir +15 % · gigs −10 %`],
-    corpo:[`Chrome −10 % · revenus passifs +20 %`,`Chrome +15 % · revenus passifs −10 %`],
-    loi:[`Protection : dégâts −10 % (blindage de fait)`,`Traqué : dégâts reçus +10 %`],
-    nomad:[`Routes sûres : conduite +1 · loyer −20 %`,`Routes fermées : conduite −1`]
-  }[b];
-  return {s,v,hi:L[0],lo:L[1]};
-}
 function mitigation(){
   let m=0;
   G.cyber.forEach(i=>m+=CY(i).mit||0);
   G.gear.forEach(i=>m+=GEARMAP[i].mit||0);
-  if(blocState(`loi`)===`hi`) m+=.1;
-  return Math.min(.5,m);
+  if(tr(`dur`)) m+=.15;
+  return Math.min(.55,m);
 }
 const ownedList = () => DIST.filter(d=>G.dist[d.id]===`player`);
 function pickFoe(d){
@@ -123,8 +118,42 @@ function promoInfo(){
   if(isLeader()) return {leader:true,title:LEADER[f.k]};
   const rep=G.fac[G.member]||0;
   if(G.rank>=3){ const ok=G.jobs>=LEAD_NEED.jobs&&rep>=LEAD_NEED.rep&&G.cred>=LEAD_NEED.cred; return {lead:true,next:`${LEADER[f.k]} (prendre la tête)`,jobs:[G.jobs,LEAD_NEED.jobs],rep:[rep,LEAD_NEED.rep],cred:[G.cred,LEAD_NEED.cred],ready:ok}; }
-  const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank];
-  return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],ready:G.jobs>=jn&&rep>=rn};
+  const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank], cn=RANK_CRED[G.rank];
+  return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],cred:[G.cred,cn],ready:G.jobs>=jn&&rep>=rn&&G.cred>=cn};
+}
+const facPowers = () => { if(!G.member) return []; const f=FAC[G.member], k=f.k, r=isLeader()?4:G.rank;
+  const sp={corp:`Couverture légale : la police te repère 40 % moins vite`,ncpd:`Plaque : la police te repère deux fois moins vite`,trauma:`Clinique gratuite aux haltes`,mox:`Thérapie à moitié prix aux haltes`,clan:`Les Badlands te couvrent`,gang:`La rue te couvre : les gangs te repèrent moins vite`}[k];
+  return [[0,`🎽 Couleurs : ${f.perk} · ${sp}`],[1,`🛡 Renfort : +3 à un jet de CORPS ou de RÉFLEXES, une fois par période`],[2,`🕶 Planque : ta poursuite retombe plus vite · salaire accru · opérations sur les quartiers`],[3,`📯 Ordres : +1 action d'empire · phase d'Empire`],[4,`👑 Tribut de la faction : +300 €$ par période`]].map(([n,t])=>({t,ok:r>=n,n})); };
+function facBackup(a){ return (G.member&&(G.rank>=1||isLeader())&&(a===`body`||a===`ref`)&&G.facHelpP!==G.stats.cards)?`@fac`:null; }
+const actOf = age => { let i=0; ACTS.forEach((a,k)=>{ if(age>=a.from) i=k; }); return i; };
+const pl = (n,w)=>`${n} ${w}${n>1?`s`:``}`;
+const AMBS = [
+  {id:`cred`,t:a=>`Atteindre ${[20,40,60,80][a]} de Street Cred`,ok:a=>G.cred>=[20,40,60,80][a]},
+  {id:`rich`,t:a=>`Posséder ${[3000,10000,25000,50000][a].toLocaleString(`fr`)} €$`,ok:a=>G.ed>=[3000,10000,25000,50000][a]},
+  {id:`rank`,t:a=>`Atteindre le rang ${Math.min(3,a+1)} dans une faction`,ok:a=>!!(G.member&&(isLeader()||G.rank>=Math.min(3,a+1)))},
+  {id:`own`,t:a=>`Tenir ${pl([1,2,3,4][a],`quartier`)}`,ok:a=>ownedList().length>=[1,2,3,4][a],min:1},
+  {id:`crew`,t:a=>`Compter ${pl([1,2,4,5][a],`membre`)} dans ta famille`,ok:a=>crewOf().length>=[1,2,4,5][a],min:1},
+  {id:`ally`,t:a=>`Avoir ${pl([1,2,3,4][a],`lien`)} à 40 ou plus`,ok:a=>Object.values(G.rel||{}).filter(v=>v>=40).length>=[1,2,3,4][a]},
+  {id:`hum`,t:a=>`Finir l'acte avec 70 d'Humanité ou plus`,ok:a=>G.hum>=70},
+  {id:`chrome`,t:a=>`Porter ${[2,3,5,6][a]} implants`,ok:a=>G.cyber.length>=[2,3,5,6][a]},
+  {id:`quest`,t:a=>`Réussir ${pl([1,3,6,9][a],`mission`)} secondaire${[1,3,6,9][a]>1?`s`:``}`,ok:a=>Object.keys(G.flags).filter(f=>f.startsWith(`qdone_`)).length+(G.stats.side||0)>=[1,3,6,9][a]},
+  {id:`clean`,t:a=>`Finir l'acte sans être recherché(e) (toutes les poursuites sous 40)`,ok:a=>Object.values(G.heat).every(v=>v<40)},
+  {id:`attr`,t:a=>`Monter un attribut à ${[6,7,8,9][a]}`,ok:a=>Object.values(G.at).some(v=>v>=[6,7,8,9][a])},
+  {id:`found`,t:a=>`Fonder ou diriger une faction`,ok:a=>!!(G.mine||isLeader()),min:1},
+  {id:`pact`,t:a=>`Sceller ${pl([1,1,2,2][a],`pacte`)}`,ok:a=>Object.keys(G.allies||{}).length>=[1,1,2,2][a],min:1}
+];
+const ambNow = () => AMBS.find(x=>x.id===G.amb);
+function pickAmbs(a){ const pool=AMBS.filter(x=>(x.min||0)<=a&&!x.ok(a)); const out=[]; while(out.length<3&&pool.length){ out.push(pool.splice(rnd(0,pool.length-1),1)[0]); } return out; }
+function pickTraits(){ const pool=Object.keys(TRAITS).filter(t=>!tr(t)); const out=[]; while(out.length<3&&pool.length){ out.push(pool.splice(rnd(0,pool.length-1),1)[0]); } return out; }
+function rollEra(){ const ks=Object.keys(ERAS).filter(k=>k!==G.era); G.era=ks[rnd(0,ks.length-1)]; return ERAS[G.era]; }
+function credTierCheck(){ let t=0; CRED_TIERS.forEach(([v],i)=>{ if(G.cred>=v) t=i+1; }); if(t>(G.credTier||0)){ G.credTier=t; return CRED_TIERS[t-1]; } return null; }
+function empireEligible(){ return !!(G.mine||isLeader()||(G.member&&G.rank>=2)); }
+function empireTick(){
+  if(!empireEligible()||G.inHub||G.flags.q_active) return;
+  G.sinceEmp=(G.sinceEmp||0)+1; if(G.sinceEmp<6||G.queue.length) return;
+  const ids=[`mine_raid`,`mine_recruit`,`p_boss`,`duty_tribute`,`lg_coalition`,`mine_traitor`,`fac_clash`,`ally_call`,`crew_favor`,`emp_offer`].filter(id=>byId[id]&&safe(byId[id].cond,false));
+  if(isLeader()) ids.push(`leader_dispute`);
+  if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
 function ageTick(){
   if(G.age<AGING_AGE) return;
@@ -156,6 +185,7 @@ const MENTOR = {body:`jackie`,ref:`claire`,tech:`vik`,int:`dex`,cool:`rogue`};
 function gainXp(a,amt){
   G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
   if(G.at[a]>=9) return;
+  if(tr(`mentor`)) amt+=1;
   G.xp[a]+=amt; chip(`i`,`+${amt} XP ${ATTRS[a].n}`);
   while(G.at[a]<9 && G.xp[a]>=xpNeed(G.at[a])){
     G.xp[a]-=xpNeed(G.at[a]); G.at[a]++;
@@ -164,12 +194,35 @@ function gainXp(a,amt){
   }
 }
 /* ---------- blocs d'influence (équilibre) ---------- */
-function moveBloc(b,d){
-  if(!b||!d) return; G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
-  const o=BLOCS[b].opp, bb=G.bloc[b], ob=G.bloc[o];
-  G.bloc[b]=clamp(bb+d,0,100); G.bloc[o]=clamp(ob-d*.4,0,100);
-  const rd=Math.round(G.bloc[b]-bb); if(Math.abs(rd)>=1) chip(rd>0?`i`:`n`,`${sgn(rd)} ${BLOCS[b].n}`);
+function heatMult(b){
+  let m=(eraNow().heat||{})[b]||1;
+  if(tr(`ombre`)) m*=.75;
+  if(G.member){ const k=FAC[G.member].k;
+    if(b===`loi`&&(k===`corp`||k===`trauma`)) m*=.6; if(b===`loi`&&k===`ncpd`) m*=.5;
+    if(b===`rue`&&(k===`gang`||k===`mox`)) m*=.7; if(b===`nomad`&&k===`clan`) m*=.6; if(b===`corpo`&&k===`corp`) m*=.7; }
+  return m;
 }
+function addHeat(b,v){
+  if(!b||!v||!BLOCS[b]) return; G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};
+  if(v>0) v*=heatMult(b);
+  const o=G.heat[b]; G.heat[b]=clamp(o+v,0,100); const rd=Math.round(G.heat[b])-Math.round(o);
+  if(rd) chip(rd>0?`n`:`p`,`${sgn(rd)} ${BLOCS[b].ic} ${BLOCS[b].n}`);
+}
+// une bonne relation fait retomber la poursuite, une mauvaise la fait monter
+function moveBloc(b,d){ addHeat(b,d<0?-d*1.6:-d*.8); }
+function heatFromCheck(c,ok,fx){
+  if(!c) return; const k=c.k;
+  if(k===`cmb`){ addHeat(`loi`,ok?12:16); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
+  else if(ok&&fx&&fx.ed>=400) addHeat(c.a===`cool`?`corpo`:`rue`,5);
+}
+function heatTick(){
+  const base=(G.cred<20?2:G.cred<50?1:(G.stats.cards%2?1:0))+(tr(`fantome`)?2:0);
+  Object.keys(BLOCS).forEach(b=>{ let dcy=base; if(G.member&&G.rank>=2&&BLOC[G.member]===b) dcy+=2; G.heat[b]=clamp((G.heat[b]||0)-dcy,0,100); });
+  // recherché(e) : ils finissent par te tomber dessus
+  const hb=hottestHeat(), hv=G.heat[hb]||0;
+  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=2&&Math.random()<(hv-18)/85){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
+}
+function hottestHeat(){ return Object.keys(BLOCS).sort((a,b)=>(G.heat[b]||0)-(G.heat[a]||0))[0]; }
 function blocFromFx(fx){
   const m={}; if(!fx) return m;
   if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{const b=BLOC[k];if(b)m[b]=(m[b]||0)+v*.5});
@@ -191,9 +244,7 @@ function makeLoot(t){
   const cands=Object.keys(WHO).filter(k=>REL_NAMES.includes(k));
   if(cands.length){ const c=cands[rnd(0,cands.length-1)];
     pool.push({k:`rel`,ic:`🤝`,t:`Faveur`,d:`+${8+3*t} lien · ${WHO[c].n}`,ap:()=>applyFx({rel:{[c]:8+3*t}})}); }
-  const worst=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
-  const dev=G.bloc[worst]-50;
-  if(Math.abs(dev)>=18) pool.push({k:`bal`,ic:`⚖`,t:`Rééquilibrer`,d:`${BLOCS[worst].n} ${dev<0?`+`:`−`}${8+4*t} (te rapproche du milieu)`,w:3,ap:()=>applyFx({bloc:{[worst]:dev<0?8+4*t:-(8+4*t)}})});
+  { const hb=hottestHeat(), hv=Math.round(G.heat[hb]||0); if(hv>=25) pool.push({k:`bal`,ic:`🕶`,t:`Profil bas`,d:`${BLOCS[hb].ic} ${BLOCS[hb].n} −${12+5*t} (poursuite)`,w:3,ap:()=>addHeat(hb,-(12+5*t))}); }
   if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&(x.loot?(t>=3&&Math.random()<.25):x.p<=2000+2200*t)&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
     pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
   if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
@@ -225,10 +276,10 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v>0&&tr(`survie`)) v=Math.round(v*1.5); if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.humx){ const b=G.hum; G.hum=clamp(G.hum+fx.humx,0,100); if(G.hum!==b){ chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.humx<0)SFX.glitch(); } }
-  if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
-  if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
+  if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5*(tr(`ame`)?.7:1)*(eraNow().hum||1)):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
+  if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(tr(`renom`)?1.25:1)*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(cv>=2) addHeat(hottestHeat(),cv*1.5); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));
@@ -299,8 +350,7 @@ function relDecay(){
 function adviceNow(){
   if(G.hp<45) return {ic:`➕`,t:`Santé basse (${G.hp}) : blessé, tu es moins efficace. Repose-toi à la prochaine halte 🍸.`,go:`heal`};
   if(G.hum<45) return {ic:`🧠`,t:`Humanité basse (${G.hum}) : pense à la thérapie à la prochaine halte 🍸.`,go:`therapy`};
-  const bs=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
-  if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
+  { const hb=hottestHeat(), hv=G.heat[hb]||0; if(hv>=70) return {ic:BLOCS[hb].ic,t:`${BLOCS[hb].n} te traque (${Math.round(hv)}) : fais profil bas avant la capture.`,go:`heat`}; }
   return null;
 }
 const FN = {
@@ -313,12 +363,12 @@ const FN = {
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
   facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+9,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+9 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
-  promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
+  promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; G.jobs=0; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
     if(G.member===`maelstrom`){G.hum=clamp(G.hum-6,0,100);chip(`n`,`−6 Humanité`)}
     if(f.k===`trauma`){G.hp=100;chip(`p`,`Soins gratuits`)}
     if(G.rank>=2) G.flags.duty=true;
-    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,(G.rank<3?`🎯 Prochain grade : ${RANKS[f.k][G.rank+1]} — ${JOB_NEED[G.rank]} missions & réputation ${REP_NEED[G.rank]}`:`🎯 Prochaine étape : prendre la tête (${LEAD_NEED.jobs} missions, rép. ${LEAD_NEED.rep}, Cred ${LEAD_NEED.cred})`),G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
+    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,(G.rank<3?`🎯 Prochain grade : ${RANKS[f.k][G.rank+1]} — Street Cred ${RANK_CRED[G.rank]} et une mission`:`🎯 Prochaine étape : prendre la tête (Street Cred ${LEAD_NEED.cred})`),`🔓 ${(facPowers().find(x=>x.n===G.rank)||{t:``}).t}`,G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
     SFX.ok(); },
   betray(){ const old=G.member; const nw=FAC[old].foes[0]; const r=leaveFac(old,`betray`); G.fac[old]=-70; cere({k:`betray`,c:`#ff2a6d`,ic:`🗡`,kick:`TRAHISON`,t:`Tu trahis ${FAC[old].n}`,sub:`Tu perds ton rang de ${r.old}`,lines:[`💀 Un contrat est mis sur ta tête`,`📉 Réputation chez ${FAC[old].n} : −70`,`⚖ ${BLOCS[BLOC[old]].n} te tourne le dos`,`👥 Tes anciens frères te chercheront`]}); joinFac(nw); },
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
@@ -330,6 +380,12 @@ const FN = {
   clashLose(){ if(!G.member) return; G.fac[G.member]=clamp((G.fac[G.member]||0)-6,-100,100); chip(`n`,`−6 ${FAC[G.member].n}`); },
   allyHelp(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)+10,-100,100); chip(`i`,`+10 ${FAC[id].n}`); } },
   allyBreak(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]) facBreak(id); },
+  payAll(){ const v=Math.max(0,G.ed); G.ed=0; chip(`n`,`−${v.toLocaleString(`fr`)} €$`); G.gear=G.gear.filter(i=>GEARMAP[i].t!==`véhicule`); },
+  twAme(){ if(!tr(`ame`)){ G.traits.push(`ame`); chip(`y`,`Trait : Âme intacte`); } },
+  twSurvie(){ if(!tr(`survie`)){ G.traits.push(`survie`); chip(`y`,`Trait : Instinct de survie`); } },
+  sideDone(){ G.stats.side=(G.stats.side||0)+1; },
+  empPush(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+40,0,99); chip(`y`,`+40 influence · ${DMAP[d].n}`); },
+  empBuy(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+30,0,99); chip(`y`,`+30 influence · ${DMAP[d].n}`); },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -345,6 +401,7 @@ function tick(months){
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
   inc+=crewOf().length*120;
   inc+=Object.keys(G.allies||{}).length*100;
+  if(isLeader()) inc+=300;
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
@@ -367,14 +424,15 @@ function whoCur(c){ return (G.cur&&G.cur.id===c.id&&(G.cur.npc||(G.cur.who&&WHO[
 function drawCard(){
   while(G.queue.length){ const c=byId[G.queue.shift()]; if(c) return c; }
   const T=G.t;
-  const st = CARDS.filter(c=>c.story && !G.done[c.id] && T>=(c.at[0]-START_YEAR)*12+c.at[1] && (!c.cond||safe(c.cond,false)));
+  const SK=G.skip||{}, wt=c=>typeof c.w===`function`?c.w():(c.w||5);
+  const st = CARDS.filter(c=>c.story && !SK[c.id] && !G.done[c.id] && T>=(c.at[0]-START_YEAR)*12+c.at[1] && (!c.cond||safe(c.cond,false)));
   if(st.length){ st.sort((a,b)=>(a.at[0]*12+a.at[1])-(b.at[0]*12+b.at[1])); return st[0]; }
   const recent = id => { const cd=CD[id]||7; return G.hist.slice(-cd).includes(id); };
-  let pool = CARDS.filter(c=>!c.story && (!c.once||!G.done[c.id]) && (!c.cond||safe(c.cond,false)) && !recent(c.id));
+  let pool = CARDS.filter(c=>!c.story && !SK[c.id] && (!c.once||!G.done[c.id]) && (!c.cond||safe(c.cond,false)) && !recent(c.id));
   if(!pool.length) pool = CARDS.filter(c=>c.id.startsWith(`fl`));
-  const tw = pool.reduce((a,c)=>a+(c.w||5),0);
+  const tw = pool.reduce((a,c)=>a+wt(c),0);
   let r = Math.random()*tw;
-  for(const c of pool){ r-=(c.w||5); if(r<=0) return c; }
+  for(const c of pool){ r-=wt(c); if(r<=0) return c; }
   return pool[0];
 }
 function prepCard(c){
@@ -410,6 +468,7 @@ function conquestChoices(d){
 }
 function canConquer(d){
   if(G.dist[d.id]===`player`) return `Déjà à toi`;
+  if(!empireEligible()) return `Réservé aux chefs de crew et aux hauts gradés (rang 2)`;
   if(d.lock&&!G.flags.dogtown) return `Verrouillé`;
   if(G.member&&G.dist[d.id]===G.member) return `Ta propre faction`;
   if((G.allies||{})[G.dist[d.id]]) return `Territoire d'un allié : romps le pacte d'abord`;
@@ -452,7 +511,7 @@ function reinforce(d){
   G.ed-=price; G.hold=G.hold||{}; G.hold[d.id]=clamp(holdOf(d.id)+35,0,100); return price;
 }
 function warTick(){
-  G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
   Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-60&&ownedList().length&&Math.random()<.35){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
@@ -547,9 +606,12 @@ function computeScore(kind){
     [`Chrome installé (${G.cyber.length})`, G.cyber.length*80],
     [`Missions de faction (${G.stats.jobs})`, G.stats.jobs*60],
     [`Relations (${relSum()})`, relSum()*14],
+    [`Ambitions accomplies (${G.ambDone||0})`, (G.ambDone||0)*800],
+    [`Traits (${(G.traits||[]).length})`, (G.traits||[]).length*200],
     [`Légende & style`, legend+fame],
   ];
   let base = lines.reduce((a,l)=>a+l[1],0);
+  store.set(`ncl_legacy`,{name:G.name,title:roleTitle(),end:ENDS[kind].t,cred:G.cred,age:G.age});
   const mult = ENDS[kind].m || ({retire:1.3,quit:1.15,blaze:G.cred>=30?1.2:0.9,flatline:.6,mercy:.6,psycho:.5,debt:.5}[kind]||1);
   return {lines, base, mult, total:Math.round(base*mult)};
 }
@@ -575,7 +637,7 @@ function checkEnd(){
   }
   if(G.hum<=0){ endGame(`psycho`); return true; }
   if(G.ed<=-4000){ endGame(`debt`); return true; }
-  for(const b of Object.keys(BLOCS)){ const v=(G.bloc||{})[b]; if(v<=0){ endGame(`bloc_${b}_lo`); return true; } if(v>=100){ endGame(`bloc_${b}_hi`); return true; } }
+  for(const b of Object.keys(BLOCS)){ if((G.heat[b]||0)>=100&&!G.queue.includes(BLOCS[b].cap)){ G.heat[b]=92; G.queue.unshift(BLOCS[b].cap); } }
   if(G.age>=HARD_AGE){ endGame(`retire`); return true; }
   if(G.age>=RETIRE_AGE&&!G.flags.retireAsked){ G.flags.retireAsked=true; G.queue.unshift(`retire_offer`); }
   return false;

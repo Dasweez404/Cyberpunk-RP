@@ -473,6 +473,15 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 .frow b{width:auto;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .frow .rb{flex:0 0 70px}
 #hrole.ready{color:var(--g);animation:blink 1s infinite}
+
+/* ---- poursuites ---- */
+.bloc.heat .hb{height:5px;margin-top:3px;background:#1b1b30;position:relative;overflow:hidden}
+.bloc.heat .hb i{position:absolute;left:0;top:0;bottom:0;background:var(--dim);transition:width .6s cubic-bezier(.2,.9,.2,1)}
+.bloc.heat.want{color:var(--y)}.bloc.heat.want .hb i{background:var(--y);box-shadow:0 0 8px var(--y)}
+.bloc.heat.hunt{color:var(--m);animation:warn 1s infinite}.bloc.heat.hunt .hb i{background:var(--m);box-shadow:0 0 8px var(--m)}
+.bloc.heat span{white-space:nowrap}
+#hdate{color:var(--dim);font-size:inherit;letter-spacing:.08em;text-align:left;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pw{display:flex;flex-direction:column;gap:3px;border-top:1px dashed var(--line);padding-top:6px}.pw small{font-size:12.5px;line-height:1.3}
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -747,8 +756,12 @@ const ENDS = {
 /* ---------- blocs d'influence ---------- */
 const BLOC = {valentinos:`rue`,maelstrom:`rue`,tygers:`rue`,sixth:`rue`,voodoo:`rue`,animals:`rue`,mox:`rue`,
   arasaka:`corpo`,militech:`corpo`,kangtao:`corpo`,biotechnica:`corpo`,trauma:`corpo`,ncpd:`loi`,barghest:`loi`,aldecaldos:`nomad`,wraiths:`nomad`};
-const BLOCS = {rue:{n:`RUE`,c:`#ff9f1c`,d:`Gangs et rues de Night City`,opp:`loi`},corpo:{n:`CORPOS`,c:`#05ffa1`,d:`Arasaka, Militech, Kang Tao…`,opp:`nomad`},
-  loi:{n:`LOI`,c:`#3b8bff`,d:`NCPD, MaxTac, Barghest`,opp:`rue`},nomad:{n:`BADLANDS`,c:`#ff4d6d`,d:`Les clans nomades`,opp:`corpo`}};
+const BLOCS = {
+  loi:{n:`POLICE`,ic:`🚔`,c:`#3b8bff`,d:`NCPD et MaxTac`,cap:`cap_loi`},
+  corpo:{n:`CORPOS`,ic:`🏢`,c:`#05ffa1`,d:`Arasaka, Militech, Kang Tao…`,cap:`cap_corpo`},
+  rue:{n:`GANGS`,ic:`🔪`,c:`#ff9f1c`,d:`Les gangs de Night City`,cap:`cap_rue`},
+  nomad:{n:`BADLANDS`,ic:`🏜`,c:`#ff4d6d`,d:`Les clans nomades`,cap:`cap_nomad`}
+};
 
 /* ---------- alliés qui aident aux jets / infos contacts ---------- */
 const ALLY = {body:[`jackie`,`panam`],ref:[`claire`,`panam`],tech:[`vik`,`claire`],int:[`lucy`,`dex`,`judy`],cool:[`rogue`,`kerry`,`misty`]};
@@ -805,12 +818,40 @@ Object.assign(CONTACTS,{
 });
 ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
 /* ---------- conditions de promotion (affichées au joueur) ---------- */
-const JOB_NEED = [1,2,3];     // missions pour passer au rang 1,2,3
-const REP_NEED = [15,30,45];  // réputation dans la faction
-const LEAD_NEED = {jobs:5,rep:55,cred:35};
+const JOB_NEED = [1,1,1];        // missions depuis la dernière promotion     // missions pour passer au rang 1,2,3
+const REP_NEED = [10,20,30];
+const RANK_CRED = [15,30,50];    // la Street Cred ouvre les grades  // réputation dans la faction
+const LEAD_NEED = {jobs:1,rep:40,cred:70};
 const FOUND_NEED = {cred:15,ed:1000}; // pour prendre la tête
 
 const AGING_AGE = 40;
+
+/* ---------- paliers de Street Cred : ce que ta réputation t'ouvre ---------- */
+const CRED_TIERS = [[10,`Contrats de fixers`],[15,`Rang 1 dans une faction · fonder la tienne`],[25,`Pactes entre factions`],[30,`Rang 2 · opérations sur les quartiers`],[40,`Gros contrats et objets rares`],[50,`Rang 3`],[70,`Prendre la tête d'une faction`],[90,`Légende de Night City`]];
+/* ---------- actes, époques, ambitions, traits ---------- */
+const ACTS = [{n:`Débuts`,from:18,s:`Survivre et se faire un nom`},{n:`Ascension`,from:25,s:`Choisir son camp, monter`},{n:`Sommet`,from:35,s:`Tenir ce qu'on a pris`},{n:`Crépuscule`,from:45,s:`Le corps lâche. Préparer sa sortie`}];
+const ROMAN = [`I`,`II`,`III`,`IV`];
+const ERAS = {
+  gangwar:{n:`Guerre des gangs`,d:`Les rues brûlent. Les gangs te remarquent plus vite, mais les contrats paient mieux.`,heat:{rue:1.5},gig:1.25},
+  crackdown:{n:`Tolérance zéro`,d:`La NCPD serre la vis : la police te repère beaucoup plus vite.`,heat:{loi:1.6}},
+  boom:{n:`Boom des corpos`,d:`L'argent coule à flots, et les corpos surveillent tout le monde.`,income:1.3,heat:{corpo:1.4}},
+  shortage:{n:`Pénurie de chrome`,d:`Les implants se font rares et hors de prix.`,cyber:1.45},
+  psycho:{n:`Vague de cyberpsychose`,d:`La ville devient folle. Chaque perte d'Humanité pèse plus lourd.`,hum:1.3},
+  golden:{n:`Âge d'or des fixers`,d:`Il y a du travail pour tous ceux qui savent tenir une arme.`,gig:1.4},
+  storm:{n:`Tempêtes sur les Badlands`,d:`Les routes sont coupées, le matériel se paie plus cher, les clans sont à cran.`,heat:{nomad:1.5},gear:1.2},
+  calm:{n:`Accalmie`,d:`Une période étrangement calme. Les coups font moins mal.`,hurt:.82},
+  crisis:{n:`Crise économique`,d:`Les loyers explosent et les contrats paient moins.`,rent:1.5,gig:.85},
+  purge:{n:`Purge des gangs`,d:`Les corpos et la police nettoient les rues. Tout le monde est nerveux.`,heat:{loi:1.3,rue:1.3},hurt:1.12}
+};
+const TRAITS = {
+  dur:[`🛡`,`Dur à cuire`,`Dégâts reçus −15 %`], froid:[`🧊`,`Sang-froid de vétéran`,`+1 aux jets sociaux`],
+  ombre:[`🌑`,`Ombre`,`+1 furtivité · les poursuites montent 25 % moins vite`], pilote:[`🏎`,`As du volant`,`+1 conduite`],
+  tueur:[`🎯`,`Instinct de tueur`,`+1 combat`], code:[`💾`,`Fantôme du Net`,`+1 hack`],
+  riche:[`💰`,`Sens des affaires`,`Revenus +20 % · prix −10 %`], ame:[`🕯`,`Âme intacte`,`Pertes d'Humanité −30 %`],
+  chance:[`🍀`,`Veinard`,`Une fois par période, un jet raté est relancé`], renom:[`★`,`Aura`,`Gains de Street Cred +25 %`],
+  meneur:[`📯`,`Meneur`,`+1 action d'empire par période`], survie:[`➕`,`Instinct de survie`,`Soins reçus +50 %`],
+  fantome:[`👻`,`Insaisissable`,`Les poursuites retombent plus vite`], mentor:[`📈`,`Autodidacte`,`+1 XP à chaque gain`]
+};
 /* =====================================================================
    CARTES — événements. Utilise les helpers globaux de engine.js
    ===================================================================== */
@@ -2513,7 +2554,8 @@ card({id:`gig_board`,quick:true,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
 card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
   tx:()=>`Une banquette au fond de l'Afterlife, un ripperdoc qui dort au comptoir, une odeur de nouilles froides. Ton corps te lâche presque. Tu peux t'offrir un vrai soin, ou simplement fermer les yeux.`,
   dyn:()=>{
-    const cl=Math.round(200*infl()), th=Math.round(600*infl()), tt=Math.round(1200*infl());
+    const fk=G.member?FAC[G.member].k:``;
+    const cl=fk===`trauma`?0:Math.round(200*infl()), th=Math.round(600*infl()*(fk===`mox`?.5:1)), tt=Math.round(1200*infl());
     const heal=Math.round(35*Math.max(.5,1-Math.max(0,G.age-30)*0.012));
     const out=[
       {t:`Passer par la clinique`,s:`${money(cl)} · +${heal} Santé`,req:()=>G.ed>=cl?``:`${money(cl)} requis`,fx:{ed:-cl,hp:heal,msg:`Du fil, des pansements, une piqûre. Tu respires de nouveau.`}},
@@ -2521,7 +2563,8 @@ card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
       {t:`Dormir quelques heures`,s:`Gratuit · +15 Santé · +5 Humanité`,fx:{hp:15,hum:5,msg:`Tu dors d'un sommeil lourd. Les rêves sont étranges, mais tu t'en souviens à peine.`}},
       {t:`Faire la fête jusqu'à l'aube`,s:`−80 €$ · risqué`,chk:{a:`cool`,dc:6,ok:{ed:-80,hum:12,msg:`Les basses, les corps, les rires. Tu oublies tout ce que tu as fait.`},ko:{ed:-150,hp:-14,hum:-3,msg:`Ça dégénère. Tu rentres plus sale que tu n'es parti(e).`}}}
     ];
-    if(!G.flags.trauma) out.splice(2,0,{t:`Souscrire à la Trauma Team`,s:`${money(tt)} · seconde vie (pas contre MaxTac)`,req:()=>G.ed>=tt?``:`${money(tt)} requis`,fx:{ed:-tt,flag:[`trauma`],msg:`Un badge, une puce de géolocalisation. Une équipe blindée viendra te chercher si tu tombes.`}});
+    out.splice(2,0,{t:`Faire profil bas`,s:`Gratuit · toutes les poursuites −12`,fx:{bloc:{loi:12,corpo:12,rue:12,nomad:12},msg:`Tu ne sors pas, tu ne réponds à personne. On parle un peu moins de toi.`}});
+    if(!G.flags.trauma) out.splice(3,0,{t:`Souscrire à la Trauma Team`,s:`${money(tt)} · seconde vie (pas contre MaxTac)`,req:()=>G.ed>=tt?``:`${money(tt)} requis`,fx:{ed:-tt,flag:[`trauma`],msg:`Un badge, une puce de géolocalisation. Une équipe blindée viendra te chercher si tu tombes.`}});
     out.push(NOPE(`Repartir sans te reposer`,`Tu repars tel(le) que tu es arrivé(e).`)); return out;
   },ch:[]});
 
@@ -2571,6 +2614,145 @@ card({id:`ally_gift`,who:`@enemy`,tag:`📜 Un geste d'allié`,w:4,cond:()=>Obje
     {t:`Prendre les hommes`,s:`Renforce tes quartiers, ou te soigne`,fx:{fn:`holdAll`,hp:15,msg:`Ils montent la garde quelques semaines. Tu dors mieux.`}}
   ]});
 /* =====================================================================
+   CARTES 11 — poursuites et captures, coup du sort de départ,
+   missions secondaires générées, offre d'empire
+   ===================================================================== */
+Object.assign(ENDS,{
+  prison:{t:`DERRIÈRE LES BARREAUX`,e:`Une cellule sans fenêtre, un numéro à la place du nom. Night City t'a déjà oublié(e).`,m:.5},
+  executed:{t:`EXÉCUTÉ(E)`,e:`Ceux que tu avais contre toi ont fini par te trouver. Ils n'ont pas pris la peine de cacher le corps.`,m:.5},
+  desert:{t:`PERDU(E) DANS LES BADLANDS`,e:`Les clans t'ont laissé(e) sans eau, sans roues, sans nom. Le sable a fait le reste.`,m:.5},
+});
+ENDS.debt={t:`MORT(E) DANS LA MISÈRE`,e:`Plus un eddie, plus un toit, plus personne. Les créanciers ont pris ce qu'il restait.`};
+const HV = b => Math.round((G.heat||{})[b]||0);
+const hot = b => HV(b)>=70;
+const hw = b => () => HV(b)>=40 ? 2+HV(b)/6 : 0;
+
+/* ---------- Poursuites (dès 40) ---------- */
+card({id:`ht_loi`,who:`ncpd`,tag:`🚔 Police · tu es recherché(e)`,w:hw(`loi`),cond:()=>HV(`loi`)>=40,
+  tx:()=>hot(`loi`)?`Gyrophares dans le rétro, un drone au-dessus de ta tête. Ton visage est sur tous les écrans de patrouille : la NCPD ne te contrôle plus, elle te <strong>traque</strong>. « À genoux. Mains sur la tête. »`
+    :`Une patrouille NCPD ralentit à ta hauteur. L'agent compare ton visage à son écran, puis pose la main sur son arme. « Toi. On a quelques questions. »`,
+  dyn:()=>{ const h=hot(`loi`), bribe=Math.round((h?1800:700)*infl());
+    return [
+      {t:`Graisser la patte`,s:`${money(bribe)} · la poursuite retombe`,req:()=>G.ed>=bribe?``:`${money(bribe)} requis`,fx:{ed:-bribe,bloc:{loi:h?18:14},msg:`Les billets disparaissent dans une poche d'uniforme. « On ne t'a pas vu(e). »`}},
+      {t:`Semer la patrouille`,s:`RÉFLEXES`,chk:{a:`ref`,k:`drv`,dc:h?10:8,ok:{bloc:{loi:8},cred:2,msg:`Une ruelle, un parking, un tunnel. Les sirènes s'éloignent.`},ko:{hp:h?-28:-16,bloc:{loi:-8},msg:`Un taser dans le dos, des coups de matraque. Tu t'en sors, mais ils ont ton nom.`}}},
+      {t:`Résister`,s:`CORPS · combat · aggrave ton cas`,chk:{a:`body`,k:`cmb`,dc:h?10:9,ok:{cred:4,bloc:{loi:-10},msg:`Deux agents à terre. Tu es libre. Et beaucoup plus recherché(e).`},ko:{hp:h?-36:-24,bloc:{loi:-14},msg:`Ils appellent des renforts. Tu t'échappes en sang.`}}},
+      {t:`Te laisser embarquer`,s:`Amende et garde à vue`,fx:{ed:-Math.round(Math.max(300,G.ed*.2)),bloc:{loi:20},hp:-6,cred:-3,msg:`Une nuit en cellule, une amende salée, une réputation écornée. Mais ton dossier se referme.`}}
+    ]; },ch:[]});
+card({id:`ht_corpo`,who:`corpo`,tag:`🏢 Corpos · tu es dans leur viseur`,w:hw(`corpo`),cond:()=>HV(`corpo`)>=40,
+  tx:()=>hot(`corpo`)?`Tes comptes sont gelés depuis ce matin. Un SUV noir stationne en bas de chez toi depuis trois jours. Aujourd'hui, les portières s'ouvrent : une équipe d'intervention corporative, calme, méthodique.`
+    :`Un costume gris s'assoit à ta table sans y être invité : « Vous dérangez des gens qui ont les moyens de ne pas être dérangés. Considérez ceci comme un avertissement. »`,
+  dyn:()=>{ const h=hot(`corpo`), pay=Math.round((h?2500:1000)*infl());
+    return [
+      {t:`Payer un "dédommagement"`,s:`${money(pay)} · ils classent le dossier`,req:()=>G.ed>=pay?``:`${money(pay)} requis`,fx:{ed:-pay,bloc:{corpo:18},msg:`Un virement, un accusé de réception. Le dossier passe dans une autre pile.`}},
+      {t:`Effacer tes traces`,s:`INTELLECT · hack`,req:R.deck(),chk:{a:`int`,k:`hck`,dc:h?10:8,ok:{bloc:{corpo:16},role:{net:1},msg:`Ton nom disparaît de leurs bases. Un fantôme de plus.`},ko:{hp:-14,hum:-3,bloc:{corpo:-8},msg:`Leur contre-mesure te brûle la nuque. Ils savent que tu as essayé.`}}},
+      {t:`Retourner la situation`,s:`SANG-FROID`,chk:{a:`cool`,dc:h?10:8,ok:{bloc:{corpo:10},cred:3,msg:`Tu leur rappelles ce que tu sais sur eux. Le costume se lève, livide.`},ko:{hp:h?-30:-12,ed:-500,msg:`Ils ne négocient pas. Ils facturent.`}}},
+      {t:`Disparaître quelque temps`,s:`Tu perds du terrain`,fx:{bloc:{corpo:12},cred:-4,ed:-200,msg:`Tu changes de planque, de numéro, de trajet. On t'oublie un peu — toi aussi.`}}
+    ]; },ch:[]});
+card({id:`ht_rue`,who:`@fixer`,tag:`🔪 Gangs · ta tête est mise à prix`,w:hw(`rue`),cond:()=>HV(`rue`)>=40,
+  tx:()=>hot(`rue`)?`Ton portrait circule sur tous les réseaux de gangs avec un chiffre dessous. Ce soir, ils sont six à t'attendre devant ta planque. Personne n'a l'air pressé.`
+    :`Un fixer te prévient à demi-mot : « Il y a une prime sur toi dans la rue. Petite, pour l'instant. Mais les gamins ont faim. »`,
+  dyn:()=>{ const h=hot(`rue`), pay=Math.round((h?2200:900)*infl());
+    return [
+      {t:`Racheter la prime`,s:`${money(pay)}`,req:()=>G.ed>=pay?``:`${money(pay)} requis`,fx:{ed:-pay,bloc:{rue:18},msg:`Le fixer fait passer le mot : la prime est levée. Pour l'instant.`}},
+      {t:`Faire un exemple`,s:`CORPS · combat`,chk:{a:`body`,k:`cmb`,dc:h?10:8,ok:{cred:6,bloc:{rue:12},hum:-3,msg:`Tu laisses le premier chasseur en vie, exprès. Il racontera.`},ko:{hp:h?-36:-22,msg:`Ils sont trop nombreux. Tu ne dois ta vie qu'à une porte dérobée.`}}},
+      {t:`Demander la protection d'une faction`,s:`Membre, allié ou chef requis`,req:()=>(G.member||G.mine||Object.keys(G.allies||{}).length)?``:`Aucune faction derrière toi`,fx:{bloc:{rue:16},ed:-300,msg:`Quelques noms prononcés au bon endroit. Les chasseurs se trouvent d'autres proies.`}},
+      {t:`Te terrer`,s:`RÉFLEXES · furtivité`,chk:{a:`ref`,k:`stl`,dc:h?9:7,ok:{bloc:{rue:8},msg:`Trois semaines sans sortir le jour. Ça marche.`},ko:{hp:-18,msg:`Quelqu'un a vendu ta planque.`}}}
+    ]; },ch:[]});
+card({id:`ht_nomad`,who:`nomad`,tag:`🏜 Badlands · les clans te barrent la route`,w:hw(`nomad`),cond:()=>HV(`nomad`)>=40,
+  tx:()=>hot(`nomad`)?`Trois Thorton en travers de la route, moteurs coupés. Les clans ont ton signalement. Ici, on ne livre personne à la police : on règle ça entre soi, dans la poussière.`
+    :`Un barrage nomade à la sortie de la ville. Le chef de convoi te dévisage : « Toi, tu ne passes plus gratuitement. »`,
+  dyn:()=>{ const h=hot(`nomad`), pay=Math.round((h?1800:700)*infl());
+    return [
+      {t:`Payer le prix du passage`,s:`${money(pay)}`,req:()=>G.ed>=pay?``:`${money(pay)} requis`,fx:{ed:-pay,bloc:{nomad:18},msg:`Le chef empoche, hoche la tête. Les camions s'écartent.`}},
+      {t:`Forcer le barrage`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:h?10:8,ok:{cred:4,bloc:{nomad:-6},msg:`Tu passes entre deux camions dans un nuage de sable. Ils ne l'oublieront pas.`},ko:{hp:h?-32:-20,bloc:{nomad:-8},msg:`Ton véhicule finit sur le toit.`}}},
+      {t:`Réparer un de leurs moteurs`,s:`TECHNIQUE`,chk:{a:`tech`,dc:h?9:7,ok:{bloc:{nomad:16},hum:3,msg:`Quand le moteur repart, les visages changent. Chez les nomades, ça vaut une parole.`},ko:{bloc:{nomad:-4},msg:`Tu aggraves la panne. Mauvais point.`}}},
+      {t:`Faire demi-tour`,s:`Tu évites les Badlands`,fx:{bloc:{nomad:8},cred:-2,msg:`Tu rentres en ville par la grande route, la tête basse.`}}
+    ]; },ch:[]});
+
+/* ---------- Captures (à 100) ---------- */
+card({id:`cap_loi`,who:`maxtac`,tag:`⛓ Arrestation`,cond:()=>false,
+  tx:()=>`Portes enfoncées à l'aube, projecteurs, canons dans le visage. La NCPD ne plaisante plus : mandat, fourgon blindé, cellule. Si tu ne sors pas de là dans l'heure, tu ne sortiras plus. <em>Plus ta Street Cred est haute, plus ils tiennent à te garder.</em>`,
+  dyn:()=>{ const bail=Math.round((3000+G.cred*60)*infl());
+    return [
+      {t:`Acheter ta liberté`,s:`${money(bail)} · caution et juge`,req:()=>G.ed>=bail?``:`${money(bail)} requis`,fx:{ed:-bail,bloc:{loi:40},cred:-3,msg:`Un avocat véreux, un juge compréhensif. Tu ressors ruiné(e), mais libre.`}},
+      {t:`T'évader pendant le transfert`,s:`RÉFLEXES`,heavy:`Si tu échoues, c'est la prison à vie.`,chk:{a:`ref`,dc:10,ok:{bloc:{loi:25},cred:8,msg:`Un virage, une portière, une course à mort. La légende dit que personne ne s'évade d'un fourgon NCPD.`},ko:{die:`prison`,msg:`Ils te rattrapent au bout de la rue. Cette fois, ils jettent la clé.`}}},
+      {t:`Faire jouer ta faction`,s:`Rang 2, chef ou pacte requis`,req:()=>((G.member&&G.rank>=2)||G.mine||isLeader()||Object.keys(G.allies||{}).length)?``:`Personne d'assez haut placé`,fx:{bloc:{loi:35},ed:-800,msg:`Un coup de fil à la bonne personne. Ton dossier « se perd ». Tu leur dois une faveur.`}},
+      {t:`Plaider coupable`,s:`Fin : la prison`,heavy:`Tu acceptes la prison. Ta vie à Night City s'arrête ici.`,fx:{die:`prison`,msg:`Tu signes. Le fourgon démarre.`}}
+    ]; },ch:[]});
+card({id:`cap_corpo`,who:`smasher`,tag:`☠ Équipe de nettoyage`,cond:()=>false,
+  tx:()=>`Ils ne préviennent plus. Une équipe de nettoyage corporative investit ton immeuble étage par étage, sans un mot, sans un bruit. Tu es une ligne à effacer dans un rapport.`,
+  ch:[
+    {t:`Te battre jusqu'au bout`,s:`CORPS · combat`,heavy:`Un échec peut te coûter la vie.`,chk:{a:`body`,k:`cmb`,dc:11,ok:{cred:10,hum:-6,bloc:{corpo:25},msg:`Tu sors de l'immeuble en flammes, seul(e) debout. Ils réévalueront le coût.`},ko:{hp:-70,bloc:{corpo:15},msg:`Tu survis peut-être. À peine.`}}},
+    {t:`Fuir par les toits`,s:`RÉFLEXES`,chk:{a:`ref`,k:`stl`,dc:10,ok:{bloc:{corpo:25},msg:`Tu disparais dans la nuit. Ils trouvent un appartement vide.`},ko:{hp:-50,bloc:{corpo:12},msg:`Une balle dans la jambe. Tu rampes jusqu'à une bouche d'égout.`}}},
+    {t:`Vendre tout ce que tu sais`,s:`Ils t'épargnent · −Humanité`,fx:{bloc:{corpo:45},hum:-12,cred:-8,msg:`Tu donnes des noms. Tous les noms. Ils rangent leurs armes.`}}
+  ]});
+card({id:`cap_rue`,who:`@fixer`,tag:`☠ La rue te condamne`,cond:()=>false,
+  tx:()=>`Tous les gangs que tu as froissés se sont mis d'accord, pour une fois. Un entrepôt, une chaise, un cercle de visages. On te laisse dire un dernier mot.`,
+  ch:[
+    {t:`Les défier tous`,s:`CORPS · combat`,heavy:`Un échec, et c'est l'exécution.`,chk:{a:`body`,k:`cmb`,dc:11,ok:{cred:12,bloc:{rue:30},msg:`Tu brises tes liens, tu brises des os. Ils te laissent partir par respect.`},ko:{die:`executed`,msg:`Tu emportes deux d'entre eux. Ça ne suffit pas.`}}},
+    {t:`Plaider ta cause`,s:`SANG-FROID`,chk:{a:`cool`,dc:10,ok:{bloc:{rue:35},cred:4,msg:`Tu parles longtemps. À la fin, quelqu'un rit. On te détache.`},ko:{hp:-45,bloc:{rue:15},msg:`Ils te laissent en vie pour l'exemple. Méconnaissable.`}}},
+    {t:`Payer le prix du sang`,s:`Tout ce que tu as`,fx:{fn:`payAll`,bloc:{rue:45},msg:`Ils te vident les poches, les comptes, la planque. Tu repars avec ta peau.`}}
+  ]});
+card({id:`cap_nomad`,who:`nomad`,tag:`☠ Jugement des clans`,cond:()=>false,
+  tx:()=>`Les clans t'ont pris(e) sur la route. Un cercle de véhicules, un feu, des anciens qui débattent de ton sort. La sentence habituelle : te laisser dans le désert, sans eau ni roues.`,
+  ch:[
+    {t:`Demander l'épreuve de la route`,s:`RÉFLEXES · conduite`,heavy:`Un échec, et ils t'abandonnent au désert.`,chk:{a:`ref`,k:`drv`,dc:10,ok:{cred:8,bloc:{nomad:35},msg:`Tu gagnes la course contre leur meilleur pilote. Les anciens se lèvent.`},ko:{die:`desert`,msg:`Tu perds. Ils tiennent parole.`}}},
+    {t:`Offrir tes mains`,s:`TECHNIQUE`,chk:{a:`tech`,dc:9,ok:{bloc:{nomad:35},hum:4,msg:`Tu remets en marche trois camions en une nuit. La dette est payée en sueur.`},ko:{hp:-35,bloc:{nomad:15},msg:`Ils te relâchent loin de tout. Tu marches deux jours.`}}},
+    {t:`Offrir ton véhicule et ton argent`,s:`Tout ce que tu as`,fx:{fn:`payAll`,bloc:{nomad:45},msg:`Ils prennent tout. On te dépose à l'entrée de la ville.`}}
+  ]});
+
+/* ---------- Coup du sort : chaque vie commence différemment ---------- */
+const TWISTS = [
+  [`Une dette de famille`,`Un créancier frappe à ta porte le jour de tes 18 ans : ton père — ou quelqu'un qui portait son nom — a laissé une ardoise. Elle est à toi maintenant.`,[[`Assumer la dette`,`−400 €$ · +Humanité`,{ed:-400,hum:6,cred:2}],[`Nier et claquer la porte`,`Les gangs s'en souviendront`,{bloc:{rue:-12},cred:3}]]],
+  [`Un héritage inattendu`,`Une vieille voisine que tu aidais est morte. Elle t'a laissé une boîte en fer : des eddies, et une adresse griffonnée.`,[[`Garder l'argent`,`+900 €$`,{ed:900}],[`Suivre l'adresse`,`Un contact à l'Afterlife`,{rel:{rogue:14},cred:3}]]],
+  [`Une vieille blessure`,`Un accident d'enfance t'a laissé une épaule mal réparée. Un ripperdoc te propose de la remplacer à crédit.`,[[`Accepter l'implant`,`Squelette en titane · −Humanité · dette`,{cy:`titanium`,humx:-6,ed:-500}],[`Garder ta chair`,`+Humanité`,{hum:5,xp:{body:3}}]]],
+  [`Un casier déjà rempli`,`À 16 ans, tu as pris pour quelqu'un d'autre. La NCPD a ta photo, tes empreintes, et beaucoup de mémoire.`,[[`Faire profil bas`,`La police te surveille`,{bloc:{loi:-18},cred:4}],[`Payer pour effacer le dossier`,`−600 €$`,{ed:-600}]]],
+  [`Un don`,`Depuis toujours, il y a une chose que tu fais mieux que les autres, sans savoir pourquoi.`,[[`Tes mains`,`+XP TECHNIQUE et RÉFLEXES`,{xp:{tech:4,ref:4}}],[`Ta tête`,`+XP INTELLECT et SANG-FROID`,{xp:{int:4,cool:4}}],[`Ton corps`,`+XP CORPS`,{xp:{body:7}}]]],
+  [`Un ami d'enfance chez les corpos`,`Vous avez grandi dans le même bloc. Lui a signé chez une corporation. Il te doit un service, et il le sait.`,[[`Lui demander de l'argent`,`+700 €$`,{ed:700}],[`Lui demander un nom`,`Les corpos te voient d'un bon œil`,{bloc:{corpo:10},fac:{militech:8},cred:2}]]],
+  [`Une promesse`,`Quelqu'un que tu aimais est mort cette année. Tu lui as promis une chose, au bord du lit.`,[[`De rester humain(e)`,`+Humanité · trait Âme intacte`,{hum:5,fn:`twAme`}],[`De ne jamais rester pauvre`,`+500 €$ · −Humanité`,{ed:500,hum:-4,cred:2}]]],
+  [`Un coup de chance`,`Tu trouves un sac dans une épave au bord de la route. Dedans : une arme propre et une liasse.`,[[`Garder l'arme`,`Lexington`,{gear:`lexington`}],[`Vendre le tout`,`+800 €$`,{ed:800}],[`Rendre le sac à son propriétaire`,`Un fixer te remarque`,{rel:{dex:14},cred:4,hum:4}]]],
+  [`Un mauvais départ`,`Ta première combine a mal tourné. Tu as perdu ce que tu avais, et gagné une cicatrice.`,[[`Recommencer plus prudemment`,`−150 €$ · +XP SANG-FROID`,{ed:-150,xp:{cool:5}}],[`Te venger`,`Les gangs te remarquent`,{bloc:{rue:-10},cred:5,hp:-10}]]],
+  [`Un mentor de passage`,`Un vieux solo te prend sous son aile pendant un hiver, avant de disparaître sans un mot.`,[[`Apprendre à te battre`,`+XP CORPS et RÉFLEXES`,{xp:{body:4,ref:4}}],[`Apprendre à survivre`,`Trait Instinct de survie`,{fn:`twSurvie`}]]],
+];
+card({id:`life_twist`,who:`narr`,tag:`Coup du sort`,cond:()=>false,
+  tx:()=>{ const i=rnd(0,TWISTS.length-1); G.tmp={tw:i}; return `<strong>${TWISTS[i][0]}.</strong> ${TWISTS[i][1]}`; },
+  dyn:()=>TWISTS[(G.tmp&&G.tmp.tw)||0][2].map(c=>({t:c[0],s:c[1],fx:c[2]})),ch:[]});
+
+/* ---------- Missions secondaires générées ---------- */
+const SM_GOALS = [`récupérer une mallette volée`,`faire sortir un témoin de la ville`,`saboter une livraison`,`retrouver une personne disparue`,`protéger un commerce contre un racket`,`voler un prototype`,`effacer un dossier compromettant`,`escorter un médecin de rue`,`porter un message à un chef de gang`,`faire taire un maître chanteur`,`reprendre un implant impayé`,`photographier une rencontre secrète`,`ramener un gamin fugueur`,`détruire une cargaison de drogue coupée`,`retrouver le tueur d'un ami`,`voler une voiture de collection`];
+const SM_TWISTS = [`Le client ment sur un point.`,`Un autre merc est déjà sur le coup.`,`La NCPD surveille le secteur.`,`La cible est quelqu'un que tu connais de vue.`,`Tout doit être réglé avant l'aube.`,`Le paiement dépend de ta discrétion.`,`Des Scavs rôdent dans le coin.`,`La cible est sous protection corpo.`,`Il pleut des cordes et les rues sont vides.`,`Le client a peur et ne dit pas de quoi.`,`Un gang local réclame sa part.`,`L'adresse donnée n'existe pas.`];
+const SM_WAYS = [
+  {t:`Passer en force`,a:`body`,k:`cmb`,ko:22},{t:`Régler ça au flingue`,a:`ref`,k:`cmb`,ko:22},{t:`T'infiltrer sans bruit`,a:`ref`,k:`stl`,ko:14},
+  {t:`Baratiner ton chemin`,a:`cool`,ko:10},{t:`Pirater les accès`,a:`int`,k:`hck`,ko:12},{t:`Bricoler une solution`,a:`tech`,ko:12},
+  {t:`Observer, puis frapper au bon moment`,a:`int`,ko:12},{t:`Tout miser sur le volant`,a:`ref`,k:`drv`,ko:18}
+];
+const SM_OK = [`Propre, rapide. Le client paie sans discuter.`,`Ça s'est joué à une seconde près, mais c'est fait.`,`Personne ne saura jamais comment tu t'y es pris(e).`,`Le client te regarde autrement. Ton nom va circuler.`];
+const SM_KO = [`Tout part de travers. Tu sauves ta peau, pas la mission.`,`Quelqu'un t'attendait. Tu repars les mains vides.`,`Un détail t'a échappé, et il a coûté cher.`];
+card({id:`sm`,who:`fix`,tag:`Mission secondaire`,w:45,cond:()=>!G.flags.q_active,
+  tx:()=>{ const d=DIST.filter(x=>!x.lock||G.flags.dogtown), dd=d[rnd(0,d.length-1)];
+    G.tmp={g:rnd(0,SM_GOALS.length-1),tw:rnd(0,SM_TWISTS.length-1),d:dd.n};
+    return `« J'ai besoin de quelqu'un pour <strong>${SM_GOALS[G.tmp.g]}</strong>, du côté de <em>${dd.n}</em>. » ${SM_TWISTS[G.tmp.tw]}`; },
+  dyn:()=>{ const tier=G.cred>=60?3:G.cred>=30?2:G.cred>=10?1:0;
+    const pay=Math.round((450+G.cred*32)*(0.8+Math.random()*0.6)*bm().gig/50)*50;
+    const ways=shuffle(SM_WAYS).slice(0,3);
+    const out=ways.map(w=>{ const dc=6+tier+rnd(0,1); const heat=w.k===`cmb`?{loi:-3}:w.k===`hck`?{corpo:-2}:null;
+      return {t:w.t,s:`${ATTRS[w.a].n}${w.k?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[w.k]}`:``} · ${money(pay)}`,chk:{a:w.a,k:w.k,dc,
+        ok:{ed:pay,cred:2+tier,fn:`sideDone`,loot:pay>=1800?(pay>=3200?2:1):0,msg:pickR(SM_OK)},
+        ko:Object.assign({hp:-(w.ko+tier*3),cred:-1,msg:pickR(SM_KO)},heat?{bloc:heat}:{})}}; });
+    if(Math.random()<.35) out.push({t:`Prévenir la cible`,s:`+Humanité · tu trahis le client`,fx:{hum:7,cred:-2,ed:Math.round(pay*.25/50)*50,msg:`Tu choisis ton camp. La cible te glisse quelques billets et disparaît. Le client, lui, s'en souviendra.`}});
+    out.push({t:`Refuser`,s:`Pas ton genre de boulot`,fx:{msg:`« Dommage. Je trouverai quelqu'un de moins regardant. »`}});
+    return out; },ch:[]});
+
+/* ---------- Offre d'empire (réservée aux chefs et hauts gradés) ---------- */
+card({id:`emp_offer`,who:`@fixer`,tag:`📯 Empire · une ouverture`,cond:()=>empireEligible(),w:0,
+  tx:()=>{ const c=DIST.filter(d=>G.dist[d.id]!==`player`&&!(d.lock&&!G.flags.dogtown)&&!(G.member&&G.dist[d.id]===G.member)); const d=c[rnd(0,c.length-1)]; G.tmp={d:d.id};
+    return `Un informateur te souffle une ouverture : les défenses de <strong>${d.n}</strong> sont dégarnies cette semaine. « Si tu veux y planter ton drapeau, c'est maintenant. »`; },
+  ch:[
+    {t:`Lancer tes hommes`,s:`CORPS · combat · +40 d'influence`,chk:{a:`body`,k:`cmb`,dc:8,ok:{fn:`empPush`,cred:4,msg:`Tes hommes s'installent avant que quiconque réagisse.`},ko:{hp:-20,cred:-2,msg:`C'était un piège. Vous reculez en désordre.`}}},
+    {t:`Acheter les bonnes personnes`,s:`−1 200 €$ · +30 d'influence`,req:R.ed(1200),fx:{ed:-1200,fn:`empBuy`,msg:`Quelques enveloppes, quelques portes qui s'ouvrent.`}},
+    {t:`Laisser passer`,s:`Garde tes forces`,fx:{msg:`Tu ne bouges pas. Quelqu'un d'autre en profitera.`}}
+  ]});
+/* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
 let G = null;
@@ -2593,7 +2775,8 @@ const DMAP = {}; DIST.forEach(d=>DMAP[d.id]=d);
 byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
-const CD = {fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+CARDS.filter(c=>/^b[cp]_/.test(c.id)).forEach(c=>{ c.cond=()=>false; });
+const CD = {sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -2604,13 +2787,15 @@ function newState(o){
     v:1, name:o.name, origin:o.origin, sub:o.sub, t:0, age:START_AGE,
     hp:100, hum:100, cred:o.cred, ed:o.ed, at,
     cyber:[], hacks:[], gear:[], flags:{}, fac:{}, member:null, rank:0, jobs:0,
-    mine:null, allies:{}, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
+    mine:null, heat:{rue:0,corpo:0,loi:0,nomad:0}, act:0, amb:null, era:null, traits:[], ambDone:0, skip:{}, credTier:0, allies:{}, ctl:{}, hold:{}, ops:{left:2}, relT:{}, dead:{}, pendingLoot:0, trainLast:0, echo:[], lastA:null, xp:{body:0,ref:0,tech:0,int:0,cool:0}, rel:{}, bloc:{rue:50,corpo:50,loi:50,nomad:50}, dist:{}, role:{solo:0,net:0,fixer:0,tech:0,med:0,rocker:0,corpo:0,nomad:0,cop:0,boss:0},
     done:{}, hist:[], queue:[], log:[], tmp:{}, joinedOnce:{}, cur:null,
     stats:{cards:0,fights:0,jobs:0,peak:0,gigs:0}, over:null, fameBonus:0
   };
   DIST.forEach(d=>s.dist[d.id]=d.o);
   Object.entries(o.fac||{}).forEach(([k,v])=>s.fac[k]=v);
   (o.flags||[]).forEach(f=>s.flags[f]=true); s.flags.basichack=true;
+  // chaque vie est différente : une partie des événements n'aura pas lieu
+  CARDS.forEach(c=>{ if(/intro|retire_offer|legend|found_faction|fac_coup|fac_promo/.test(c.id)) return; if(c.story?Math.random()<.35:(c.once&&Math.random()<.22)) s.skip[c.id]=1; });
   return s;
 }
 const yr = () => START_YEAR + Math.floor(G.t/12);
@@ -2640,36 +2825,28 @@ function skill(k){
   if(G.origin===`corpo`&&k===`soc`) v++;
   if(k===`soc`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).soc||0});
   if(k===`stl`) G.gear.forEach(i=>{v+=(GEARMAP[i].k||{}).stl||0});
-  if(k===`drv`){ const bs=blocState(`nomad`); if(bs===`hi`)v++; if(bs===`lo`)v--; }
+  v+=({cmb:tr(`tueur`),hck:tr(`code`),drv:tr(`pilote`),soc:tr(`froid`),stl:tr(`ombre`)}[k])?1:0;
   return v;
 }
-function blocState(b){ const v=(G.bloc||{})[b]; return v>=65?`hi`:v<=35?`lo`:null; }
-function bm(){ // multiplicateurs liés aux blocs et à l'origine
-  const r=blocState(`rue`), c=blocState(`corpo`), l=blocState(`loi`), n=blocState(`nomad`);
+const tr = id => !!(G.traits&&G.traits.includes(id));
+const eraNow = () => ERAS[G.era]||{};
+const heatState = b => { const v=(G.heat||{})[b]||0; return v>=70?`hunt`:v>=40?`want`:null; };
+function bm(){ // multiplicateurs : origine, traits, époque
+  const er=eraNow(), rich=tr(`riche`);
   return {
-    gear:(r===`hi`?.85:r===`lo`?1.15:1), cyber:(c===`hi`?.9:c===`lo`?1.15:1)*(G.origin===`corpo`?.9:1),
-    gig:(r===`hi`?1.1:r===`lo`?.9:1), income:(c===`hi`?1.2:c===`lo`?.9:1),
-    hurt:(l===`lo`?1.1:1), rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(n===`hi`?.8:1)
+    gear:(rich?.9:1)*(er.gear||1), cyber:(G.origin===`corpo`?.9:1)*(rich?.9:1)*(er.cyber||1),
+    gig:(er.gig||1), income:(rich?1.2:1)*(er.income||1), hurt:(er.hurt||1),
+    rent:(G.origin===`street`?.8:G.origin===`nomad`?.6:1)*(er.rent||1)
   };
 }
 const cyPrice = c => Math.round(c.p*(G.flags.vik?.85:1)*(G.member===`maelstrom`?.9:1)*bm().cyber*infl());
 const gearPrice = g => Math.round(g.p*(G.member===`militech`||G.member===`sixth`?.9:1)*bm().gear*infl());
-function blocPerkLines(b){
-  const s=blocState(b), v=Math.round(G.bloc[b]);
-  const L={
-    rue:[`Marché noir −15 % · gigs +10 %`,`Marché noir +15 % · gigs −10 %`],
-    corpo:[`Chrome −10 % · revenus passifs +20 %`,`Chrome +15 % · revenus passifs −10 %`],
-    loi:[`Protection : dégâts −10 % (blindage de fait)`,`Traqué : dégâts reçus +10 %`],
-    nomad:[`Routes sûres : conduite +1 · loyer −20 %`,`Routes fermées : conduite −1`]
-  }[b];
-  return {s,v,hi:L[0],lo:L[1]};
-}
 function mitigation(){
   let m=0;
   G.cyber.forEach(i=>m+=CY(i).mit||0);
   G.gear.forEach(i=>m+=GEARMAP[i].mit||0);
-  if(blocState(`loi`)===`hi`) m+=.1;
-  return Math.min(.5,m);
+  if(tr(`dur`)) m+=.15;
+  return Math.min(.55,m);
 }
 const ownedList = () => DIST.filter(d=>G.dist[d.id]===`player`);
 function pickFoe(d){
@@ -2695,8 +2872,42 @@ function promoInfo(){
   if(isLeader()) return {leader:true,title:LEADER[f.k]};
   const rep=G.fac[G.member]||0;
   if(G.rank>=3){ const ok=G.jobs>=LEAD_NEED.jobs&&rep>=LEAD_NEED.rep&&G.cred>=LEAD_NEED.cred; return {lead:true,next:`${LEADER[f.k]} (prendre la tête)`,jobs:[G.jobs,LEAD_NEED.jobs],rep:[rep,LEAD_NEED.rep],cred:[G.cred,LEAD_NEED.cred],ready:ok}; }
-  const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank];
-  return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],ready:G.jobs>=jn&&rep>=rn};
+  const jn=JOB_NEED[G.rank], rn=REP_NEED[G.rank], cn=RANK_CRED[G.rank];
+  return {next:k[G.rank+1],jobs:[G.jobs,jn],rep:[rep,rn],cred:[G.cred,cn],ready:G.jobs>=jn&&rep>=rn&&G.cred>=cn};
+}
+const facPowers = () => { if(!G.member) return []; const f=FAC[G.member], k=f.k, r=isLeader()?4:G.rank;
+  const sp={corp:`Couverture légale : la police te repère 40 % moins vite`,ncpd:`Plaque : la police te repère deux fois moins vite`,trauma:`Clinique gratuite aux haltes`,mox:`Thérapie à moitié prix aux haltes`,clan:`Les Badlands te couvrent`,gang:`La rue te couvre : les gangs te repèrent moins vite`}[k];
+  return [[0,`🎽 Couleurs : ${f.perk} · ${sp}`],[1,`🛡 Renfort : +3 à un jet de CORPS ou de RÉFLEXES, une fois par période`],[2,`🕶 Planque : ta poursuite retombe plus vite · salaire accru · opérations sur les quartiers`],[3,`📯 Ordres : +1 action d'empire · phase d'Empire`],[4,`👑 Tribut de la faction : +300 €$ par période`]].map(([n,t])=>({t,ok:r>=n,n})); };
+function facBackup(a){ return (G.member&&(G.rank>=1||isLeader())&&(a===`body`||a===`ref`)&&G.facHelpP!==G.stats.cards)?`@fac`:null; }
+const actOf = age => { let i=0; ACTS.forEach((a,k)=>{ if(age>=a.from) i=k; }); return i; };
+const pl = (n,w)=>`${n} ${w}${n>1?`s`:``}`;
+const AMBS = [
+  {id:`cred`,t:a=>`Atteindre ${[20,40,60,80][a]} de Street Cred`,ok:a=>G.cred>=[20,40,60,80][a]},
+  {id:`rich`,t:a=>`Posséder ${[3000,10000,25000,50000][a].toLocaleString(`fr`)} €$`,ok:a=>G.ed>=[3000,10000,25000,50000][a]},
+  {id:`rank`,t:a=>`Atteindre le rang ${Math.min(3,a+1)} dans une faction`,ok:a=>!!(G.member&&(isLeader()||G.rank>=Math.min(3,a+1)))},
+  {id:`own`,t:a=>`Tenir ${pl([1,2,3,4][a],`quartier`)}`,ok:a=>ownedList().length>=[1,2,3,4][a],min:1},
+  {id:`crew`,t:a=>`Compter ${pl([1,2,4,5][a],`membre`)} dans ta famille`,ok:a=>crewOf().length>=[1,2,4,5][a],min:1},
+  {id:`ally`,t:a=>`Avoir ${pl([1,2,3,4][a],`lien`)} à 40 ou plus`,ok:a=>Object.values(G.rel||{}).filter(v=>v>=40).length>=[1,2,3,4][a]},
+  {id:`hum`,t:a=>`Finir l'acte avec 70 d'Humanité ou plus`,ok:a=>G.hum>=70},
+  {id:`chrome`,t:a=>`Porter ${[2,3,5,6][a]} implants`,ok:a=>G.cyber.length>=[2,3,5,6][a]},
+  {id:`quest`,t:a=>`Réussir ${pl([1,3,6,9][a],`mission`)} secondaire${[1,3,6,9][a]>1?`s`:``}`,ok:a=>Object.keys(G.flags).filter(f=>f.startsWith(`qdone_`)).length+(G.stats.side||0)>=[1,3,6,9][a]},
+  {id:`clean`,t:a=>`Finir l'acte sans être recherché(e) (toutes les poursuites sous 40)`,ok:a=>Object.values(G.heat).every(v=>v<40)},
+  {id:`attr`,t:a=>`Monter un attribut à ${[6,7,8,9][a]}`,ok:a=>Object.values(G.at).some(v=>v>=[6,7,8,9][a])},
+  {id:`found`,t:a=>`Fonder ou diriger une faction`,ok:a=>!!(G.mine||isLeader()),min:1},
+  {id:`pact`,t:a=>`Sceller ${pl([1,1,2,2][a],`pacte`)}`,ok:a=>Object.keys(G.allies||{}).length>=[1,1,2,2][a],min:1}
+];
+const ambNow = () => AMBS.find(x=>x.id===G.amb);
+function pickAmbs(a){ const pool=AMBS.filter(x=>(x.min||0)<=a&&!x.ok(a)); const out=[]; while(out.length<3&&pool.length){ out.push(pool.splice(rnd(0,pool.length-1),1)[0]); } return out; }
+function pickTraits(){ const pool=Object.keys(TRAITS).filter(t=>!tr(t)); const out=[]; while(out.length<3&&pool.length){ out.push(pool.splice(rnd(0,pool.length-1),1)[0]); } return out; }
+function rollEra(){ const ks=Object.keys(ERAS).filter(k=>k!==G.era); G.era=ks[rnd(0,ks.length-1)]; return ERAS[G.era]; }
+function credTierCheck(){ let t=0; CRED_TIERS.forEach(([v],i)=>{ if(G.cred>=v) t=i+1; }); if(t>(G.credTier||0)){ G.credTier=t; return CRED_TIERS[t-1]; } return null; }
+function empireEligible(){ return !!(G.mine||isLeader()||(G.member&&G.rank>=2)); }
+function empireTick(){
+  if(!empireEligible()||G.inHub||G.flags.q_active) return;
+  G.sinceEmp=(G.sinceEmp||0)+1; if(G.sinceEmp<6||G.queue.length) return;
+  const ids=[`mine_raid`,`mine_recruit`,`p_boss`,`duty_tribute`,`lg_coalition`,`mine_traitor`,`fac_clash`,`ally_call`,`crew_favor`,`emp_offer`].filter(id=>byId[id]&&safe(byId[id].cond,false));
+  if(isLeader()) ids.push(`leader_dispute`);
+  if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
 function ageTick(){
   if(G.age<AGING_AGE) return;
@@ -2728,6 +2939,7 @@ const MENTOR = {body:`jackie`,ref:`claire`,tech:`vik`,int:`dex`,cool:`rogue`};
 function gainXp(a,amt){
   G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
   if(G.at[a]>=9) return;
+  if(tr(`mentor`)) amt+=1;
   G.xp[a]+=amt; chip(`i`,`+${amt} XP ${ATTRS[a].n}`);
   while(G.at[a]<9 && G.xp[a]>=xpNeed(G.at[a])){
     G.xp[a]-=xpNeed(G.at[a]); G.at[a]++;
@@ -2736,12 +2948,35 @@ function gainXp(a,amt){
   }
 }
 /* ---------- blocs d'influence (équilibre) ---------- */
-function moveBloc(b,d){
-  if(!b||!d) return; G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
-  const o=BLOCS[b].opp, bb=G.bloc[b], ob=G.bloc[o];
-  G.bloc[b]=clamp(bb+d,0,100); G.bloc[o]=clamp(ob-d*.4,0,100);
-  const rd=Math.round(G.bloc[b]-bb); if(Math.abs(rd)>=1) chip(rd>0?`i`:`n`,`${sgn(rd)} ${BLOCS[b].n}`);
+function heatMult(b){
+  let m=(eraNow().heat||{})[b]||1;
+  if(tr(`ombre`)) m*=.75;
+  if(G.member){ const k=FAC[G.member].k;
+    if(b===`loi`&&(k===`corp`||k===`trauma`)) m*=.6; if(b===`loi`&&k===`ncpd`) m*=.5;
+    if(b===`rue`&&(k===`gang`||k===`mox`)) m*=.7; if(b===`nomad`&&k===`clan`) m*=.6; if(b===`corpo`&&k===`corp`) m*=.7; }
+  return m;
 }
+function addHeat(b,v){
+  if(!b||!v||!BLOCS[b]) return; G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};
+  if(v>0) v*=heatMult(b);
+  const o=G.heat[b]; G.heat[b]=clamp(o+v,0,100); const rd=Math.round(G.heat[b])-Math.round(o);
+  if(rd) chip(rd>0?`n`:`p`,`${sgn(rd)} ${BLOCS[b].ic} ${BLOCS[b].n}`);
+}
+// une bonne relation fait retomber la poursuite, une mauvaise la fait monter
+function moveBloc(b,d){ addHeat(b,d<0?-d*1.6:-d*.8); }
+function heatFromCheck(c,ok,fx){
+  if(!c) return; const k=c.k;
+  if(k===`cmb`){ addHeat(`loi`,ok?12:16); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
+  else if(ok&&fx&&fx.ed>=400) addHeat(c.a===`cool`?`corpo`:`rue`,5);
+}
+function heatTick(){
+  const base=(G.cred<20?2:G.cred<50?1:(G.stats.cards%2?1:0))+(tr(`fantome`)?2:0);
+  Object.keys(BLOCS).forEach(b=>{ let dcy=base; if(G.member&&G.rank>=2&&BLOC[G.member]===b) dcy+=2; G.heat[b]=clamp((G.heat[b]||0)-dcy,0,100); });
+  // recherché(e) : ils finissent par te tomber dessus
+  const hb=hottestHeat(), hv=G.heat[hb]||0;
+  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=2&&Math.random()<(hv-18)/85){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
+}
+function hottestHeat(){ return Object.keys(BLOCS).sort((a,b)=>(G.heat[b]||0)-(G.heat[a]||0))[0]; }
 function blocFromFx(fx){
   const m={}; if(!fx) return m;
   if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{const b=BLOC[k];if(b)m[b]=(m[b]||0)+v*.5});
@@ -2763,9 +2998,7 @@ function makeLoot(t){
   const cands=Object.keys(WHO).filter(k=>REL_NAMES.includes(k));
   if(cands.length){ const c=cands[rnd(0,cands.length-1)];
     pool.push({k:`rel`,ic:`🤝`,t:`Faveur`,d:`+${8+3*t} lien · ${WHO[c].n}`,ap:()=>applyFx({rel:{[c]:8+3*t}})}); }
-  const worst=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
-  const dev=G.bloc[worst]-50;
-  if(Math.abs(dev)>=18) pool.push({k:`bal`,ic:`⚖`,t:`Rééquilibrer`,d:`${BLOCS[worst].n} ${dev<0?`+`:`−`}${8+4*t} (te rapproche du milieu)`,w:3,ap:()=>applyFx({bloc:{[worst]:dev<0?8+4*t:-(8+4*t)}})});
+  { const hb=hottestHeat(), hv=Math.round(G.heat[hb]||0); if(hv>=25) pool.push({k:`bal`,ic:`🕶`,t:`Profil bas`,d:`${BLOCS[hb].ic} ${BLOCS[hb].n} −${12+5*t} (poursuite)`,w:3,ap:()=>addHeat(hb,-(12+5*t))}); }
   if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&(x.loot?(t>=3&&Math.random()<.25):x.p<=2000+2200*t)&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
     pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
   if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
@@ -2797,10 +3030,10 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v>0&&tr(`survie`)) v=Math.round(v*1.5); if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.humx){ const b=G.hum; G.hum=clamp(G.hum+fx.humx,0,100); if(G.hum!==b){ chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.humx<0)SFX.glitch(); } }
-  if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
-  if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
+  if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5*(tr(`ame`)?.7:1)*(eraNow().hum||1)):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
+  if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(tr(`renom`)?1.25:1)*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(cv>=2) addHeat(hottestHeat(),cv*1.5); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
   if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));
@@ -2871,8 +3104,7 @@ function relDecay(){
 function adviceNow(){
   if(G.hp<45) return {ic:`➕`,t:`Santé basse (${G.hp}) : blessé, tu es moins efficace. Repose-toi à la prochaine halte 🍸.`,go:`heal`};
   if(G.hum<45) return {ic:`🧠`,t:`Humanité basse (${G.hum}) : pense à la thérapie à la prochaine halte 🍸.`,go:`therapy`};
-  const bs=Object.keys(BLOCS).sort((a,b)=>Math.abs(G.bloc[b]-50)-Math.abs(G.bloc[a]-50))[0];
-  if(Math.abs(G.bloc[bs]-50)>=26) return {ic:`⚖`,t:`${BLOCS[bs].n} ${G.bloc[bs]<50?`t'en veut`:`te tient de près`} : rééquilibre.`,go:`empire`};
+  { const hb=hottestHeat(), hv=G.heat[hb]||0; if(hv>=70) return {ic:BLOCS[hb].ic,t:`${BLOCS[hb].n} te traque (${Math.round(hv)}) : fais profil bas avant la capture.`,go:`heat`}; }
   return null;
 }
 const FN = {
@@ -2885,12 +3117,12 @@ const FN = {
   mineGrow(){ if(G.mine){G.mine.power++;chip(`y`,`Puissance de ${G.mine.name} +1`);} },
   facJobWin(){ const f=FAC[G.member]; const pay=(G.rank+1)*450+rnd(0,350); G.ed+=pay; G.cred=clamp(G.cred+3+G.rank,0,100); G.fac[G.member]=clamp((G.fac[G.member]||0)+9,-100,100); G.jobs++; G.stats.jobs++; G.pendingLoot=Math.max(G.pendingLoot||0,G.rank>=2?2:1); chip(`i`,`+${pay} €$`); { const pi=promoInfo(); if(pi&&pi.jobs) chip(`y`,`Missions ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`); } chip(`y`,`+${3+G.rank} Street Cred`); chip(`i`,`+9 ${f.n}`); },
   facJobFail(){ G.jobs=Math.max(0,G.jobs); },
-  promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
+  promote(){ const f=FAC[G.member]; const oldT=RANKS[f.k][G.rank]; G.rank++; G.jobs=0; const pay=500*G.rank; G.ed+=pay; G.fac[G.member]=clamp((G.fac[G.member]||0)+8,-100,100); chip(`y`,`Rang : ${RANKS[f.k][G.rank]}`); chip(`i`,`+${pay} €$`);
     if(f.k===`mox`){G.hum=clamp(G.hum+8,0,100);chip(`p`,`+8 Humanité`)}
     if(G.member===`maelstrom`){G.hum=clamp(G.hum-6,0,100);chip(`n`,`−6 Humanité`)}
     if(f.k===`trauma`){G.hp=100;chip(`p`,`Soins gratuits`)}
     if(G.rank>=2) G.flags.duty=true;
-    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,(G.rank<3?`🎯 Prochain grade : ${RANKS[f.k][G.rank+1]} — ${JOB_NEED[G.rank]} missions & réputation ${REP_NEED[G.rank]}`:`🎯 Prochaine étape : prendre la tête (${LEAD_NEED.jobs} missions, rép. ${LEAD_NEED.rep}, Cred ${LEAD_NEED.cred})`),G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
+    cere({k:`promo`,c:f.c,ic:`⬆`,kick:`PROMOTION`,t:RANKS[f.k][G.rank],sub:`${oldT} → ${RANKS[f.k][G.rank]} · ${f.n}`,lines:[`💰 +${pay} €$`,`✨ ${RANK_PERKS[G.rank-1]}`,(G.rank<3?`🎯 Prochain grade : ${RANKS[f.k][G.rank+1]} — Street Cred ${RANK_CRED[G.rank]} et une mission`:`🎯 Prochaine étape : prendre la tête (Street Cred ${LEAD_NEED.cred})`),`🔓 ${(facPowers().find(x=>x.n===G.rank)||{t:``}).t}`,G.rank>=2?`⚠ Plus de pouvoir, plus de devoirs : la famille attend sa part`:`⚔ Ceux d'en bas te regardent, ceux d'en haut aussi`]});
     SFX.ok(); },
   betray(){ const old=G.member; const nw=FAC[old].foes[0]; const r=leaveFac(old,`betray`); G.fac[old]=-70; cere({k:`betray`,c:`#ff2a6d`,ic:`🗡`,kick:`TRAHISON`,t:`Tu trahis ${FAC[old].n}`,sub:`Tu perds ton rang de ${r.old}`,lines:[`💀 Un contrat est mis sur ta tête`,`📉 Réputation chez ${FAC[old].n} : −70`,`⚖ ${BLOCS[BLOC[old]].n} te tourne le dos`,`👥 Tes anciens frères te chercheront`]}); joinFac(nw); },
   seizeFaction(){ const id=G.member; G.flags[`leader_`+id]=true; G.rank=3; cere({k:`leader`,c:FAC[id].c,ic:`👑`,kick:`COURONNE`,t:`Tu diriges ${FAC[id].n}`,sub:`${LEADER[FAC[id].k]} · ${FAC[id].n}`,lines:[`🏙 Ton quartier d'origine est à toi`,`⚠ Les ambitieux t'observent : attention aux complots`,`📜 Tu portes le poids de tous les tiens`]}); addEcho(`leader_dispute`,3); addEcho(`leader_coup`,12); const hd=FAC[id].home; if(DMAP[hd]) G.dist[hd]=`player`; G.role.boss+=2; chip(`y`,`Tu diriges ${FAC[id].n}`); toast(`Tu prends la tête de ${FAC[id].n}`); SFX.ok(); flash(`#fcee0a`); },
@@ -2902,6 +3134,12 @@ const FN = {
   clashLose(){ if(!G.member) return; G.fac[G.member]=clamp((G.fac[G.member]||0)-6,-100,100); chip(`n`,`−6 ${FAC[G.member].n}`); },
   allyHelp(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]){ G.fac[id]=clamp((G.fac[id]||0)+10,-100,100); chip(`i`,`+10 ${FAC[id].n}`); } },
   allyBreak(){ const id=G.tmp&&G.tmp.fid; if(FAC[id]) facBreak(id); },
+  payAll(){ const v=Math.max(0,G.ed); G.ed=0; chip(`n`,`−${v.toLocaleString(`fr`)} €$`); G.gear=G.gear.filter(i=>GEARMAP[i].t!==`véhicule`); },
+  twAme(){ if(!tr(`ame`)){ G.traits.push(`ame`); chip(`y`,`Trait : Âme intacte`); } },
+  twSurvie(){ if(!tr(`survie`)){ G.traits.push(`survie`); chip(`y`,`Trait : Instinct de survie`); } },
+  sideDone(){ G.stats.side=(G.stats.side||0)+1; },
+  empPush(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+40,0,99); chip(`y`,`+40 influence · ${DMAP[d].n}`); },
+  empBuy(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+30,0,99); chip(`y`,`+30 influence · ${DMAP[d].n}`); },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -2917,6 +3155,7 @@ function tick(months){
   if(G.mine&&G.mine.type===`fixers`) inc+=300;
   inc+=crewOf().length*120;
   inc+=Object.keys(G.allies||{}).length*100;
+  if(isLeader()) inc+=300;
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
@@ -2939,14 +3178,15 @@ function whoCur(c){ return (G.cur&&G.cur.id===c.id&&(G.cur.npc||(G.cur.who&&WHO[
 function drawCard(){
   while(G.queue.length){ const c=byId[G.queue.shift()]; if(c) return c; }
   const T=G.t;
-  const st = CARDS.filter(c=>c.story && !G.done[c.id] && T>=(c.at[0]-START_YEAR)*12+c.at[1] && (!c.cond||safe(c.cond,false)));
+  const SK=G.skip||{}, wt=c=>typeof c.w===`function`?c.w():(c.w||5);
+  const st = CARDS.filter(c=>c.story && !SK[c.id] && !G.done[c.id] && T>=(c.at[0]-START_YEAR)*12+c.at[1] && (!c.cond||safe(c.cond,false)));
   if(st.length){ st.sort((a,b)=>(a.at[0]*12+a.at[1])-(b.at[0]*12+b.at[1])); return st[0]; }
   const recent = id => { const cd=CD[id]||7; return G.hist.slice(-cd).includes(id); };
-  let pool = CARDS.filter(c=>!c.story && (!c.once||!G.done[c.id]) && (!c.cond||safe(c.cond,false)) && !recent(c.id));
+  let pool = CARDS.filter(c=>!c.story && !SK[c.id] && (!c.once||!G.done[c.id]) && (!c.cond||safe(c.cond,false)) && !recent(c.id));
   if(!pool.length) pool = CARDS.filter(c=>c.id.startsWith(`fl`));
-  const tw = pool.reduce((a,c)=>a+(c.w||5),0);
+  const tw = pool.reduce((a,c)=>a+wt(c),0);
   let r = Math.random()*tw;
-  for(const c of pool){ r-=(c.w||5); if(r<=0) return c; }
+  for(const c of pool){ r-=wt(c); if(r<=0) return c; }
   return pool[0];
 }
 function prepCard(c){
@@ -2982,6 +3222,7 @@ function conquestChoices(d){
 }
 function canConquer(d){
   if(G.dist[d.id]===`player`) return `Déjà à toi`;
+  if(!empireEligible()) return `Réservé aux chefs de crew et aux hauts gradés (rang 2)`;
   if(d.lock&&!G.flags.dogtown) return `Verrouillé`;
   if(G.member&&G.dist[d.id]===G.member) return `Ta propre faction`;
   if((G.allies||{})[G.dist[d.id]]) return `Territoire d'un allié : romps le pacte d'abord`;
@@ -3024,7 +3265,7 @@ function reinforce(d){
   G.ed-=price; G.hold=G.hold||{}; G.hold[d.id]=clamp(holdOf(d.id)+35,0,100); return price;
 }
 function warTick(){
-  G.ops={left:OPS_PER}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
   Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-60&&ownedList().length&&Math.random()<.35){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
@@ -3119,9 +3360,12 @@ function computeScore(kind){
     [`Chrome installé (${G.cyber.length})`, G.cyber.length*80],
     [`Missions de faction (${G.stats.jobs})`, G.stats.jobs*60],
     [`Relations (${relSum()})`, relSum()*14],
+    [`Ambitions accomplies (${G.ambDone||0})`, (G.ambDone||0)*800],
+    [`Traits (${(G.traits||[]).length})`, (G.traits||[]).length*200],
     [`Légende & style`, legend+fame],
   ];
   let base = lines.reduce((a,l)=>a+l[1],0);
+  store.set(`ncl_legacy`,{name:G.name,title:roleTitle(),end:ENDS[kind].t,cred:G.cred,age:G.age});
   const mult = ENDS[kind].m || ({retire:1.3,quit:1.15,blaze:G.cred>=30?1.2:0.9,flatline:.6,mercy:.6,psycho:.5,debt:.5}[kind]||1);
   return {lines, base, mult, total:Math.round(base*mult)};
 }
@@ -3147,7 +3391,7 @@ function checkEnd(){
   }
   if(G.hum<=0){ endGame(`psycho`); return true; }
   if(G.ed<=-4000){ endGame(`debt`); return true; }
-  for(const b of Object.keys(BLOCS)){ const v=(G.bloc||{})[b]; if(v<=0){ endGame(`bloc_${b}_lo`); return true; } if(v>=100){ endGame(`bloc_${b}_hi`); return true; } }
+  for(const b of Object.keys(BLOCS)){ if((G.heat[b]||0)>=100&&!G.queue.includes(BLOCS[b].cap)){ G.heat[b]=92; G.queue.unshift(BLOCS[b].cap); } }
   if(G.age>=HARD_AGE){ endGame(`retire`); return true; }
   if(G.age>=RETIRE_AGE&&!G.flags.retireAsked){ G.flags.retireAsked=true; G.queue.unshift(`retire_offer`); }
   return false;
@@ -3274,14 +3518,14 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
 function showHow(){
   modal(`Comment jouer`,`<div class="log"><b>1.</b> Chaque carte est un événement. Choisis une réponse (touche simplement un choix, ou les touches 1-2-3).</div>
   <div class="log"><b>2.</b> Surveille ta <b style="color:var(--hp)">Santé</b>, ton <b style="color:var(--hum)">Humanité</b> (trop de chrome = cyberpsychose), ta <b style="color:var(--cred)">Street Cred</b> et tes <b style="color:var(--ed)">€$</b>.</div>
-  <div class="log"><b>⚖</b> <b>Équilibre :</b> les 4 barres RUE · CORPOS · LOI · BADLANDS (sous les jauges) doivent rester <b>au milieu</b>. Trop bas, ils te traquent ; trop haut, ils te possèdent — dans les deux cas, ça peut te coûter la vie. Les points sur les barres montrent ce qu'un choix va changer.</div>
+  <div class="log"><b>🚔</b> <b>Poursuites :</b> Police, Corpos, Gangs et Badlands te repèrent quand tu fais du bruit. À 40 ils te cherchent, à 70 ils te traquent, à 100 c'est la capture. Plus ta Street Cred est haute, plus elles retombent lentement. La <b>Street Cred</b> ouvre aussi les grades et les grandes actions (touche la date en haut pour voir les paliers, ton acte et ton ambition).</div>
   <div class="log"><b>3.</b> Les actions à jets de dés affichent la chance de réussite. Tes attributs, implants et équipements l'améliorent. Tes attributs montent <b>à l'usage</b> (XP) — réussir ou même rater te fait progresser.</div>
   <div class="log"><b>4.</b> Toutes les ~5 cartes, une halte à l'<b>Afterlife</b> (🍸) : tu choisis boutique, contrat ou repos — mais pas le moment. Pas assez d'argent ? L'option est verrouillée. Blessé, tu es moins efficace. <b>EMPIRE</b> : conquiers des quartiers.</div>
   <div class="log"><b>5.</b> Rejoins, trahis ou fonde une faction. Débloque des voies : Edgerunner, Netrunner, Fixer, Techie, Medtech, Rockerboy, Flic…</div>
@@ -3348,14 +3592,15 @@ function renderCreate(){
     const o=ORIGINS[CR.origin], s=o.subs[CR.sub];
     G=newState({name:nm,origin:CR.origin,sub:CR.sub,cred:o.cred,ed:o.ed,at:o.at,alloc:CR.alloc,fac:s.fac,flags:o.flags});
     (o.gear||[]).forEach(g=>G.gear.push(g));
-    if(CR.origin===`corpo`){G.bloc.corpo=62;G.bloc.rue=40}
-    if(CR.origin===`nomad`){G.bloc.nomad=62;G.bloc.corpo=40}
-    if(CR.origin===`street`){G.bloc.rue=60;G.bloc.loi=40}
+    if(CR.origin===`corpo`){G.heat.rue=10}
+    if(CR.origin===`nomad`){G.heat.loi=8}
+    if(CR.origin===`street`){G.heat.loi=12}
     if(CR.origin===`corpo`){ G.role.corpo=2; }
     if(CR.origin===`nomad`){ G.role.nomad=2; }
     if(CR.origin===`street`){ G.role.fixer=1; }
     G.log.unshift({d:dateStr(),m:`${nm} débute sa vie à Night City (${o.n}).`});
-    renderGame(); nextCard();
+    addEcho(`life_twist`,1);
+    renderGame(); legacyStep(()=>startAct(()=>nextCard()));
   };
   if(CR.step===3){ $(`#rnd`).onclick=()=>{SFX.tap();$(`#nm`).value=randomName();CR.name=$(`#nm`).value}; setTimeout(()=>{const n=$(`#nm`);if(n&&!n.value)n.focus()},100); }
 }
@@ -3371,7 +3616,7 @@ function renderGame(){
         <div class="meter m-ed" id="m-ed"><div class="lb">€$<b id="v-ed"></b></div><div class="bar"><i id="b-ed"></i></div><span class="dot"></span></div>
       </div>
       <div class="blocs" id="blocs"></div>
-      <div class="sub-hud"><span id="hdate"></span><button class="hbtn" id="hhub">🍸 <b id="hhn">5</b></button><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
+      <div class="sub-hud"><button id="hdate"></button><button class="hbtn" id="hhub">🍸 <b id="hhn">5</b></button><button class="hbtn" id="hbc">👥 <b id="hbn">0</b></button><button class="role" id="hrole"></button></div>
     </div>
     <div class="stage" id="stage"></div>
     <div class="choices" id="choices"></div>
@@ -3384,6 +3629,7 @@ function renderGame(){
     </nav></div>`;
   document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
+  $(`#hdate`).onclick=()=>{SFX.tap();openAct()};
   $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
   $(`#hrole`).onclick=()=>{SFX.tap();openEmpire(`fac`)};
   updateHud(true);
@@ -3409,7 +3655,7 @@ function updateHud(init){
   document.body.classList.toggle(`lowhp`,G.hp<=30);
   tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
-  $(`#hdate`).textContent=`${dateStr()} · ${G.age} ans`;
+  $(`#hdate`).textContent=`${ROMAN[G.act||0]} · ${yr()} · ${G.age} ans`;
   { const pi=promoInfo(), hr=$(`#hrole`); hr.textContent=roleTitle()+(pi&&pi.jobs&&!pi.ready?` · ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`:pi&&pi.ready?` ⬆`:``); hr.classList.toggle(`ready`,!!(pi&&pi.ready)); }
   const cb=document.querySelector(`.dock [data-d=city]`); if(cb)cb.classList.toggle(`alert`,G.hp<45||G.hum<45);
   $(`#m-hp`).classList.toggle(`warn`,G.hp<=25);
@@ -3423,23 +3669,25 @@ function updateHud(init){
   renderBlocs();
   $(`#hhn`).textContent=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));
   const nc=REL_NAMES.filter(i=>relv(i)>=5&&!(G.dead||{})[i]).length; $(`#hbn`).textContent=nc;
-  const ad=adviceNow(), urgent=ad&&[`heal`,`therapy`,`empire`].includes(ad.go);
+  const ad=adviceNow(), urgent=!!ad;
   $(`#advice`).innerHTML=urgent?`<button class="adv" id="advb">${ad.ic} ${ad.t} <b>›</b></button>`:``;
   const ab=$(`#advb`); if(ab) ab.onclick=()=>{SFX.tap();goAdvice(ad.go)};
   lastVals=v;
 }
 function renderBlocs(){
-  const b=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};
+  const h=G.heat||{};
   $(`#blocs`).innerHTML=Object.keys(BLOCS).map(k=>{
-    const v=Math.round(b[k]), danger=v<=20||v>=80;
-    return `<button class="bloc ${danger?`dg`:``}" id="bl-${k}" data-bl="${k}"><span>${BLOCS[k].n}</span><div class="bb"><i style="left:${v}%;background:${danger?`var(--m)`:BLOCS[k].c}"></i></div></button>`;
+    const v=Math.round(h[k]||0), st=v>=70?`hunt`:v>=40?`want`:``;
+    return `<button class="bloc heat ${st}" id="bl-${k}" data-bl="${k}"><span>${BLOCS[k].ic} ${BLOCS[k].n}</span><div class="hb"><i style="width:${v}%"></i></div></button>`;
   }).join(``);
   document.querySelectorAll(`.bloc`).forEach(e=>e.onclick=()=>{SFX.tap();openBloc(e.dataset.bl)});
 }
 function openBloc(k){
-  const rows=Object.keys(BLOCS).map(b=>{ const p=blocPerkLines(b); return `<div class="item ${b===k?`own`:``}" style="border-color:${BLOCS[b].c}${b===k?``:`55`}"><div class="in"><b style="color:${BLOCS[b].c}">${BLOCS[b].n} · ${p.v}/100 ${p.s===`hi`?`<span class="tagx g">FAVEUR</span>`:p.s===`lo`?`<span class="tagx">HOSTILE</span>`:``}</b><small>${BLOCS[b].d}</small>
-    <small style="color:${p.s===`hi`?`var(--g)`:`var(--dim)`}">▲ 65+ : ${p.hi}</small><small style="color:${p.s===`lo`?`var(--m)`:`var(--dim)`}">▼ 35− : ${p.lo}</small></div></div>`; }).join(``);
-  modal(`Équilibre`,`<div class="log" style="color:var(--dim)">Garde les barres <b>près du milieu</b>. Une faveur (65+) donne des avantages, mais à 100 ils te possèdent. Une hostilité (35−) te coûte, et à 0 ils te tuent. Un bloc qui monte fait baisser son opposé : Rue ↔ Loi, Corpos ↔ Badlands.</div>${rows}`);
+  const dcy=(G.cred<20?2:G.cred<50?1:0.5)+(tr(`fantome`)?2:0);
+  const rows=Object.keys(BLOCS).map(b=>{ const v=Math.round(G.heat[b]||0), st=v>=70?[`TRAQUÉ(E)`,`m`]:v>=40?[`RECHERCHÉ(E)`,`y`]:[`TRANQUILLE`,`g`];
+    return `<div class="item ${b===k?`own`:``}" style="border-color:${BLOCS[b].c}${b===k?``:`55`}"><div class="in"><b style="color:${BLOCS[b].c}">${BLOCS[b].ic} ${BLOCS[b].n} · ${v}/100 <span class="fst ${st[1]}">${st[0]}</span></b><small>${BLOCS[b].d}</small><div class="bigbar" style="margin-top:6px"><i style="background:${v>=70?`var(--m)`:v>=40?`var(--y)`:BLOCS[b].c};width:${v}%"></i></div></div></div>`; }).join(``);
+  modal(`Poursuites`,`<div class="log" style="color:var(--dim)">Chaque coup d'éclat fait monter une poursuite. <b>40</b> : tu es recherché(e), ils te tombent dessus. <b>70</b> : ils te traquent. <b>100</b> : capture — prison, exécution ou désert.</div>${rows}
+   <div class="log">Elles retombent de <b style="color:${dcy<=2?`var(--m)`:`var(--g)`}">${dcy}</b> par période. <b>Plus ta Street Cred est haute, plus on se souvient de toi</b> (Cred ${G.cred}).<br>Pour les faire baisser : profil bas à l'Afterlife, pots-de-vin, services rendus aux factions, et le rang dans une faction.</div>`);
 }
 function previewDots(ch){
   const keys=new Set(); const add=f=>{if(!f)return;[`hp`,`hum`,`cred`,`ed`].forEach(k=>{if(f[k])keys.add(k)});};
@@ -3468,7 +3716,7 @@ function showCardView(){
   chs.innerHTML=visChoices(c).map(({h,i},pos)=>{
     const lock=h.req?h.req():``; let badge=``;
     if(h.chk){ const r=rollInfo(h.chk); const p=Math.round(r.chance*100); badge=`<span class="bd ${p>=70?`hi`:p<=35?`lo`:``}">${p}%</span>`; }
-    let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(WHO[al].n)}">📞<small>${esc(WHO[al].n.split(` `)[0])}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
+    let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a)||facBackup(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ const an=al===`@fac`?`Renfort`:WHO[al].n.split(` `)[0]; help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(an)}">${al===`@fac`?`🛡`:`📞`}<small>${esc(an)}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
     return `<div class="crow"><button class="btn choice ${lock?`lock`:``} ${h.exp?`exp`:``}" data-i="${i}"><span class="k">${pos+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
   }).join(``);
   chs.querySelectorAll(`.help`).forEach(b=>b.onclick=()=>pick(+b.dataset.h,0,b.dataset.al));
@@ -3481,6 +3729,7 @@ function showCardView(){
   });
   revealText($(`.card .tx`)); showTip();
   if(c.id===`afterlife_hub`&&G.hubLeft>=2) neonFx(`AFTERLIFE`);
+  if(G.empNext){ G.empNext=false; neonFx(`EMPIRE`); }
   SFX.swoosh();
 }
 function revealText(el){
@@ -3488,7 +3737,7 @@ function revealText(el){
   const words=[]; const walk=n=>{ n.childNodes.forEach(ch=>{ if(ch.nodeType===3){ const frag=document.createDocumentFragment(); ch.textContent.split(/(\s+)/).forEach(t=>{ if(!t) return; if(/^\s+$/.test(t)){ frag.appendChild(document.createTextNode(t)); return; } const s=document.createElement(`span`); s.className=`w`; s.textContent=t; words.push(s); frag.appendChild(s); }); ch.replaceWith(frag); } else if(ch.nodeType===1) walk(ch); }); };
   walk(el); const step=Math.min(22,420/Math.max(1,words.length)); words.forEach((s,i)=>s.style.animationDelay=(i*step)+`ms`);
 }
-const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`⚖ Garde les 4 barres sous les jauges près du milieu.`,`🍸 L'Afterlife revient régulièrement (compteur 🍸) : boutique, contrat ou repos. EMPIRE : quartiers · CONTACTS : tes alliés.`];
+const TIPS=[`👆 Touche une réponse. Le % indique tes chances de réussite.`,`🚔 Les 4 jauges de poursuite montent quand tu fais du bruit. À 100 : capture.`,`🍸 L'Afterlife revient régulièrement (compteur 🍸) : boutique, contrat ou repos. EMPIRE : quartiers · CONTACTS : tes alliés.`];
 function showTip(){
   const seen=store.get(`ncl_tips`)||0; if(seen>=TIPS.length||G.stats.cards>=TIPS.length*2+2||G.stats.cards%2) return;
   const i=seen; store.set(`ncl_tips`,seen+1);
@@ -3509,10 +3758,13 @@ function pick(i,dir,al,ok){
 }
 function resolveChoice(ch,al){
   CHIPS=[]; let fx, info=null;
-  if(al){ G.helpP=G.stats.cards; chip(`y`,`📞 ${WHO[al].n.split(` `)[0]} t'aide (+3)`); applyFx({rel:{[al]:2}}); }
+  if(al===`@fac`){ G.facHelpP=G.stats.cards; chip(`y`,`🛡 Renfort de ${FAC[G.member].n} (+3)`); }
+  else if(al){ G.helpP=G.stats.cards; chip(`y`,`📞 ${WHO[al].n.split(` `)[0]} t'aide (+3)`); applyFx({rel:{[al]:2}}); }
   if(ch.chk){
-    const c=ch.chk, r=rollInfo(c,al?3:0), roll=rnd(1,10);
-    const ok = roll===10 || (roll!==1 && roll>=r.need);
+    const c=ch.chk, r=rollInfo(c,al?3:0); let roll=rnd(1,10);
+    let ok = roll===10 || (roll!==1 && roll>=r.need);
+    if(!ok&&tr(`chance`)&&G.luckP!==G.stats.cards){ G.luckP=G.stats.cards; roll=rnd(1,10); ok=roll===10||(roll!==1&&roll>=r.need); chip(`y`,`🍀 Veinard : jet relancé`); }
+    heatFromCheck(c,ok,ok?c.ok:c.ko);
     fx = ok?c.ok:c.ko; info={roll,ok,a:c.a,...r};
     if(ok)G.stats.fights+=0;
   } else fx=ch.fx;
@@ -3571,12 +3823,15 @@ function afterCard(r){
     tick(2);
     if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
   } else {
-    if(G.cred>45){ G.cred-=(G.cred>85?3:G.cred>65?2:1); }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); hubTick();
+    if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); hubTick(); empireTick();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
   if(yr()!==y0) yearFx(yr());
+  const tier=credTierCheck(); if(tier) tierFx(tier);
+  if(checkEnd()) return showEnd();
+  if(actOf(G.age)>(G.act||0)) return actTransition(()=>nextCard());
   nextCard();
 }
 function askFactionName(kind,done){
@@ -3590,6 +3845,55 @@ function askFactionName(kind,done){
   };
 }
 
+/* ---------- actes, ambitions, traits, héritage ---------- */
+function tierFx(t){ overlayFx(`lvlfx`,`<span>STREET CRED ${t[0]}</span><b class="hd" style="font-size:22px;line-height:1.2;padding:0 20px">${esc(t[1])}</b>`,2000); SFX.ok(); G.log.unshift({d:dateStr(),m:`Palier de Street Cred ${t[0]} : ${t[1]}.`}); }
+function startAct(cb){
+  const a=G.act||0, A_=ACTS[a], er=rollEra();
+  cere({k:`found`,c:`#00f0ff`,ic:`🎬`,kick:`ACTE ${ROMAN[a]}`,t:A_.n,sub:A_.s,lines:[`🌆 Époque : ${er.n}`,er.d,a===0?`🎯 Choisis ton ambition : la réussir te donne un trait permanent`:`🎯 Une nouvelle ambition t'attend`]});
+  G.log.unshift({d:dateStr(),m:`Acte ${ROMAN[a]} — ${A_.n}. Époque : ${er.n}.`});
+  showCere(()=>pickAmbition(cb));
+}
+function pickAmbition(cb){
+  const a=G.act||0, opts=pickAmbs(a);
+  if(!opts.length){ G.amb=null; return cb(); }
+  modal(`🎯 Ton ambition · Acte ${ROMAN[a]}`,`<div class="log" style="color:var(--dim)">Choisis ce que tu vises avant la fin de l'acte (${ACTS[a+1]?`à ${ACTS[a+1].from} ans`:`la fin de ta carrière`}). Réussie : tu gagnes un <b>trait permanent</b>.</div><div class="tiles one">`+
+    opts.map((o,i)=>`<button class="tile rec" data-am="${o.id}" style="min-height:auto;animation:chin .4s ${i*.08}s both"><b>${o.t(a)}</b></button>`).join(``)+`</div>`,{lock:true});
+  document.querySelectorAll(`[data-am]`).forEach(b=>b.onclick=()=>{ G.amb=b.dataset.am; SFX.buy(); G.log.unshift({d:dateStr(),m:`Ambition : ${ambNow().t(a)}.`}); closeModal(); updateHud(); cb(); });
+}
+function actTransition(cb){
+  const a=G.act||0, am=ambNow(), ok=am?am.ok(a):false;
+  const next=()=>{ G.act=a+1; G.amb=null; save(); startAct(cb); };
+  if(!am) return next();
+  if(ok){
+    G.ambDone=(G.ambDone||0)+1; const ts=pickTraits();
+    cere({k:`found`,c:`#05ffa1`,ic:`🏆`,kick:`AMBITION ACCOMPLIE`,t:`Acte ${ROMAN[a]} bouclé`,sub:am.t(a),lines:[`✨ Tu gagnes un trait permanent`,`📈 +800 au score final`]});
+    showCere(()=>{ if(!ts.length) return next();
+      modal(`✨ Choisis un trait`,`<div class="log" style="color:var(--dim)">Ce que cet acte a fait de toi. Permanent.</div><div class="tiles one">`+ts.map((t,i)=>`<button class="tile rec" data-tt="${t}" style="flex-direction:row;align-items:center;gap:12px;min-height:auto;animation:chin .4s ${i*.08}s both"><span class="ti">${TRAITS[t][0]}</span><span><b style="display:block">${TRAITS[t][1]}</b><small>${TRAITS[t][2]}</small></span></button>`).join(``)+`</div>`,{lock:true});
+      document.querySelectorAll(`[data-tt]`).forEach(b=>b.onclick=()=>{ G.traits.push(b.dataset.tt); SFX.buy(); burst(innerWidth/2,innerHeight*.4,[`#05ffa1`,`#fcee0a`,`#fff`],50); G.log.unshift({d:dateStr(),m:`Trait acquis : ${TRAITS[b.dataset.tt][1]}.`}); closeModal(); next(); });
+    });
+  } else {
+    CHIPS=[]; applyFx({hum:-4});
+    cere({k:`leave`,c:`#8a8aa8`,ic:`⌛`,kick:`AMBITION MANQUÉE`,t:`Acte ${ROMAN[a]} terminé`,sub:am.t(a),lines:[`Tu n'y es pas arrivé(e) à temps`,`😔 Un peu d'amertume : Humanité en baisse`,`Un nouvel acte commence`]});
+    showCere(next);
+  }
+}
+function openAct(){
+  const a=G.act||0, am=ambNow(), er=eraNow();
+  modal(`Acte ${ROMAN[a]} · ${ACTS[a].n}`,`<div class="item"><div class="in"><b style="color:var(--c)">${ACTS[a].s}</b><small>${ACTS[a+1]?`Prochain acte à ${ACTS[a+1].from} ans (tu en as ${G.age})`:`Dernier acte`}</small></div></div>
+   <div class="sec">Ambition</div><div class="item ${am&&am.ok(a)?`own`:``}"><div class="in"><b>${am?am.t(a):`Aucune`}</b><small>${am?(am.ok(a)?`✓ Condition remplie pour l'instant — tiens jusqu'à la fin de l'acte`:`En cours`):``}</small></div></div>
+   <div class="sec">Époque</div><div class="item"><div class="in"><b style="color:var(--y)">${er.n||`—`}</b><small>${er.d||``}</small></div></div>
+   <div class="sec">Traits</div>${(G.traits||[]).map(t=>`<div class="item own"><div class="in"><b>${TRAITS[t][0]} ${TRAITS[t][1]}</b><small>${TRAITS[t][2]}</small></div></div>`).join(``)||`<div class="log">Aucun trait pour l'instant. Réussis une ambition.</div>`}
+   <div class="sec">Paliers de Street Cred (tu as ${G.cred})</div>${CRED_TIERS.map(([v,t])=>`<div class="log" style="color:${G.cred>=v?`var(--g)`:`var(--dim)`}"><b style="color:inherit">${G.cred>=v?`✓`:`🔒`} ${v}</b>${t}</div>`).join(``)}`,{full:true});
+}
+function legacyStep(cb){
+  const L=store.get(`ncl_legacy`); if(!L||!L.name) return cb();
+  const ids=REL_NAMES.filter(i=>WHO[i]), who=ids[rnd(0,ids.length-1)];
+  modal(`Héritage de ${esc(L.name)}`,`<div class="log">${esc(L.name)}, ${esc(L.title||``)} — ${esc(L.end||``)} à ${L.age||`?`} ans. Night City n'a pas tout oublié. Qu'est-ce qui te revient ?</div><div class="tiles one">
+    <button class="tile rec" data-lg="ed" style="min-height:auto"><b>💰 Une cache d'eddies</b><small>+800 €$</small></button>
+    <button class="tile rec" data-lg="rel" style="min-height:auto"><b>🤝 Un contact fidèle</b><small>${esc(WHO[who].n)} se souvient de ${esc(L.name)} (+25 de lien)</small></button>
+    <button class="tile rec" data-lg="cred" style="min-height:auto"><b>📖 Sa légende</b><small>+6 Street Cred : on te compare déjà à ${esc(L.name)}</small></button></div>`,{lock:true});
+  document.querySelectorAll(`[data-lg]`).forEach(b=>b.onclick=()=>{ CHIPS=[]; const k=b.dataset.lg; applyFx(k===`ed`?{ed:800}:k===`rel`?{rel:{[who]:25}}:{cred:6}); G.log.unshift({d:dateStr(),m:`Héritage de ${L.name}.`}); store.del(`ncl_legacy`); SFX.buy(); closeModal(); updateHud(); cb(); });
+}
 /* ---------- particules ---------- */
 function burst(x,y,colors,n){
   let cv=$(`#pcv`); if(!cv){ cv=document.createElement(`canvas`); cv.id=`pcv`; cv.style.cssText=`position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95`; document.body.appendChild(cv); }
@@ -3685,7 +3989,7 @@ function relBlock(){
 /* ----- contrats : gains ----- */
 const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function goAdvice(go){
-  if(go===`empire`) return openEmpire(`map`);
+  if(go===`heat`) return openBloc(hottestHeat());
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);
 }
 /* ----- EMPIRE ----- */
@@ -3796,8 +4100,8 @@ function openFaction(id){
     acts+=`<button class="btn choice ${left?``:`lock`}" id="ffav"><span class="tt"><b>🤝 Rendre un service</b><small>${left?`+10 réputation · +400 €$ · ${ATTRS[facAttr(f)].n}`:`🔒 Plus d'action cette période`}</small></span>${bd(pct(`favor`))}</button>`;
     acts+=`<button class="btn choice ${left&&!ally?``:`lock`}" id="fraid"><span class="tt"><b>⚔ Attaquer ${f.n}</b><small>${ally?`🔒 C'est ton allié`:left?`Butin · −22 réputation · représailles assurées`:`🔒 Plus d'action cette période`}</small></span>${bd(pct(`raid`))}</button>`;
     if(ally) acts+=`<button class="btn choice" id="fbreak"><span class="tt"><b>💔 Rompre le pacte</b><small>−35 réputation · ils se vengeront</small></span></button>`;
-    else { const n=Object.keys(G.allies||{}).length, okp=r>=40&&G.ed>=1500&&n<2;
-      acts+=`<button class="btn choice ${okp?``:`lock`}" id="fpact"><span class="tt"><b>📜 Sceller un pacte</b><small>${okp?`1 500 €$ · tribut, +2 contre leurs ennemis`:`🔒 ${r<40?`Réputation 40 requise (${r})`:n>=2?`2 pactes maximum`:`1 500 €$ requis`}`}</small></span></button>`; }
+    else { const n=Object.keys(G.allies||{}).length, okp=r>=40&&G.ed>=1500&&n<2&&G.cred>=25;
+      acts+=`<button class="btn choice ${okp?``:`lock`}" id="fpact"><span class="tt"><b>📜 Sceller un pacte</b><small>${okp?`1 500 €$ · tribut, +2 contre leurs ennemis`:`🔒 ${G.cred<25?`Street Cred 25 requise`:r<40?`Réputation 40 requise (${r})`:n>=2?`2 pactes maximum`:`1 500 €$ requis`}`}</small></span></button>`; }
   }
   modal(f.n,`<div class="item" style="border-color:${f.c}"><div class="in"><b style="color:${f.c}">${f.n} <span class="fst ${st[1]}">${st[0]}</span></b><small>${f.d}</small><small style="color:var(--c)">${f.perk}</small>
      <small>Réputation : <span style="font-weight:700;color:${r>=0?`var(--g)`:`var(--m)`}">${r}</span> · Territoires : ${terr.length?terr.join(`, `):`aucun`}</small><small>Ennemis : ${f.foes.length?f.foes.map(x=>FAC[x]?FAC[x].n:x).join(`, `):`aucun déclaré`}</small></div></div>${acts}`,{back:openFactions});
@@ -3809,7 +4113,7 @@ function openFaction(id){
   on(`#fjoin`,()=>confirmHeavy({heavy:`Tu prêtes serment à ${f.n}. Ses ennemis deviennent les tiens, et tu ne pourras plus fonder ta propre faction tant que tu portes leurs couleurs.`},()=>{ CHIPS=[]; joinFac(id); applyFx({cred:3}); G.log.unshift({d:dateStr(),m:`Tu rejoins ${f.n}.`}); updateHud(); closeModal(); showCere(()=>openFactions()); }));
   on(`#ffav`,()=>{ if(!opsLeft()){SFX.ko();return} const r2=facAct(id,`favor`); res(r2.ok?`Service rendu`:`Service raté`,r2,r2.text); });
   on(`#fraid`,()=>{ if(!opsLeft()||ally){SFX.ko();return} confirmHeavy({heavy:`Attaquer ${f.n} : tu peux gagner gros, mais ils riposteront. À −30 ils deviennent hostiles, à −60 c'est la guerre ouverte sur tes quartiers.`},()=>{ const r2=facAct(id,`raid`); res(r2.ok?`Raid réussi`:`Raid raté`,r2,r2.text); }); });
-  on(`#fpact`,()=>{ if(!(r>=40&&G.ed>=1500&&Object.keys(G.allies||{}).length<2)){SFX.ko();return} facPact(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); });
+  on(`#fpact`,()=>{ if(!(r>=40&&G.ed>=1500&&G.cred>=25&&Object.keys(G.allies||{}).length<2)){SFX.ko();return} facPact(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); });
   on(`#fbreak`,()=>confirmHeavy({heavy:`Rompre le pacte avec ${f.n} : −35 de réputation, et ils viendront se venger.`},()=>{ facBreak(id); updateHud(); closeModal(); showCere(()=>openFaction(id)); }));
 }
 function openFound(){
@@ -3831,9 +4135,10 @@ function rankPanel(){
   else {
     const row=(ic,l,a,b)=>`<div class="rk"><span>${ic} ${l}</span><b style="color:${a>=b?`var(--g)`:`var(--t)`}">${Math.min(a,b)}/${b}${a>=b?` ✓`:``}</b></div>${bar(a,b,a>=b?`var(--g)`:col)}`;
     body=`<small>Prochain grade : <b style="color:${col}">${p.next}</b></small>`+row(`📜`,`Missions`,p.jobs[0],p.jobs[1])+row(`🤝`,`Réputation ${f.n}`,p.rep[0],p.rep[1])+(p.cred?row(`★`,`Street Cred`,p.cred[0],p.cred[1]):``);
-    const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais encore ${p.jobs[1]-p.jobs[0]} mission(s)`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred`);
+    const miss=[]; if(p.jobs[0]<p.jobs[1]) miss.push(`fais une mission pour ta faction`); if(p.rep[0]<p.rep[1]) miss.push(`gagne ${p.rep[1]-p.rep[0]} de réputation (missions réussies, loyauté)`); if(p.cred&&p.cred[0]<p.cred[1]) miss.push(`monte ta Street Cred à ${p.cred[1]}`);
     body+=p.ready?`<button class="btn pri" id="claim">⬆ ${p.lead?`Prendre la tête maintenant`:`Réclamer ma promotion`}</button>`:`<small style="color:var(--dim)">Pour monter : ${miss.join(`, `)}.</small>`;
   }
+  body+=`<div class="pw">${facPowers().map(x=>`<small style="color:${x.ok?`var(--t)`:`var(--dim)`}">${x.ok?`✓`:`🔒`} ${x.t}</small>`).join(``)}</div>`;
   const can=G.stats.cards-(G.askP===undefined?-9:G.askP)>=2;
   return `<div class="item own" style="border-color:${col};flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div class="in"><b style="color:${col}">${roleTitle()}</b><small>${f.perk}</small></div><button class="buy no" id="lfac">Quitter</button></div>${body}
     <button class="btn" id="askm" ${can?``:`disabled`} style="text-align:center">📜 Demander une mission${can?``:` (déjà demandée)`}</button></div>`;

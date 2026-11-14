@@ -462,3 +462,12 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 .frow b{width:auto;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .frow .rb{flex:0 0 70px}
 #hrole.ready{color:var(--g);animation:blink 1s infinite}
+
+/* ---- poursuites ---- */
+.bloc.heat .hb{height:5px;margin-top:3px;background:#1b1b30;position:relative;overflow:hidden}
+.bloc.heat .hb i{position:absolute;left:0;top:0;bottom:0;background:var(--dim);transition:width .6s cubic-bezier(.2,.9,.2,1)}
+.bloc.heat.want{color:var(--y)}.bloc.heat.want .hb i{background:var(--y);box-shadow:0 0 8px var(--y)}
+.bloc.heat.hunt{color:var(--m);animation:warn 1s infinite}.bloc.heat.hunt .hb i{background:var(--m);box-shadow:0 0 8px var(--m)}
+.bloc.heat span{white-space:nowrap}
+#hdate{color:var(--dim);font-size:inherit;letter-spacing:.08em;text-align:left;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pw{display:flex;flex-direction:column;gap:3px;border-top:1px dashed var(--line);padding-top:6px}.pw small{font-size:12.5px;line-height:1.3}

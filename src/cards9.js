@@ -68,7 +68,8 @@ card({id:`gig_board`,quick:true,who:`@fixer`,tag:`💼 Contrats`,cond:()=>false,
 card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
   tx:()=>`Une banquette au fond de l'Afterlife, un ripperdoc qui dort au comptoir, une odeur de nouilles froides. Ton corps te lâche presque. Tu peux t'offrir un vrai soin, ou simplement fermer les yeux.`,
   dyn:()=>{
-    const cl=Math.round(200*infl()), th=Math.round(600*infl()), tt=Math.round(1200*infl());
+    const fk=G.member?FAC[G.member].k:``;
+    const cl=fk===`trauma`?0:Math.round(200*infl()), th=Math.round(600*infl()*(fk===`mox`?.5:1)), tt=Math.round(1200*infl());
     const heal=Math.round(35*Math.max(.5,1-Math.max(0,G.age-30)*0.012));
     const out=[
       {t:`Passer par la clinique`,s:`${money(cl)} · +${heal} Santé`,req:()=>G.ed>=cl?``:`${money(cl)} requis`,fx:{ed:-cl,hp:heal,msg:`Du fil, des pansements, une piqûre. Tu respires de nouveau.`}},
@@ -76,7 +77,8 @@ card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
       {t:`Dormir quelques heures`,s:`Gratuit · +15 Santé · +5 Humanité`,fx:{hp:15,hum:5,msg:`Tu dors d'un sommeil lourd. Les rêves sont étranges, mais tu t'en souviens à peine.`}},
       {t:`Faire la fête jusqu'à l'aube`,s:`−80 €$ · risqué`,chk:{a:`cool`,dc:6,ok:{ed:-80,hum:12,msg:`Les basses, les corps, les rires. Tu oublies tout ce que tu as fait.`},ko:{ed:-150,hp:-14,hum:-3,msg:`Ça dégénère. Tu rentres plus sale que tu n'es parti(e).`}}}
     ];
-    if(!G.flags.trauma) out.splice(2,0,{t:`Souscrire à la Trauma Team`,s:`${money(tt)} · seconde vie (pas contre MaxTac)`,req:()=>G.ed>=tt?``:`${money(tt)} requis`,fx:{ed:-tt,flag:[`trauma`],msg:`Un badge, une puce de géolocalisation. Une équipe blindée viendra te chercher si tu tombes.`}});
+    out.splice(2,0,{t:`Faire profil bas`,s:`Gratuit · toutes les poursuites −12`,fx:{bloc:{loi:12,corpo:12,rue:12,nomad:12},msg:`Tu ne sors pas, tu ne réponds à personne. On parle un peu moins de toi.`}});
+    if(!G.flags.trauma) out.splice(3,0,{t:`Souscrire à la Trauma Team`,s:`${money(tt)} · seconde vie (pas contre MaxTac)`,req:()=>G.ed>=tt?``:`${money(tt)} requis`,fx:{ed:-tt,flag:[`trauma`],msg:`Un badge, une puce de géolocalisation. Une équipe blindée viendra te chercher si tu tombes.`}});
     out.push(NOPE(`Repartir sans te reposer`,`Tu repars tel(le) que tu es arrivé(e).`)); return out;
   },ch:[]});
 

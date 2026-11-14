@@ -271,8 +271,12 @@ const ENDS = {
 /* ---------- blocs d'influence ---------- */
 const BLOC = {valentinos:`rue`,maelstrom:`rue`,tygers:`rue`,sixth:`rue`,voodoo:`rue`,animals:`rue`,mox:`rue`,
   arasaka:`corpo`,militech:`corpo`,kangtao:`corpo`,biotechnica:`corpo`,trauma:`corpo`,ncpd:`loi`,barghest:`loi`,aldecaldos:`nomad`,wraiths:`nomad`};
-const BLOCS = {rue:{n:`RUE`,c:`#ff9f1c`,d:`Gangs et rues de Night City`,opp:`loi`},corpo:{n:`CORPOS`,c:`#05ffa1`,d:`Arasaka, Militech, Kang Tao…`,opp:`nomad`},
-  loi:{n:`LOI`,c:`#3b8bff`,d:`NCPD, MaxTac, Barghest`,opp:`rue`},nomad:{n:`BADLANDS`,c:`#ff4d6d`,d:`Les clans nomades`,opp:`corpo`}};
+const BLOCS = {
+  loi:{n:`POLICE`,ic:`🚔`,c:`#3b8bff`,d:`NCPD et MaxTac`,cap:`cap_loi`},
+  corpo:{n:`CORPOS`,ic:`🏢`,c:`#05ffa1`,d:`Arasaka, Militech, Kang Tao…`,cap:`cap_corpo`},
+  rue:{n:`GANGS`,ic:`🔪`,c:`#ff9f1c`,d:`Les gangs de Night City`,cap:`cap_rue`},
+  nomad:{n:`BADLANDS`,ic:`🏜`,c:`#ff4d6d`,d:`Les clans nomades`,cap:`cap_nomad`}
+};
 
 /* ---------- alliés qui aident aux jets / infos contacts ---------- */
 const ALLY = {body:[`jackie`,`panam`],ref:[`claire`,`panam`],tech:[`vik`,`claire`],int:[`lucy`,`dex`,`judy`],cool:[`rogue`,`kerry`,`misty`]};
@@ -329,9 +333,37 @@ Object.assign(CONTACTS,{
 });
 ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
 /* ---------- conditions de promotion (affichées au joueur) ---------- */
-const JOB_NEED = [1,2,3];     // missions pour passer au rang 1,2,3
-const REP_NEED = [15,30,45];  // réputation dans la faction
-const LEAD_NEED = {jobs:5,rep:55,cred:35};
+const JOB_NEED = [1,1,1];        // missions depuis la dernière promotion     // missions pour passer au rang 1,2,3
+const REP_NEED = [10,20,30];
+const RANK_CRED = [15,30,50];    // la Street Cred ouvre les grades  // réputation dans la faction
+const LEAD_NEED = {jobs:1,rep:40,cred:70};
 const FOUND_NEED = {cred:15,ed:1000}; // pour prendre la tête
 
 const AGING_AGE = 40;
+
+/* ---------- paliers de Street Cred : ce que ta réputation t'ouvre ---------- */
+const CRED_TIERS = [[10,`Contrats de fixers`],[15,`Rang 1 dans une faction · fonder la tienne`],[25,`Pactes entre factions`],[30,`Rang 2 · opérations sur les quartiers`],[40,`Gros contrats et objets rares`],[50,`Rang 3`],[70,`Prendre la tête d'une faction`],[90,`Légende de Night City`]];
+/* ---------- actes, époques, ambitions, traits ---------- */
+const ACTS = [{n:`Débuts`,from:18,s:`Survivre et se faire un nom`},{n:`Ascension`,from:25,s:`Choisir son camp, monter`},{n:`Sommet`,from:35,s:`Tenir ce qu'on a pris`},{n:`Crépuscule`,from:45,s:`Le corps lâche. Préparer sa sortie`}];
+const ROMAN = [`I`,`II`,`III`,`IV`];
+const ERAS = {
+  gangwar:{n:`Guerre des gangs`,d:`Les rues brûlent. Les gangs te remarquent plus vite, mais les contrats paient mieux.`,heat:{rue:1.5},gig:1.25},
+  crackdown:{n:`Tolérance zéro`,d:`La NCPD serre la vis : la police te repère beaucoup plus vite.`,heat:{loi:1.6}},
+  boom:{n:`Boom des corpos`,d:`L'argent coule à flots, et les corpos surveillent tout le monde.`,income:1.3,heat:{corpo:1.4}},
+  shortage:{n:`Pénurie de chrome`,d:`Les implants se font rares et hors de prix.`,cyber:1.45},
+  psycho:{n:`Vague de cyberpsychose`,d:`La ville devient folle. Chaque perte d'Humanité pèse plus lourd.`,hum:1.3},
+  golden:{n:`Âge d'or des fixers`,d:`Il y a du travail pour tous ceux qui savent tenir une arme.`,gig:1.4},
+  storm:{n:`Tempêtes sur les Badlands`,d:`Les routes sont coupées, le matériel se paie plus cher, les clans sont à cran.`,heat:{nomad:1.5},gear:1.2},
+  calm:{n:`Accalmie`,d:`Une période étrangement calme. Les coups font moins mal.`,hurt:.82},
+  crisis:{n:`Crise économique`,d:`Les loyers explosent et les contrats paient moins.`,rent:1.5,gig:.85},
+  purge:{n:`Purge des gangs`,d:`Les corpos et la police nettoient les rues. Tout le monde est nerveux.`,heat:{loi:1.3,rue:1.3},hurt:1.12}
+};
+const TRAITS = {
+  dur:[`🛡`,`Dur à cuire`,`Dégâts reçus −15 %`], froid:[`🧊`,`Sang-froid de vétéran`,`+1 aux jets sociaux`],
+  ombre:[`🌑`,`Ombre`,`+1 furtivité · les poursuites montent 25 % moins vite`], pilote:[`🏎`,`As du volant`,`+1 conduite`],
+  tueur:[`🎯`,`Instinct de tueur`,`+1 combat`], code:[`💾`,`Fantôme du Net`,`+1 hack`],
+  riche:[`💰`,`Sens des affaires`,`Revenus +20 % · prix −10 %`], ame:[`🕯`,`Âme intacte`,`Pertes d'Humanité −30 %`],
+  chance:[`🍀`,`Veinard`,`Une fois par période, un jet raté est relancé`], renom:[`★`,`Aura`,`Gains de Street Cred +25 %`],
+  meneur:[`📯`,`Meneur`,`+1 action d'empire par période`], survie:[`➕`,`Instinct de survie`,`Soins reçus +50 %`],
+  fantome:[`👻`,`Insaisissable`,`Les poursuites retombent plus vite`], mentor:[`📈`,`Autodidacte`,`+1 XP à chaque gain`]
+};
