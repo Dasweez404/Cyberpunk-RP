@@ -136,7 +136,7 @@ function showHow(){
 
 /* ---------- création ---------- */
 const ORIGINS = {
-  street:{n:`Street Kid`,d:`Grandi dans la rue, tu connais les combines. Réflexes et sang-froid. Peu d'eddies, beaucoup de contacts.`,ed:350,cred:6,at:{ref:1,cool:1},
+  street:{n:`Street Kid`,d:`Grandi dans la rue, tu connais les combines. Réflexes et sang-froid. Peu d'eddies, beaucoup de contacts.`,ed:600,cred:6,at:{ref:1,cool:1},
     subs:{heywood:{n:`Heywood — Wellsprings`,d:`Le barrio des Valentinos. Famille, foi, honneur.`,fac:{valentinos:15,maelstrom:-6}},
           watson:{n:`Watson — Kabuki`,d:`Néons et marché noir. Là où l'on apprend à survivre.`,fac:{mox:10,tygers:-4}},
           santo:{n:`Santo Domingo — Arroyo`,d:`Béton, patrouilles et violence quotidienne.`,fac:{sixth:12,animals:5}}}},
@@ -145,7 +145,7 @@ const ORIGINS = {
           militech:{n:`Militech`,d:`L'industrie militaire. Guerre, profits, drapeaux.`,fac:{militech:15,arasaka:-10}},
           kangtao:{n:`Kang Tao`,d:`Smart weapons et élégance froide.`,fac:{kangtao:15,militech:-4}},
           biotechnica:{n:`Biotechnica`,d:`Nourriture, génétique, agriculture synthétique.`,fac:{biotechnica:15}}}},
-  nomad:{n:`Nomade`,d:`Les Badlands t'ont élevé. Moteurs, solidarité, horizons. Corps et technique.`,ed:600,cred:4,at:{body:1,tech:1},gear:[`archer`],
+  nomad:{n:`Nomade`,d:`Les Badlands t'ont élevé. Moteurs, solidarité, horizons. Corps et technique.`,ed:800,cred:4,at:{body:1,tech:1},gear:[`archer`],
     subs:{aldecaldos:{n:`Aldecaldos`,d:`La famille de Saul Bright. Loyauté et sable.`,fac:{aldecaldos:20,wraiths:-8}},
           wraiths:{n:`Wraiths`,d:`Pillards de la route. Vitesse et violence.`,fac:{wraiths:20,aldecaldos:-8}},
           solo:{n:`Nomade sans clan`,d:`Seul(e) sur la route. Personne pour te protéger.`,fac:{}}}},
@@ -426,7 +426,7 @@ function afterCard(r){
     if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
   } else {
     if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); hubTick(); empireTick();
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); hubTick(); empireTick();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
@@ -589,7 +589,7 @@ function relBlock(){
   return `<div class="sec">Relations</div>`+rs.map(([k,v])=>{const w=WHO[k];return `<div class="item"><div class="in"><b style="color:${w.c}">${esc(w.n)}${G.flags[`lover_`+k]?` ♥`:``}</b><small>${esc(w.r)}</small><div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};left:${v>=0?0:0}%;width:${Math.abs(v)}%"></i></div></div><b style="color:${v>=0?`var(--g)`:`var(--m)`}">${v}</b></div>`}).join(``);
 }
 /* ----- contrats : gains ----- */
-const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.6*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function goAdvice(go){
   if(go===`heat`) return openBloc(hottestHeat());
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);

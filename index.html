@@ -522,14 +522,22 @@ const WHO = {
   smasher:{n:`Adam Smasher`,r:`Arasaka · Cyborg intégral`,c:`#ff2a6d`,st:`visor`,sk:5},
   johnny:{n:`Johnny Silverhand`,r:`Légende · Samurai`,c:`#fcee0a`,st:`shades`,sk:22},
   kerry:{n:`Kerry Eurodyne`,r:`Rockerboy`,c:`#c77dff`,st:`long`,sk:26},
-  lizzie:{n:`Lizzie Wizzy`,r:`Lizzie's Bar · Mox`,c:`#ff2a6d`,st:`mohawk`,sk:28},
+  lizzie:{n:`Susie Q`,r:`Cheffe des Mox · Lizzie's Bar`,c:`#ff6ec7`,st:`mohawk`,sk:28},
   judy:{n:`Judy Alvarez`,r:`Technicienne BD · Mox`,c:`#05ffa1`,st:`short`,sk:30},
   panam:{n:`Panam Palmer`,r:`Aldecaldos`,c:`#ff9f1c`,st:`cap`,sk:28},
   saul:{n:`Saul Bright`,r:`Chef des Aldecaldos`,c:`#ff9f1c`,st:`cap`,sk:22},
   royce:{n:`Royce`,r:`Maelstrom · Totentanz`,c:`#ff2a6d`,st:`visor`,sk:10},
-  brick:{n:`Brick`,r:`Chef des Voodoo Boys`,c:`#05ffa1`,st:`hood`,sk:15},
+  brick:{n:`Maman Brigitte`,r:`Cheffe des Voodoo Boys`,c:`#05ffa1`,st:`long`,sk:15},
+  brickm:{n:`Brick`,r:`Ancien chef du Maelstrom`,c:`#ff2a6d`,st:`visor`,sk:8},
+  jotaro:{n:`Jotaro Shobo`,r:`Caïd des Tyger Claws · Kabuki`,c:`#ff4d6d`,st:`mohawk`,sk:34},
+  gunner:{n:`Will Gunner`,r:`Chef de la 6th Street`,c:`#00f0ff`,st:`cap`,sk:26},
+  nash:{n:`Nash`,r:`Chef de bande · Wraiths`,c:`#ff4d6d`,st:`mask`,sk:26},
+  oda:{n:`Sandayu Oda`,r:`Arasaka · Garde de Hanako`,c:`#ff0033`,st:`mask`,sk:32},
+  mitch:{n:`Mitch Anderson`,r:`Aldecaldos · Vétéran`,c:`#ff9f1c`,st:`cap`,sk:24},
+  dakota:{n:`Dakota Smith`,r:`Fixer · Badlands`,c:`#ff9f1c`,st:`long`,sk:22},
+  dino:{n:`Dino Dinovic`,r:`Fixer · City Center`,c:`#c77dff`,st:`shades`,sk:28},
   sas:{n:`Sasquatch`,r:`Chef des Animals`,c:`#ff9f1c`,st:`bald`,sk:25},
-  capitan:{n:`El Capitán`,r:`Chef des Valentinos`,c:`#ffb000`,st:`cap`,sk:27},
+  capitan:{n:`Gustavo Orta`,r:`Valentinos · Caïd de Heywood`,c:`#ffb000`,st:`cap`,sk:27},
   claws:{n:`Lieutenant Tyger Claws`,r:`Tyger Claws`,c:`#ff2a6d`,st:`mask`,sk:34},
   sixth:{n:`Vétéran de la 6th Street`,r:`6th Street`,c:`#00f0ff`,st:`helmet`,sk:24},
   meredith:{n:`Meredith Stout`,r:`Militech · Cadre`,c:`#05ffa1`,st:`short`,sk:30},
@@ -553,23 +561,23 @@ const FAC = {
   valentinos:{n:`Valentinos`,c:`#ffb000`,k:`gang`,leader:`capitan`,home:`wellsprings`,foes:[`maelstrom`,`tygers`],
     d:`Gang de Heywood. Foi, famille, honneur. Ils protègent leur barrio et ne trahissent jamais les leurs.`,
     perk:`+1 CORPS · protection à Wellsprings`,at:{body:1},
-    lines:[`Un Valentino te demande de livrer des armes à une église de Heywood.`,`Un vieux du barrio a un contentieux avec des Maelstrom. À toi de le régler.`,`El Capitán veut des ex-voto en eddies : une collecte "protection" à faire.`]},
+    lines:[`Un Valentino te demande de livrer des armes à une église de Heywood.`,`Un vieux du barrio a un contentieux avec des Maelstrom. À toi de le régler.`,`Gustavo Orta veut des ex-voto en eddies : une collecte "protection" à faire.`]},
   maelstrom:{n:`Maelstrom`,c:`#ff2a6d`,k:`gang`,leader:`royce`,home:`northside`,foes:[`valentinos`,`mox`,`sixth`],
     d:`Chromés jusqu'à l'os, adorateurs du progrès sans limite. Totentanz est leur forteresse. Ils t'ouvriront les portes du chrome… et de la cyberpsychose.`,
     perk:`+1 RÉFLEXES · chrome à prix cassé (−10 % Humanité par promo)`,at:{ref:1},
     lines:[`Royce a besoin de mains pour un casse sanglant dans un entrepôt de Northside.`,`Un lot de cyberware volé est à récupérer. Les Maelstrom ne font jamais dans la dentelle.`,`Une démonstration de force contre un petit gang : les Maelstrom veulent du bruit.`]},
-  tygers:{n:`Tyger Claws`,c:`#ff4d6d`,k:`gang`,leader:`claws`,home:`japantown`,foes:[`maelstrom`,`mox`],
+  tygers:{n:`Tyger Claws`,c:`#ff4d6d`,k:`gang`,leader:`jotaro`,home:`japantown`,foes:[`maelstrom`,`mox`],
     d:`Le gang des tatouages de tigre. Japantown et Kabuki. Racket, trafic d'êtres humains, dojo.`,
     perk:`+1 SANG-FROID · entrée libre à Japantown`,at:{cool:1},
     lines:[`Un commerçant de Little China a "oublié" de payer son tribut aux Tyger Claws.`,`Un convoi de ripperdocs illégaux est à escorter jusqu'à Japantown.`,`Un duel d'honneur dans un dojo. Le perdant paie en cash — ou en sang.`]},
-  sixth:{n:`6th Street`,c:`#00f0ff`,k:`gang`,leader:`sixth`,home:`arroyo`,foes:[`animals`,`maelstrom`],
+  sixth:{n:`6th Street`,c:`#00f0ff`,k:`gang`,leader:`gunner`,home:`arroyo`,foes:[`animals`,`maelstrom`],
     d:`Anciens soldats et patriotes autoproclamés de Santo Domingo. Ils patrouillent leurs rues, chassent les "indésirables" et rêvent d'une Amérique unie.`,
     perk:`+1 TECHNIQUE · armes de guerre à prix réduit`,at:{tech:1},
     lines:[`Une patrouille de la 6th Street va "nettoyer" un carrefour. Veux-tu en être ?`,`Un dépôt de munitions militaires change de main. La 6th Street te veut en couverture.`,`Des Scavs rôdent à Santo Domingo. On t'envoie les repousser.`]},
   voodoo:{n:`Voodoo Boys`,c:`#05ffa1`,k:`gang`,leader:`brick`,home:`coastview`,foes:[`arasaka`],
     d:`Netrunners haïtiens de Pacifica. Ils connaissent le Blackwall mieux que quiconque et ne font confiance à personne.`,
     perk:`+1 INTELLECT · accès au marché des quickhacks`,at:{int:1},
-    lines:[`Brick veut qu'on perce le pare-feu d'une corpo mineure. Du boulot propre.`,`Un netrunner voodoo disparu : on t'envoie fouiller le Net profond.`,`Un transfert de données sensibles à Pacifica. Zéro trace, zéro erreur.`]},
+    lines:[`Placide veut qu'on perce le pare-feu d'une corpo mineure. Du boulot propre.`,`Un netrunner voodoo disparu : on t'envoie fouiller le Net profond.`,`Un transfert de données sensibles à Pacifica. Zéro trace, zéro erreur.`]},
   animals:{n:`Animals`,c:`#ff9f1c`,k:`gang`,leader:`sas`,home:`rancho`,foes:[`sixth`],
     d:`Culturistes sous stéroïdes et chrome musculaire de Santo Domingo. Respect de la force brute.`,
     perk:`+1 CORPS · gagne les bagarres plus facilement`,at:{body:1},
@@ -582,7 +590,7 @@ const FAC = {
     d:`La famille nomade de Saul Bright. Un clan qui tient parole, répare tout, et défend la liberté des Badlands.`,
     perk:`+1 TECHNIQUE · véhicule du clan`,at:{tech:1},
     lines:[`Panam a besoin d'un pilote pour un convoi qui doit éviter les Raffen Shiv.`,`Une pièce rare pour le moteur d'un Thorton : va la chercher en ville.`,`Un convoi Biotechnica traverse le territoire du clan. Négocie le péage.`]},
-  wraiths:{n:`Wraiths`,c:`#ff4d6d`,k:`clan`,leader:`nomad`,home:`badlands`,foes:[`aldecaldos`],
+  wraiths:{n:`Wraiths`,c:`#ff4d6d`,k:`clan`,leader:`nash`,home:`badlands`,foes:[`aldecaldos`],
     d:`Nomades durs, rapides, sans pitié. Des pillards de la route qui vénèrent la vitesse.`,
     perk:`+1 RÉFLEXES · bonus de conduite`,at:{ref:1},
     lines:[`Un convoi isolé traverse notre territoire. Attaque éclair.`,`Une course à mort sur l'autoroute de la Badlands. Le gagnant prend tout.`,`Des Aldecaldos ont franchi la frontière. On leur donne une leçon.`]},
@@ -814,9 +822,9 @@ Object.assign(CONTACTS,{
 
 Object.assign(CONTACTS,{
   wakako:`Fixer de Japantown · contrats discrets`, regina:`Fixer · véhicules & assassinats`, padre:`Fixer du barrio · protection`,
-  muamar:`Fixer · les gros coups`, faraday:`Fixer · Edgerunners`, nancy:`Détective NCPD · intel`, river:`Détective NCPD · protection`
+  muamar:`Fixer de Santo Domingo · les gros coups`, dakota:`Fixer des Badlands · convois`, dino:`Fixer du City Center · cols blancs`, faraday:`Fixer · Edgerunners`, nancy:`Inspecteur NCPD · intel`, river:`Détective NCPD · protection`
 });
-ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`);
+ALLY.cool.push(`wakako`,`faraday`); ALLY.ref.push(`regina`); ALLY.body.push(`padre`,`river`); ALLY.int.push(`nancy`,`muamar`,`dino`); ALLY.ref.push(`dakota`);
 /* ---------- conditions de promotion (affichées au joueur) ---------- */
 const JOB_NEED = [1,1,1];        // missions depuis la dernière promotion     // missions pour passer au rang 1,2,3
 const REP_NEED = [10,20,30];
@@ -1019,10 +1027,10 @@ card({id:`trauma_sub`,who:`doc`,tag:`Trauma Team`,w:4,once:true,cond:()=>G.ed>=1
     {t:`Refuser, je compte sur mes réflexes`,fx:{cred:1}}
   ]});
 card({id:`mox_club`,who:`lizzie`,tag:`Lizzie's Bar · Kabuki`,w:4,
-  tx:`Néons roses et basses profondes. Lizzie t'accueille au club : « Ici, on s'entraide, on se protège, et personne n'aime les profiteurs. Tu bois, tu danses… ou tu veux nous aider pour un souci ? »`,
+  tx:`Néons roses et basses profondes. Susie Q t'accueille au club : « Ici, on s'entraide, on se protège, et personne n'aime les profiteurs. Tu bois, tu danses… ou tu veux nous aider pour un souci ? »`,
   ch:[
     {t:`Danser jusqu'à l'aube`,s:`+Humanité`,fx:{hum:9,ed:-80,msg:`Les basses font vibrer ton implant. Pendant une heure, tu oublies la ville.`}},
-    {t:`Proposer ton aide`,s:`SANG-FROID`,chk:{a:`cool`,dc:6,ok:{cred:5,fac:{mox:10},hum:3,msg:`Tu règles un souci de harcèlement avec tact. Lizzie te serre dans ses bras.`},ko:{cred:1,fac:{mox:2},msg:`Tu fais une gaffe. Mais l'intention compte.`}}},
+    {t:`Proposer ton aide`,s:`SANG-FROID`,chk:{a:`cool`,dc:6,ok:{cred:5,fac:{mox:10},hum:3,msg:`Tu règles un souci de harcèlement avec tact. Susie Q te serre dans ses bras.`},ko:{cred:1,fac:{mox:2},msg:`Tu fais une gaffe. Mais l'intention compte.`}}},
     {t:`Repartir`,fx:{}}
   ]});
 card({id:`maelstrom_raid`,who:`royce`,tag:`Maelstrom`,w:3,cond:()=>G.cred>=10&&!G.member,
@@ -1189,7 +1197,7 @@ card({id:`blackwall`,who:`brick`,tag:`Voodoo Boys · Blackwall`,w:5,cond:()=>has
   tx:`Les Voodoo Boys te contactent sur un canal crypté : « On cherche quelqu'un qui peut s'approcher du <em>Blackwall</em>. On parle d'IA rogue, d'Alt Cunningham, de choses qui regardent depuis l'autre côté. Tu en es ? »`,
   ch:[
     {t:`Plonger au bord du Blackwall`,s:`INT · Danger mental`,chk:{a:`int`,k:`hck`,dc:10,ok:{cred:12,ed:3500,at:{int:1},hum:-6,role:{net:3},fac:{voodoo:10},msg:`Une présence énorme t'observe. Tu ressors vivant avec des données que personne n'a jamais vues.`},ko:{hp:-35,hum:-15,msg:`Une vague de données te traverse. Tu te réveilles hagard(e), la tête en feu.`}}},
-    {t:`Refuser, tu préfères survivre`,fx:{cred:1,hum:2,msg:`Brick note ton nom. « Un jour, peut-être. »`}}
+    {t:`Refuser, tu préfères survivre`,fx:{cred:1,hum:2,msg:`Maman Brigitte note ton nom. « Un jour, peut-être. »`}}
   ]});
 card({id:`netwatch`,who:`corpo`,tag:`NetWatch · Audit`,w:4,cond:()=>hasDeck(),
   tx:`NetWatch a repéré une intrusion qui ressemble beaucoup à ta signature. Un agent propose un marché : « Pas de poursuites si tu coopères. Ou tu disparais dans un sous-sol. »`,
@@ -1438,7 +1446,7 @@ card({id:`fac_betray`,who:`fix`,tag:`Trahison possible`,w:3,once:true,cond:()=>G
 R.rel=(id,v)=>()=>((G.rel||{})[id]||0)>=v?``:`Lien avec ${WHO[id].n} ${v}`;
 const rel = id => (G.rel&&G.rel[id])||0;
 Object.assign(WHO,{
-  placide:{n:`Placide`,r:`Valentinos · Lieutenant`,c:`#ffb000`,st:`short`,sk:26},
+  placide:{n:`Placide`,r:`Voodoo Boys · Bras droit de Brigitte`,c:`#05ffa1`,st:`bald`,sk:14},
   dum:{n:`Dum Dum`,r:`Maelstrom · Totentanz`,c:`#ff2a6d`,st:`visor`,sk:10},
   claire:{n:`Claire Russell`,r:`Pilote · Mécano`,c:`#fcee0a`,st:`cap`,sk:28},
   rache:{n:`Rache Bartmoss`,r:`Légende du Net`,c:`#05ffa1`,st:`hood`,sk:12},
@@ -1451,7 +1459,7 @@ Object.assign(WHO,{
   hiro:{n:`Hiro Sato`,r:`Ingénieur · Kang Tao`,c:`#ffd166`,st:`cap`,sk:30},
   eli:{n:`Eli Okoye`,r:`Agent NetWatch · Informateur`,c:`#05ffa1`,st:`shades`,sk:20},
 });
-const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`,`wakako`,`regina`,`padre`,`muamar`,`faraday`,`nancy`,`river`];
+const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`,`wakako`,`regina`,`padre`,`muamar`,`faraday`,`nancy`,`river`,`dakota`,`dino`];
 
 /* ============================ RELATIONS ============================ */
 // Jackie
@@ -1574,13 +1582,13 @@ card({id:`lc_moon`,who:`lucy`,tag:`2076 · Lucy`,w:6,cond:()=>G.flags.maine&&yr(
 
 /* ============================ ARCS DE FACTION ============================ */
 const ARCS = {
-  valentinos:[`placide`,`Placide a un problème : un Maelstrom a profané une église de Wellsprings. Le barrio veut du sang, mais El Capitán veut de l'honneur.`,`Venger l'église`,`Prendre la tête d'une procession de nuit`],
+  valentinos:[`capitan`,`Gustavo Orta a un problème : un Maelstrom a profané une église de Wellsprings. Le barrio veut du sang, mais Padre réclame de l'honneur.`,`Venger l'église`,`Prendre la tête d'une procession de nuit`],
   maelstrom:[`dum`,`Dum Dum veut te voir : « Un Royce plus fort, c'est un Maelstrom plus fort. Je te donne une dose de chrome gratuit si tu me jures fidélité. »`,`Accepter le chrome`,`Résister à la tentation`],
   tygers:[`claws`,`Un shinobi de Japantown te propose une initiation : réciter le code des Tyger Claws et subir un tatouage au laser.`,`Subir l'initiation`,`Faire croire que tu es loyal(e)`],
   sixth:[`sixth`,`Un vétéran 6th Street te raconte la guerre de Unification. « On n'est pas des gangsters, on est des patriotes. Prouve-le en nettoyant le quartier. »`,`Nettoyer Arroyo`,`Négocier avec les gangs`],
-  voodoo:[`brick`,`Brick t'invite à une réunion privée : « Le Blackwall bouge. On a besoin de vigilance. Tu veux voir ce qu'il y a derrière ? »`,`Plonger avec lui`,`Veiller sur le périmètre`],
+  voodoo:[`placide`,`Placide te convoque pour Maman Brigitte : « Le Blackwall bouge. On a besoin de vigilance. Tu veux voir ce qu'il y a derrière ? »`,`Plonger avec eux`,`Veiller sur le périmètre`],
   animals:[`sas`,`Sasquatch te convoque au dojo : « Tu as de la force. Pas encore de cœur. Montre-moi les deux. »`,`Défier un champion`,`Protéger un enfant du quartier`],
-  mox:[`lizzie`,`Lizzie te demande de monter sur scène pour un hommage aux disparues du Mox. « Tu portes nos couleurs. Parle pour nous. »`,`Parler sur scène`,`Proposer une action de rue`],
+  mox:[`lizzie`,`Susie Q te demande de monter sur scène pour un hommage aux disparues du Mox. « Tu portes nos couleurs. Parle pour nous. »`,`Parler sur scène`,`Proposer une action de rue`],
   aldecaldos:[`saul`,`Saul te parle de la route : « Les Badlands changent. NUSA et Militech rôdent. J'ai besoin de quelqu'un pour tenir le flanc est. »`,`Tenir le flanc est`,`Négocier avec NUSA`],
   wraiths:[`nomad`,`Un chef Wraith veut un convoi de guerre : « Pas de pitié, pas de témoin. Tu es dedans ? »`,`Mener le convoi`,`Ralentir pour sauver des civils`],
   barghest:[`hansen`,`Hansen te confie le contrôle d'une porte de Dogtown. « La discipline, c'est la survie. »`,`Tenir la porte`,`Autoriser des civils à passer`],
@@ -2017,7 +2025,7 @@ EXP(`edge_job`,`ref`,9,{t:`Danser entre les balles, sans un coup tiré`,fx:{ed:6
 EXP(`hum_warn`,`cool`,8,{t:`Reprendre le contrôle par la seule force de ta volonté`,fx:{hum:20,cred:2,msg:`Tu fermes les yeux, tu respires. Les voix se taisent. Tu regardes tes mains : elles sont à toi.`}});
 EXP(`bd_snuff`,`int`,8,{t:`Remonter la piste jusqu'au producteur et le dénoncer`,fx:{hum:10,cred:6,rel:{judy:10},fac:{mox:10},msg:`Tu fournis à Judy un dossier béton. Le producteur disparaît des écrans.`}});
 EXP(`kerry_concert`,`cool`,8,{t:`Monter sur scène pour un duo improvisé`,fx:{cred:9,hum:6,rel:{kerry:12},role:{rocker:3},msg:`Kerry t'attrape par l'épaule, la foule hurle. Un moment pour toujours.`}});
-EXP(`mox_club`,`cool`,8,{t:`Devenir la voix des Mox ce soir`,fx:{cred:6,hum:8,fac:{mox:10},rel:{judy:6},msg:`Un micro, trois phrases, une salle debout. Lizzie sourit.`}});
+EXP(`mox_club`,`cool`,8,{t:`Devenir la voix des Mox ce soir`,fx:{cred:6,hum:8,fac:{mox:10},rel:{judy:6},msg:`Un micro, trois phrases, une salle debout. Susie Q sourit.`}});
 EXP(`rogue_drink`,`cool`,8,{t:`Lui parler comme à une égale`,fx:{cred:8,rel:{rogue:12},hum:4,msg:`Rogue lève un sourcil, puis te pousse un verre. Tu viens de marquer un point.`}});
 /* =====================================================================
    CARTES 5 — quêtes secondaires en chaînes (3 cartes), contrats de
@@ -2317,13 +2325,13 @@ card({id:`hands_2`,who:`hands`,tag:`Mr. Hands · Une faveur`,once:true,w:7,cond:
     {t:`Décliner`,fx:{rel:{hands:-2},hum:3}}
   ]});
 /* =====================================================================
-   CARTES 7 — fixers & contacts connus (Muamar Reyes, Faraday, Nancy
+   CARTES 7 — fixers & contacts connus (Muamar Reyes, Faraday, Harold
    Hartley, River Ward…) + missions propres à chaque fixer
    ===================================================================== */
 Object.assign(WHO,{
-  muamar:{n:`Muamar Reyes`,r:`Fixer · Les gros coups`,c:`#ffd166`,st:`shades`,sk:22},
+  muamar:{n:`Muamar « El Capitán » Reyes`,r:`Fixer · Santo Domingo`,c:`#ffd166`,st:`shades`,sk:22},
   faraday:{n:`Faraday`,r:`Fixer · Edgerunners`,c:`#ff9f1c`,st:`cap`,sk:24},
-  nancy:{n:`Nancy Hartley`,r:`Détective NCPD`,c:`#3b8bff`,st:`short`,sk:30},
+  nancy:{n:`Harold Han`,r:`Inspecteur NCPD`,c:`#3b8bff`,st:`short`,sk:30},
   river:{n:`River Ward`,r:`Détective NCPD · The Glen`,c:`#3b8bff`,st:`short`,sk:26},
 });
 FIXERS.push(`muamar`,`faraday`);
@@ -2350,7 +2358,7 @@ card({id:`pd_2`,who:`padre`,tag:`Padre · Dans le barrio`,once:true,w:7,cond:()=
 
 /* ---------- Muamar Reyes ---------- */
 card({id:`meet_muamar`,who:`muamar`,tag:`Rencontre · Muamar Reyes`,once:true,w:6,cond:()=>rel(`muamar`)<5&&G.cred>=14,
-  tx:`Un homme élégant t'aborde dans un bar de Westbrook, un cigare éteint aux lèvres. « Muamar Reyes. Fixer. On m'a parlé de toi. Je n'aime pas perdre mon temps, alors voici l'idée : un coffre dans un entrepôt de Pacifica, trois hommes dessus, et un client prêt à payer cher. »`,
+  tx:`Un homme élégant t'aborde dans un garage de Santo Domingo, un cigare éteint aux lèvres. « Muamar Reyes. Ici, on m'appelle El Capitán. Fixer. On m'a parlé de toi. Je n'aime pas perdre mon temps, alors voici l'idée : un coffre dans un entrepôt de Pacifica, trois hommes dessus, et un client prêt à payer cher. »`,
   ch:[
     {t:`Poser des questions`,s:`INTELLECT`,chk:{a:`int`,dc:7,ok:{rel:{muamar:14},cred:3,ed:600,msg:`Tu as pris le temps de comprendre. Il apprécie : « Prudent. J'aime ça. »`},ko:{rel:{muamar:6},msg:`Il s'impatiente. Mais t'a retenu(e).`}}},
     {t:`Dire oui tout de suite`,s:`Impulsif`,fx:{rel:{muamar:8},cred:2,ed:300,msg:`« Enthousiaste. Voyons si ça dure. »`}}
@@ -2390,16 +2398,16 @@ card({id:`faraday_gift`,who:`faraday`,tag:`Faraday · Reconnaissance`,once:true,
   ]});
 
 /* ---------- Détectives NCPD ---------- */
-card({id:`meet_nancy`,who:`nancy`,tag:`Rencontre · Nancy Hartley`,once:true,w:6,cond:()=>rel(`nancy`)<5&&G.cred>=10,
-  tx:`Une détective NCPD, manteau gris, café tiède, te fait signe depuis un banc : « Nancy Hartley. Je ne suis pas là pour t'arrêter. Je cherche quelqu'un qui connaît les rues. Quelqu'un qui parle, discrètement. »`,
+card({id:`meet_nancy`,who:`nancy`,tag:`Rencontre · Harold Han`,once:true,w:6,cond:()=>rel(`nancy`)<5&&G.cred>=10,
+  tx:`Un inspecteur NCPD, manteau gris, café tiède, te fait signe depuis un banc : « Harold Han. Je ne suis pas là pour t'arrêter. Je cherche quelqu'un qui connaît les rues. Quelqu'un qui parle, discrètement. »`,
   ch:[
-    {t:`Coopérer`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{rel:{nancy:14},bloc:{loi:6},ed:500,msg:`Quelques noms, un contexte. Elle note tout sans un mot.`},ko:{rel:{nancy:6},msg:`Tu bafouilles. Elle sourit, sans méchanceté.`}}},
-    {t:`Lui dire de te laisser tranquille`,s:`Rue +`,fx:{rel:{nancy:-4},bloc:{rue:4,loi:-4},msg:`Elle hausse les épaules. « On se reverra. »`}}
+    {t:`Coopérer`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{rel:{nancy:14},bloc:{loi:6},ed:500,msg:`Quelques noms, un contexte. Il note tout sans un mot.`},ko:{rel:{nancy:6},msg:`Tu bafouilles. Il sourit, sans méchanceté.`}}},
+    {t:`Lui dire de te laisser tranquille`,s:`Rue +`,fx:{rel:{nancy:-4},bloc:{rue:4,loi:-4},msg:`Il hausse les épaules. « On se reverra. »`}}
   ]});
-card({id:`nancy_job`,who:`nancy`,tag:`Nancy · Une enquête`,once:true,w:7,cond:()=>rel(`nancy`)>=10,
-  tx:`Nancy étale des photos sur le capot de sa voiture : trois disparitions, un même point commun, une BD qui circule. « J'ai besoin d'un œil extérieur. Tu es mon seul recours. »`,
+card({id:`nancy_job`,who:`nancy`,tag:`Han · Une enquête`,once:true,w:7,cond:()=>rel(`nancy`)>=10,
+  tx:`Han étale des photos sur le capot de sa voiture : trois disparitions, un même point commun, une BD qui circule. « J'ai besoin d'un œil extérieur. Tu es mon seul recours. »`,
   ch:[
-    {t:`Enquêter sur le terrain`,s:`INTELLECT`,chk:{a:`int`,dc:8,ok:{ed:1500,cred:6,rel:{nancy:14},bloc:{loi:5},msg:`Tu relies les points. Nancy sourit en fermant son carnet.`},ko:{hp:-14,rel:{nancy:6},msg:`Une impasse, une menace. Tu reviens avec peu.`}}},
+    {t:`Enquêter sur le terrain`,s:`INTELLECT`,chk:{a:`int`,dc:8,ok:{ed:1500,cred:6,rel:{nancy:14},bloc:{loi:5},msg:`Tu relies les points. Han sourit en fermant son carnet.`},ko:{hp:-14,rel:{nancy:6},msg:`Une impasse, une menace. Tu reviens avec peu.`}}},
     {t:`Lui laisser faire`,fx:{rel:{nancy:-3}}}
   ]});
 card({id:`meet_river`,who:`river`,tag:`Rencontre · River Ward`,once:true,w:6,cond:()=>rel(`river`)<5&&G.cred>=12,
@@ -2733,7 +2741,7 @@ card({id:`sm`,who:`fix`,tag:`Mission secondaire`,w:45,cond:()=>!G.flags.q_active
     G.tmp={g:rnd(0,SM_GOALS.length-1),tw:rnd(0,SM_TWISTS.length-1),d:dd.n};
     return `« J'ai besoin de quelqu'un pour <strong>${SM_GOALS[G.tmp.g]}</strong>, du côté de <em>${dd.n}</em>. » ${SM_TWISTS[G.tmp.tw]}`; },
   dyn:()=>{ const tier=G.cred>=60?3:G.cred>=30?2:G.cred>=10?1:0;
-    const pay=Math.round((450+G.cred*32)*(0.8+Math.random()*0.6)*bm().gig/50)*50;
+    const pay=Math.round((520+G.cred*34)*(0.8+Math.random()*0.6)*bm().gig/50)*50;
     const ways=shuffle(SM_WAYS).slice(0,3);
     const out=ways.map(w=>{ const dc=6+tier+rnd(0,1); const heat=w.k===`cmb`?{loi:-3}:w.k===`hck`?{corpo:-2}:null;
       return {t:w.t,s:`${ATTRS[w.a].n}${w.k?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[w.k]}`:``} · ${money(pay)}`,chk:{a:w.a,k:w.k,dc,
@@ -2751,6 +2759,74 @@ card({id:`emp_offer`,who:`@fixer`,tag:`📯 Empire · une ouverture`,cond:()=>em
     {t:`Lancer tes hommes`,s:`CORPS · combat · +40 d'influence`,chk:{a:`body`,k:`cmb`,dc:8,ok:{fn:`empPush`,cred:4,msg:`Tes hommes s'installent avant que quiconque réagisse.`},ko:{hp:-20,cred:-2,msg:`C'était un piège. Vous reculez en désordre.`}}},
     {t:`Acheter les bonnes personnes`,s:`−1 200 €$ · +30 d'influence`,req:R.ed(1200),fx:{ed:-1200,fn:`empBuy`,msg:`Quelques enveloppes, quelques portes qui s'ouvrent.`}},
     {t:`Laisser passer`,s:`Garde tes forces`,fx:{msg:`Tu ne bouges pas. Quelqu'un d'autre en profitera.`}}
+  ]});
+/* =====================================================================
+   CARTES 12 — fixers de quartier (Dakota Smith, Dino Dinovic), figures
+   de faction (Brick, Oda, Mitch), créanciers
+   ===================================================================== */
+FIXERS.push(`dakota`,`dino`);
+
+/* ---------- Dakota Smith · Badlands ---------- */
+card({id:`meet_dakota`,who:`dakota`,tag:`Rencontre · Dakota Smith`,once:true,w:6,cond:()=>rel(`dakota`)<5&&(G.origin===`nomad`||G.cred>=10),
+  tx:`Un garage perdu au bord de la route, à la lisière des Badlands. Une femme aux mains tachées d'huile te détaille sans se presser : « Dakota Smith. Je fixe pour ceux qui roulent. Ici, pas de costards, pas de mensonges. Tu sais tenir un volant ou une clé ? »`,
+  ch:[
+    {t:`Lui montrer ce que tu vaux au volant`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:6,ok:{rel:{dakota:14},cred:3,ed:400,msg:`Un tour de piste dans la poussière. Elle hoche la tête : « Tu feras l'affaire. »`},ko:{rel:{dakota:6},hp:-6,msg:`Tu plantes le pick-up dans un fossé. Elle rit. « On apprend. »`}}},
+    {t:`L'aider à l'atelier`,s:`TECHNIQUE`,chk:{a:`tech`,dc:6,ok:{rel:{dakota:14},xp:{tech:3},msg:`Vous remontez un moteur en silence. C'est sa façon de faire connaissance.`},ko:{rel:{dakota:5},msg:`Tu perds une vis. Elle soupire, mais te garde.`}}}
+  ]});
+card({id:`dakota_job`,who:`dakota`,tag:`Dakota · Convoi clandestin`,once:true,w:7,cond:()=>rel(`dakota`)>=10,
+  tx:`Dakota déplie une carte sur un capot brûlant : « Un chargement à faire passer sous le nez de Militech. Les Wraiths rôdent sur la route, et la patrouille frontalière a soif. <strong>3 500 €$</strong>. Les Badlands paient ceux qui arrivent. »`,
+  ch:[
+    {t:`Couper par le désert`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:8,ok:{ed:3500,cred:7,rel:{dakota:12},bloc:{nomad:6},loot:2,msg:`Tu traces une piste que personne ne connaît. Livraison à l'heure, moteur fumant.`},ko:{hp:-24,ed:400,rel:{dakota:4},msg:`Les Wraiths te tombent dessus. Tu sauves ta peau, pas la cargaison.`}}},
+    {t:`Maquiller le chargement`,s:`TECHNIQUE`,chk:{a:`tech`,dc:8,ok:{ed:3500,cred:6,rel:{dakota:12},msg:`Faux plancher, faux papiers. La patrouille ne voit que de la ferraille.`},ko:{ed:300,bloc:{loi:-8},msg:`Un douanier trop curieux. Tu abandonnes le camion.`}}},
+    {t:`Décliner`,fx:{rel:{dakota:-2}}}
+  ]});
+
+/* ---------- Dino Dinovic · City Center ---------- */
+card({id:`meet_dino`,who:`dino`,tag:`Rencontre · Dino Dinovic`,once:true,w:6,cond:()=>rel(`dino`)<5&&G.cred>=18,
+  tx:`Un club privé de Downtown, cuir rouge et fumée chère. Un ancien rocker aux bagues trop nombreuses te fait signe : « Dino Dinovic. Je m'occupe du City Center. Ici les clients ont des noms qu'on ne prononce pas et des problèmes qu'on règle sans bruit. Tu sais être discret(e) ? »`,
+  ch:[
+    {t:`Lui prouver ta discrétion`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{rel:{dino:14},cred:4,ed:600,msg:`Tu ne poses aucune question. Il apprécie : « Rare. »`},ko:{rel:{dino:6},msg:`Tu parles un peu trop. Il sourit quand même.`}}},
+    {t:`Parler musique avec lui`,s:`+Lien`,fx:{rel:{dino:10},hum:4,msg:`Il a joué avant de fixer. Une heure plus tard, vous êtes presque amis.`}}
+  ]});
+card({id:`dino_job`,who:`dino`,tag:`Dino · Affaire de cols blancs`,once:true,w:7,cond:()=>rel(`dino`)>=10,
+  tx:`Dino fait glisser une carte magnétique sur la table : « Un cadre a des dossiers qu'il ne devrait pas avoir. Tour de bureaux à Corpo Plaza, quarantième étage. Tu entres, tu copies, tu sors. <strong>4 500 €$</strong>. Si ça fait du bruit, on ne se connaît pas. »`,
+  ch:[
+    {t:`Entrer en costume, comme si tu y travaillais`,s:`SANG-FROID · social`,chk:{a:`cool`,dc:8,ok:{ed:4500,cred:7,rel:{dino:12},loot:2,msg:`Un badge, un sourire, un ascenseur. Personne ne te regarde deux fois.`},ko:{hp:-14,ed:400,bloc:{corpo:-10},msg:`La réceptionniste appelle la sécurité. Tu sors par l'escalier de service.`}}},
+    {t:`Pirater le serveur depuis le parking`,s:`INTELLECT · hack`,req:R.deck(),chk:{a:`int`,k:`hck`,dc:8,ok:{ed:4500,cred:7,rel:{dino:12},role:{net:2},loot:2,msg:`Les dossiers défilent sur ton écran. Tu n'as même pas quitté ta voiture.`},ko:{hp:-12,bloc:{corpo:-10},msg:`Un contre-piratage. Ils ont une trace de toi.`}}},
+    {t:`Décliner`,fx:{rel:{dino:-2}}}
+  ]});
+
+/* ---------- Figures de faction ---------- */
+card({id:`brick_cell`,who:`brickm`,tag:`Maelstrom · Le prisonnier de Totentanz`,once:true,w:6,cond:()=>yr()>=2074&&(G.member===`maelstrom`||(G.fac.maelstrom||0)>=10||G.cred>=30),
+  tx:`Au fond du Totentanz, derrière une porte piégée, un homme enchaîné te regarde à travers la grille : <strong>Brick</strong>, l'ancien chef du Maelstrom, que Royce a renversé et enfermé. « Toi. Tu n'es pas des siens. Ouvre cette porte, et le Maelstrom te devra quelque chose. Royce, lui, te tuera. »`,
+  ch:[
+    {t:`Libérer Brick`,s:`TECHNIQUE · désamorcer le piège`,heavy:`Libérer Brick, c'est défier Royce. Le Maelstrom se déchirera, et tu seras au milieu.`,chk:{a:`tech`,dc:8,ok:{cred:8,fac:{maelstrom:14},flag:[`brick_free`],echo:{fac_revenge:5},msg:`Le piège cède. Brick se redresse, immense. « Je n'oublie pas. » Royce non plus.`},ko:{hp:-34,fac:{maelstrom:-10},msg:`Le piège explose à moitié. Tu t'enfuis avant que Royce n'arrive.`}}},
+    {t:`Prévenir Royce`,s:`Loyauté au chef actuel`,fx:{ed:1500,fac:{maelstrom:10},hum:-5,msg:`Royce ricane et te jette une liasse. Derrière la grille, Brick ne dit rien. Il te regarde.`}},
+    {t:`Refermer la porte et partir`,fx:{hum:-2,msg:`Tu n'as rien vu. Tu n'as rien entendu.`}}
+  ]});
+card({id:`oda_duel`,who:`oda`,tag:`Arasaka · Sandayu Oda`,once:true,w:5,cond:()=>G.cred>=40&&yr()>=2075,
+  tx:`Un homme masqué, lames mantis repliées, t'attend au milieu d'un parking vide : <strong>Sandayu Oda</strong>, garde du corps de Hanako Arasaka. « Ton nom revient trop souvent dans les rapports. Ma maîtresse veut savoir si tu es une menace ou un outil. Montre-moi. »`,
+  ch:[
+    {t:`Accepter le duel`,s:`RÉFLEXES · combat`,heavy:`Oda est l'un des meilleurs combattants de Night City.`,chk:{a:`ref`,k:`cmb`,dc:11,ok:{cred:14,fac:{arasaka:10},loot:3,msg:`Tu le touches une fois. Une seule. Il s'incline : « Un outil, donc. Et un bon. »`},ko:{hp:-50,cred:4,msg:`Il s'arrête à un centimètre de ta gorge. « Pas une menace. » Il s'en va.`}}},
+    {t:`T'incliner et proposer tes services`,s:`SANG-FROID`,chk:{a:`cool`,dc:8,ok:{ed:2500,fac:{arasaka:14},bloc:{corpo:8},msg:`Il te jauge, puis tend une carte. « Arasaka sait récompenser. »`},ko:{cred:-3,msg:`Il te tourne le dos. « Ni l'un ni l'autre. »`}}},
+    {t:`Refuser et partir`,fx:{cred:2,fac:{arasaka:-6},msg:`Tu sens son regard dans ton dos jusqu'à la sortie.`}}
+  ]});
+card({id:`mitch_panzer`,who:`mitch`,tag:`Aldecaldos · Mitch Anderson`,once:true,w:5,cond:()=>G.origin===`nomad`||(G.fac.aldecaldos||0)>=10||rel(`panam`)>=15,
+  tx:`Mitch Anderson, vétéran et mécano des Aldecaldos, essuie ses mains sur un chiffon : « On a récupéré un vieux blindé Militech. Il ne démarre pas. Si tu m'aides à le réveiller, le clan te doit un service. Et moi, une bière. »`,
+  ch:[
+    {t:`Plonger dans le moteur`,s:`TECHNIQUE`,chk:{a:`tech`,dc:7,ok:{xp:{tech:4},fac:{aldecaldos:12},rel:{panam:6},cred:4,msg:`Le blindé tousse, crache, rugit. Mitch pousse un cri de gosse.`},ko:{hp:-8,fac:{aldecaldos:4},msg:`Un retour de flamme. Mitch te soigne en riant.`}}},
+    {t:`Piloter l'essai`,s:`RÉFLEXES · conduite`,chk:{a:`ref`,k:`drv`,dc:8,ok:{cred:6,fac:{aldecaldos:10},bloc:{nomad:6},msg:`Tu fais danser trente tonnes d'acier dans la poussière. Tout le camp regarde.`},ko:{hp:-16,msg:`Tu emboutis un camion-citerne. Vide, heureusement.`}}},
+    {t:`Passer`,fx:{}}
+  ]});
+
+/* ---------- Créanciers : la dette fait mal ---------- */
+card({id:`debt_collect`,who:`fix`,tag:`⚠ Les créanciers`,w:70,cond:()=>G.ed<=-1500,
+  tx:()=>`Tu dois <strong>${Math.abs(G.ed).toLocaleString(`fr`)} €$</strong>. Ils sont quatre dans ton appartement quand tu rentres, assis sur tes meubles. « On ne vient pas discuter. On vient se servir. »`,
+  ch:[
+    {t:`Leur laisser un implant`,s:`Ils l'arrachent sur place`,req:()=>G.cyber.length?``:`Aucun implant`,fx:{fn:`sellOne`,hp:-12,hum:-4,msg:`Sans anesthésie. Ils repartent avec une pièce de toi.`}},
+    {t:`Leur laisser ton matériel`,s:`Tout ton équipement`,req:()=>G.gear.length?``:`Aucun équipement`,fx:{fn:`seizeGear`,msg:`Ils vident ta planque. Il te reste tes mains.`}},
+    {t:`Encaisser la leçon`,s:`Ils te passent à tabac`,fx:{hp:-38,hum:-6,fn:`debtCut`,msg:`Ils effacent une partie de la dette à coups de barre de fer.`}},
+    {t:`Fuir par la fenêtre`,s:`RÉFLEXES · ils te chercheront`,chk:{a:`ref`,dc:8,ok:{bloc:{rue:-18},msg:`Trois étages, une benne, une course. Ta tête vient de prendre de la valeur dans la rue.`},ko:{hp:-30,bloc:{rue:-12},msg:`Ils te rattrapent dans l'escalier.`}}}
   ]});
 /* =====================================================================
    MOTEUR — état, règles, effets
@@ -2776,7 +2852,7 @@ byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
 CARDS.filter(c=>/^b[cp]_/.test(c.id)).forEach(c=>{ c.cond=()=>false; });
-const CD = {sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {debt_collect:3,sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -2925,6 +3001,11 @@ function recruitAlly(id){
   else { applyFx({rel:{[id]:-4}}); }
   return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
+function debtTick(){
+  if(G.ed>=0) return;
+  const it=Math.max(60,Math.round(-G.ed*.12)); G.ed-=it; CHIPS=[]; addHeat(`rue`,7); G.hum=clamp(G.hum-2,0,100);
+  toast(`Dette : −${it} €$ d'intérêts · les créanciers s'impatientent`);
+}
 function hubTick(){
   if(G.inHub) return;
   G.sinceHub=(G.sinceHub||0)+1; const need=(G.hp<35||G.ed<0)?3:5;
@@ -3013,8 +3094,8 @@ function makeLoot(t){
 }
 /* ---------- jets ---------- */
 const woundPen = () => G.hp<20?3:G.hp<40?2:G.hp<60?1:0;
-const dcBonus = () => Math.min(6,Math.floor((G.age-18)/6)) + (G.cred>=70?1:0);
-const infl = () => 1+0.015*(yr()-START_YEAR);
+const dcBonus = () => Math.min(5,Math.floor((G.age-18)/8)) + (G.cred>=70?1:0);
+const infl = () => 1+0.01*(yr()-START_YEAR);
 function rollInfo(c,bonus){
   const kk = c.k||(c.a===`cool`?`soc`:null);
   const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
@@ -3030,11 +3111,11 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v>0&&tr(`survie`)) v=Math.round(v*1.5); if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v>0&&tr(`survie`)) v=Math.round(v*1.5); if(v<0) v=-Math.max(1,Math.round(-v*1.35*bm().hurt*(1+Math.max(0,G.age-24)*0.015)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.humx){ const b=G.hum; G.hum=clamp(G.hum+fx.humx,0,100); if(G.hum!==b){ chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.humx<0)SFX.glitch(); } }
   if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5*(tr(`ame`)?.7:1)*(eraNow().hum||1)):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(tr(`renom`)?1.25:1)*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(cv>=2) addHeat(hottestHeat(),cv*1.5); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
-  if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
+  if(fx.ed){ const ev=fx.ed>0?Math.round(fx.ed*1.3/10)*10:fx.ed; G.ed+=ev; chip(ev>0?`i`:`n`,`${sgn(ev)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));
   if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{ G.fac[k]=clamp((G.fac[k]||0)+v,-100,100); });
@@ -3140,6 +3221,8 @@ const FN = {
   sideDone(){ G.stats.side=(G.stats.side||0)+1; },
   empPush(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+40,0,99); chip(`y`,`+40 influence · ${DMAP[d].n}`); },
   empBuy(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+30,0,99); chip(`y`,`+30 influence · ${DMAP[d].n}`); },
+  seizeGear(){ const n=G.gear.length; G.gear=[]; chip(`n`,`−${n} équipement(s)`); G.ed=Math.min(0,G.ed+n*700); chip(`i`,`Dette réduite`); },
+  debtCut(){ if(G.ed<0){ const v=Math.round(-G.ed*.35); G.ed+=v; chip(`i`,`Dette −${v} €$`); } },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -3159,7 +3242,7 @@ function tick(months){
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*infl()*BASE*bm().rent;
+  const rent = clamp(20+Math.max(0,G.ed)*.003,20,120)*infl()*BASE*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
@@ -3199,7 +3282,7 @@ function prepCard(c){
   else if(c.who===`@ex`){ const f=FAC[G.lastEx]; npc=f?genNpc(f.k,f.c,`Ex-frère · ${f.n}`):genNpc(`gang`); }
   else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
   else if(c.who===`@enemy`){ const f=FAC[G.tmp&&G.tmp.fid]; npc=f?genNpc(f.k,f.c,f.n):genNpc(`gang`); }
-  else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`muamar`,`lizzie`,`faraday`]); }
+  else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`dino`,`faraday`]); }
   else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
   else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:/^fl/.test(c.id)?d.n:`Night City`,r:/^fl/.test(c.id)?`${d.w} · ${dateStr()}`:dateStr(),c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
   if(npc) G.cur.npc=npc;
@@ -3534,7 +3617,7 @@ function showHow(){
 
 /* ---------- création ---------- */
 const ORIGINS = {
-  street:{n:`Street Kid`,d:`Grandi dans la rue, tu connais les combines. Réflexes et sang-froid. Peu d'eddies, beaucoup de contacts.`,ed:350,cred:6,at:{ref:1,cool:1},
+  street:{n:`Street Kid`,d:`Grandi dans la rue, tu connais les combines. Réflexes et sang-froid. Peu d'eddies, beaucoup de contacts.`,ed:600,cred:6,at:{ref:1,cool:1},
     subs:{heywood:{n:`Heywood — Wellsprings`,d:`Le barrio des Valentinos. Famille, foi, honneur.`,fac:{valentinos:15,maelstrom:-6}},
           watson:{n:`Watson — Kabuki`,d:`Néons et marché noir. Là où l'on apprend à survivre.`,fac:{mox:10,tygers:-4}},
           santo:{n:`Santo Domingo — Arroyo`,d:`Béton, patrouilles et violence quotidienne.`,fac:{sixth:12,animals:5}}}},
@@ -3543,7 +3626,7 @@ const ORIGINS = {
           militech:{n:`Militech`,d:`L'industrie militaire. Guerre, profits, drapeaux.`,fac:{militech:15,arasaka:-10}},
           kangtao:{n:`Kang Tao`,d:`Smart weapons et élégance froide.`,fac:{kangtao:15,militech:-4}},
           biotechnica:{n:`Biotechnica`,d:`Nourriture, génétique, agriculture synthétique.`,fac:{biotechnica:15}}}},
-  nomad:{n:`Nomade`,d:`Les Badlands t'ont élevé. Moteurs, solidarité, horizons. Corps et technique.`,ed:600,cred:4,at:{body:1,tech:1},gear:[`archer`],
+  nomad:{n:`Nomade`,d:`Les Badlands t'ont élevé. Moteurs, solidarité, horizons. Corps et technique.`,ed:800,cred:4,at:{body:1,tech:1},gear:[`archer`],
     subs:{aldecaldos:{n:`Aldecaldos`,d:`La famille de Saul Bright. Loyauté et sable.`,fac:{aldecaldos:20,wraiths:-8}},
           wraiths:{n:`Wraiths`,d:`Pillards de la route. Vitesse et violence.`,fac:{wraiths:20,aldecaldos:-8}},
           solo:{n:`Nomade sans clan`,d:`Seul(e) sur la route. Personne pour te protéger.`,fac:{}}}},
@@ -3824,7 +3907,7 @@ function afterCard(r){
     if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
   } else {
     if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); hubTick(); empireTick();
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); hubTick(); empireTick();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
@@ -3987,7 +4070,7 @@ function relBlock(){
   return `<div class="sec">Relations</div>`+rs.map(([k,v])=>{const w=WHO[k];return `<div class="item"><div class="in"><b style="color:${w.c}">${esc(w.n)}${G.flags[`lover_`+k]?` ♥`:``}</b><small>${esc(w.r)}</small><div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};left:${v>=0?0:0}%;width:${Math.abs(v)}%"></i></div></div><b style="color:${v>=0?`var(--g)`:`var(--m)`}">${v}</b></div>`}).join(``);
 }
 /* ----- contrats : gains ----- */
-const gigPay=g=>Math.round(g.pay*1.7*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.6*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function goAdvice(go){
   if(go===`heat`) return openBloc(hottestHeat());
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);

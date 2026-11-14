@@ -5,7 +5,7 @@
 R.rel=(id,v)=>()=>((G.rel||{})[id]||0)>=v?``:`Lien avec ${WHO[id].n} ${v}`;
 const rel = id => (G.rel&&G.rel[id])||0;
 Object.assign(WHO,{
-  placide:{n:`Placide`,r:`Valentinos · Lieutenant`,c:`#ffb000`,st:`short`,sk:26},
+  placide:{n:`Placide`,r:`Voodoo Boys · Bras droit de Brigitte`,c:`#05ffa1`,st:`bald`,sk:14},
   dum:{n:`Dum Dum`,r:`Maelstrom · Totentanz`,c:`#ff2a6d`,st:`visor`,sk:10},
   claire:{n:`Claire Russell`,r:`Pilote · Mécano`,c:`#fcee0a`,st:`cap`,sk:28},
   rache:{n:`Rache Bartmoss`,r:`Légende du Net`,c:`#05ffa1`,st:`hood`,sk:12},
@@ -18,7 +18,7 @@ Object.assign(WHO,{
   hiro:{n:`Hiro Sato`,r:`Ingénieur · Kang Tao`,c:`#ffd166`,st:`cap`,sk:30},
   eli:{n:`Eli Okoye`,r:`Agent NetWatch · Informateur`,c:`#05ffa1`,st:`shades`,sk:20},
 });
-const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`,`wakako`,`regina`,`padre`,`muamar`,`faraday`,`nancy`,`river`];
+const REL_NAMES = [`jackie`,`judy`,`panam`,`misty`,`rogue`,`kerry`,`vik`,`dex`,`lucy`,`mama`,`delamain`,`claire`,`chino`,`nadia`,`mika`,`hiro`,`eli`,`hands`,`wakako`,`regina`,`padre`,`muamar`,`faraday`,`nancy`,`river`,`dakota`,`dino`];
 
 /* ============================ RELATIONS ============================ */
 // Jackie
@@ -141,13 +141,13 @@ card({id:`lc_moon`,who:`lucy`,tag:`2076 · Lucy`,w:6,cond:()=>G.flags.maine&&yr(
 
 /* ============================ ARCS DE FACTION ============================ */
 const ARCS = {
-  valentinos:[`placide`,`Placide a un problème : un Maelstrom a profané une église de Wellsprings. Le barrio veut du sang, mais El Capitán veut de l'honneur.`,`Venger l'église`,`Prendre la tête d'une procession de nuit`],
+  valentinos:[`capitan`,`Gustavo Orta a un problème : un Maelstrom a profané une église de Wellsprings. Le barrio veut du sang, mais Padre réclame de l'honneur.`,`Venger l'église`,`Prendre la tête d'une procession de nuit`],
   maelstrom:[`dum`,`Dum Dum veut te voir : « Un Royce plus fort, c'est un Maelstrom plus fort. Je te donne une dose de chrome gratuit si tu me jures fidélité. »`,`Accepter le chrome`,`Résister à la tentation`],
   tygers:[`claws`,`Un shinobi de Japantown te propose une initiation : réciter le code des Tyger Claws et subir un tatouage au laser.`,`Subir l'initiation`,`Faire croire que tu es loyal(e)`],
   sixth:[`sixth`,`Un vétéran 6th Street te raconte la guerre de Unification. « On n'est pas des gangsters, on est des patriotes. Prouve-le en nettoyant le quartier. »`,`Nettoyer Arroyo`,`Négocier avec les gangs`],
-  voodoo:[`brick`,`Brick t'invite à une réunion privée : « Le Blackwall bouge. On a besoin de vigilance. Tu veux voir ce qu'il y a derrière ? »`,`Plonger avec lui`,`Veiller sur le périmètre`],
+  voodoo:[`placide`,`Placide te convoque pour Maman Brigitte : « Le Blackwall bouge. On a besoin de vigilance. Tu veux voir ce qu'il y a derrière ? »`,`Plonger avec eux`,`Veiller sur le périmètre`],
   animals:[`sas`,`Sasquatch te convoque au dojo : « Tu as de la force. Pas encore de cœur. Montre-moi les deux. »`,`Défier un champion`,`Protéger un enfant du quartier`],
-  mox:[`lizzie`,`Lizzie te demande de monter sur scène pour un hommage aux disparues du Mox. « Tu portes nos couleurs. Parle pour nous. »`,`Parler sur scène`,`Proposer une action de rue`],
+  mox:[`lizzie`,`Susie Q te demande de monter sur scène pour un hommage aux disparues du Mox. « Tu portes nos couleurs. Parle pour nous. »`,`Parler sur scène`,`Proposer une action de rue`],
   aldecaldos:[`saul`,`Saul te parle de la route : « Les Badlands changent. NUSA et Militech rôdent. J'ai besoin de quelqu'un pour tenir le flanc est. »`,`Tenir le flanc est`,`Négocier avec NUSA`],
   wraiths:[`nomad`,`Un chef Wraith veut un convoi de guerre : « Pas de pitié, pas de témoin. Tu es dedans ? »`,`Mener le convoi`,`Ralentir pour sauver des civils`],
   barghest:[`hansen`,`Hansen te confie le contrôle d'une porte de Dogtown. « La discipline, c'est la survie. »`,`Tenir la porte`,`Autoriser des civils à passer`],

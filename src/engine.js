@@ -22,7 +22,7 @@ byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
 CARDS.filter(c=>/^b[cp]_/.test(c.id)).forEach(c=>{ c.cond=()=>false; });
-const CD = {sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {debt_collect:3,sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -171,6 +171,11 @@ function recruitAlly(id){
   else { applyFx({rel:{[id]:-4}}); }
   return {ok,auto,roll,need:r.need,chips:CHIPS.slice()};
 }
+function debtTick(){
+  if(G.ed>=0) return;
+  const it=Math.max(60,Math.round(-G.ed*.12)); G.ed-=it; CHIPS=[]; addHeat(`rue`,7); G.hum=clamp(G.hum-2,0,100);
+  toast(`Dette : −${it} €$ d'intérêts · les créanciers s'impatientent`);
+}
 function hubTick(){
   if(G.inHub) return;
   G.sinceHub=(G.sinceHub||0)+1; const need=(G.hp<35||G.ed<0)?3:5;
@@ -259,8 +264,8 @@ function makeLoot(t){
 }
 /* ---------- jets ---------- */
 const woundPen = () => G.hp<20?3:G.hp<40?2:G.hp<60?1:0;
-const dcBonus = () => Math.min(6,Math.floor((G.age-18)/6)) + (G.cred>=70?1:0);
-const infl = () => 1+0.015*(yr()-START_YEAR);
+const dcBonus = () => Math.min(5,Math.floor((G.age-18)/8)) + (G.cred>=70?1:0);
+const infl = () => 1+0.01*(yr()-START_YEAR);
 function rollInfo(c,bonus){
   const kk = c.k||(c.a===`cool`?`soc`:null);
   const tot = A(c.a) + (kk?skill(kk):0) + (bonus||0);
@@ -276,11 +281,11 @@ const chip = (cls,txt)=>CHIPS.push({cls,txt});
 const sgn = v => (v>0?`+`:``)+v;
 function applyFx(fx){
   if(!fx) return;
-  if(fx.hp){ let v=fx.hp; if(v>0&&tr(`survie`)) v=Math.round(v*1.5); if(v<0) v=-Math.max(1,Math.round(-v*1.6*bm().hurt*(1+Math.max(0,G.age-24)*0.02)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
+  if(fx.hp){ let v=fx.hp; if(v>0&&tr(`survie`)) v=Math.round(v*1.5); if(v<0) v=-Math.max(1,Math.round(-v*1.35*bm().hurt*(1+Math.max(0,G.age-24)*0.015)*(G.hp<40?1.2:1)*(1-mitigation()))); const b=G.hp; G.hp=clamp(G.hp+v,0,100); if(G.hp!==b) chip(v>0?`p`:`n`,`${sgn(G.hp-b)} Santé`); if(v<0){SFX.hit();shake();flash(`#ff2a6d`)} }
   if(fx.humx){ const b=G.hum; G.hum=clamp(G.hum+fx.humx,0,100); if(G.hum!==b){ chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.humx<0)SFX.glitch(); } }
   if(fx.hum){ const hv=fx.hum<0?Math.round(fx.hum*1.5*(tr(`ame`)?.7:1)*(eraNow().hum||1)):fx.hum; const b=G.hum; G.hum=clamp(G.hum+hv,0,100); if(G.hum!==b) chip(G.hum>b?`p`:`n`,`${sgn(G.hum-b)} Humanité`); if(fx.hum<0)SFX.glitch(); }
   if(fx.cred){ const b=G.cred; const cv=fx.cred>0?Math.max(1,Math.round(fx.cred*(tr(`renom`)?1.25:1)*(1-G.cred/110))):fx.cred; G.cred=clamp(G.cred+cv,0,100); if(cv>=2) addHeat(hottestHeat(),cv*1.5); if(G.cred!==b) chip(G.cred>b?`y`:`n`,`${sgn(G.cred-b)} Street Cred`); G.stats.peak=Math.max(G.stats.peak,G.cred); }
-  if(fx.ed){ G.ed+=fx.ed; chip(fx.ed>0?`i`:`n`,`${sgn(fx.ed)} €$`); }
+  if(fx.ed){ const ev=fx.ed>0?Math.round(fx.ed*1.3/10)*10:fx.ed; G.ed+=ev; chip(ev>0?`i`:`n`,`${sgn(ev)} €$`); }
   if(fx.at) Object.entries(fx.at).forEach(([k,v])=>{ const b=G.at[k]; G.at[k]=clamp(G.at[k]+v,1,10); if(G.at[k]!==b) chip(`p`,`${sgn(G.at[k]-b)} ${ATTRS[k].n}`); });
   Object.entries(blocFromFx(fx)).forEach(([b,d])=>moveBloc(b,d));
   if(fx.fac) Object.entries(fx.fac).forEach(([k,v])=>{ G.fac[k]=clamp((G.fac[k]||0)+v,-100,100); });
@@ -386,6 +391,8 @@ const FN = {
   sideDone(){ G.stats.side=(G.stats.side||0)+1; },
   empPush(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+40,0,99); chip(`y`,`+40 influence · ${DMAP[d].n}`); },
   empBuy(){ const d=G.tmp&&G.tmp.d; if(!d) return; G.ctl=G.ctl||{}; G.ctl[d]=clamp((G.ctl[d]||0)+30,0,99); chip(`y`,`+30 influence · ${DMAP[d].n}`); },
+  seizeGear(){ const n=G.gear.length; G.gear=[]; chip(`n`,`−${n} équipement(s)`); G.ed=Math.min(0,G.ed+n*700); chip(`i`,`Dette réduite`); },
+  debtCut(){ if(G.ed<0){ const v=Math.round(-G.ed*.35); G.ed+=v; chip(`i`,`Dette −${v} €$`); } },
   cancelHunt(){ G.echo=(G.echo||[]).filter(x=>x.id!==`hunt_2`); delete G.flags.hunted; chip(`y`,`Prime levée`); },
   loseLead(){ if(!isLeader()) return; const id=G.member; delete G.flags[`leader_`+id]; G.rank=2; chip(`n`,`Tu perds la couronne`); cere({k:`betray`,c:`#ff2a6d`,ic:`💀`,kick:`DESTITUTION`,t:`Tu n'es plus à la tête`,sub:`${FAC[id].n} t'a renversé(e)`,lines:[`⬇ Rang : ${RANKS[FAC[id].k][2]}`,`📉 Ta réputation s'effondre`,`🗡 Tes rivaux se partagent ta place`]}); G.fac[id]=clamp((G.fac[id]||0)-25,-100,100); },
   facDefy(){ if(G.member){ G.fac[G.member]=clamp((G.fac[G.member]||0)-14,-100,100); chip(`n`,`−14 ${FAC[G.member].n}`); G.flags.duty=true; } },
@@ -405,7 +412,7 @@ function tick(months){
   if(G.flags.corpjob) inc+=140*BASE;
   if(G.member){ const kd=FAC[G.member].k; inc+= (kd===`corp`||kd===`ncpd`||kd===`trauma`?110:55)*(G.rank+1)*BASE*.6; }
   inc*=bm().income;
-  const rent = clamp(30+Math.max(0,G.ed)*.004,30,150)*infl()*BASE*bm().rent;
+  const rent = clamp(20+Math.max(0,G.ed)*.003,20,120)*infl()*BASE*bm().rent;
   const net = Math.round((inc-rent)*k);
   G.ed += net;
   const reg = G.cyber.reduce((a,i)=>a+(CY(i).regen||0),0);
@@ -445,7 +452,7 @@ function prepCard(c){
   else if(c.who===`@ex`){ const f=FAC[G.lastEx]; npc=f?genNpc(f.k,f.c,`Ex-frère · ${f.n}`):genNpc(`gang`); }
   else if(c.who===`@fixer`){ G.cur.who=FIXERS[rnd(0,FIXERS.length-1)]; }
   else if(c.who===`@enemy`){ const f=FAC[G.tmp&&G.tmp.fid]; npc=f?genNpc(f.k,f.c,f.n):genNpc(`gang`); }
-  else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`muamar`,`lizzie`,`faraday`]); }
+  else if(c.who===`@hub`){ G.cur.who=pickR([`rogue`,`dex`,`claire`,`hands`,`dino`,`faraday`]); }
   else if(GENERIC_WHO[c.who]) npc=genNpc(GENERIC_WHO[c.who]);
   else if(c.who===`narr`){ const ds=DIST.filter(d=>!d.lock||G.flags.dogtown), d=ds[rnd(0,ds.length-1)]; npc={n:/^fl/.test(c.id)?d.n:`Night City`,r:/^fl/.test(c.id)?`${d.w} · ${dateStr()}`:dateStr(),c:`#fcee0a`,scene:1,ic:pickR([`🌧`,`🌃`,`🏙`,`🌆`,`🚇`,`🛣`,`🌫`,`🔥`,`🚕`,`📡`]),st:`hood`,sk:30}; }
   if(npc) G.cur.npc=npc;

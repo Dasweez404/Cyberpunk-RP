@@ -118,7 +118,7 @@ card({id:`sm`,who:`fix`,tag:`Mission secondaire`,w:45,cond:()=>!G.flags.q_active
     G.tmp={g:rnd(0,SM_GOALS.length-1),tw:rnd(0,SM_TWISTS.length-1),d:dd.n};
     return `« J'ai besoin de quelqu'un pour <strong>${SM_GOALS[G.tmp.g]}</strong>, du côté de <em>${dd.n}</em>. » ${SM_TWISTS[G.tmp.tw]}`; },
   dyn:()=>{ const tier=G.cred>=60?3:G.cred>=30?2:G.cred>=10?1:0;
-    const pay=Math.round((450+G.cred*32)*(0.8+Math.random()*0.6)*bm().gig/50)*50;
+    const pay=Math.round((520+G.cred*34)*(0.8+Math.random()*0.6)*bm().gig/50)*50;
     const ways=shuffle(SM_WAYS).slice(0,3);
     const out=ways.map(w=>{ const dc=6+tier+rnd(0,1); const heat=w.k===`cmb`?{loi:-3}:w.k===`hck`?{corpo:-2}:null;
       return {t:w.t,s:`${ATTRS[w.a].n}${w.k?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[w.k]}`:``} · ${money(pay)}`,chk:{a:w.a,k:w.k,dc,

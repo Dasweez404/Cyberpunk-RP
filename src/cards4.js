@@ -75,5 +75,5 @@ EXP(`edge_job`,`ref`,9,{t:`Danser entre les balles, sans un coup tiré`,fx:{ed:6
 EXP(`hum_warn`,`cool`,8,{t:`Reprendre le contrôle par la seule force de ta volonté`,fx:{hum:20,cred:2,msg:`Tu fermes les yeux, tu respires. Les voix se taisent. Tu regardes tes mains : elles sont à toi.`}});
 EXP(`bd_snuff`,`int`,8,{t:`Remonter la piste jusqu'au producteur et le dénoncer`,fx:{hum:10,cred:6,rel:{judy:10},fac:{mox:10},msg:`Tu fournis à Judy un dossier béton. Le producteur disparaît des écrans.`}});
 EXP(`kerry_concert`,`cool`,8,{t:`Monter sur scène pour un duo improvisé`,fx:{cred:9,hum:6,rel:{kerry:12},role:{rocker:3},msg:`Kerry t'attrape par l'épaule, la foule hurle. Un moment pour toujours.`}});
-EXP(`mox_club`,`cool`,8,{t:`Devenir la voix des Mox ce soir`,fx:{cred:6,hum:8,fac:{mox:10},rel:{judy:6},msg:`Un micro, trois phrases, une salle debout. Lizzie sourit.`}});
+EXP(`mox_club`,`cool`,8,{t:`Devenir la voix des Mox ce soir`,fx:{cred:6,hum:8,fac:{mox:10},rel:{judy:6},msg:`Un micro, trois phrases, une salle debout. Susie Q sourit.`}});
 EXP(`rogue_drink`,`cool`,8,{t:`Lui parler comme à une égale`,fx:{cred:8,rel:{rogue:12},hum:4,msg:`Rogue lève un sourcil, puis te pousse un verre. Tu viens de marquer un point.`}});

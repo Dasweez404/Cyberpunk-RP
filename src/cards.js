@@ -165,10 +165,10 @@ card({id:`trauma_sub`,who:`doc`,tag:`Trauma Team`,w:4,once:true,cond:()=>G.ed>=1
     {t:`Refuser, je compte sur mes réflexes`,fx:{cred:1}}
   ]});
 card({id:`mox_club`,who:`lizzie`,tag:`Lizzie's Bar · Kabuki`,w:4,
-  tx:`Néons roses et basses profondes. Lizzie t'accueille au club : « Ici, on s'entraide, on se protège, et personne n'aime les profiteurs. Tu bois, tu danses… ou tu veux nous aider pour un souci ? »`,
+  tx:`Néons roses et basses profondes. Susie Q t'accueille au club : « Ici, on s'entraide, on se protège, et personne n'aime les profiteurs. Tu bois, tu danses… ou tu veux nous aider pour un souci ? »`,
   ch:[
     {t:`Danser jusqu'à l'aube`,s:`+Humanité`,fx:{hum:9,ed:-80,msg:`Les basses font vibrer ton implant. Pendant une heure, tu oublies la ville.`}},
-    {t:`Proposer ton aide`,s:`SANG-FROID`,chk:{a:`cool`,dc:6,ok:{cred:5,fac:{mox:10},hum:3,msg:`Tu règles un souci de harcèlement avec tact. Lizzie te serre dans ses bras.`},ko:{cred:1,fac:{mox:2},msg:`Tu fais une gaffe. Mais l'intention compte.`}}},
+    {t:`Proposer ton aide`,s:`SANG-FROID`,chk:{a:`cool`,dc:6,ok:{cred:5,fac:{mox:10},hum:3,msg:`Tu règles un souci de harcèlement avec tact. Susie Q te serre dans ses bras.`},ko:{cred:1,fac:{mox:2},msg:`Tu fais une gaffe. Mais l'intention compte.`}}},
     {t:`Repartir`,fx:{}}
   ]});
 card({id:`maelstrom_raid`,who:`royce`,tag:`Maelstrom`,w:3,cond:()=>G.cred>=10&&!G.member,
@@ -335,7 +335,7 @@ card({id:`blackwall`,who:`brick`,tag:`Voodoo Boys · Blackwall`,w:5,cond:()=>has
   tx:`Les Voodoo Boys te contactent sur un canal crypté : « On cherche quelqu'un qui peut s'approcher du <em>Blackwall</em>. On parle d'IA rogue, d'Alt Cunningham, de choses qui regardent depuis l'autre côté. Tu en es ? »`,
   ch:[
     {t:`Plonger au bord du Blackwall`,s:`INT · Danger mental`,chk:{a:`int`,k:`hck`,dc:10,ok:{cred:12,ed:3500,at:{int:1},hum:-6,role:{net:3},fac:{voodoo:10},msg:`Une présence énorme t'observe. Tu ressors vivant avec des données que personne n'a jamais vues.`},ko:{hp:-35,hum:-15,msg:`Une vague de données te traverse. Tu te réveilles hagard(e), la tête en feu.`}}},
-    {t:`Refuser, tu préfères survivre`,fx:{cred:1,hum:2,msg:`Brick note ton nom. « Un jour, peut-être. »`}}
+    {t:`Refuser, tu préfères survivre`,fx:{cred:1,hum:2,msg:`Maman Brigitte note ton nom. « Un jour, peut-être. »`}}
   ]});
 card({id:`netwatch`,who:`corpo`,tag:`NetWatch · Audit`,w:4,cond:()=>hasDeck(),
   tx:`NetWatch a repéré une intrusion qui ressemble beaucoup à ta signature. Un agent propose un marché : « Pas de poursuites si tu coopères. Ou tu disparais dans un sous-sol. »`,

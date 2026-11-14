@@ -1,11 +1,11 @@
 /* =====================================================================
-   CARTES 7 — fixers & contacts connus (Muamar Reyes, Faraday, Nancy
+   CARTES 7 — fixers & contacts connus (Muamar Reyes, Faraday, Harold
    Hartley, River Ward…) + missions propres à chaque fixer
    ===================================================================== */
 Object.assign(WHO,{
-  muamar:{n:`Muamar Reyes`,r:`Fixer · Les gros coups`,c:`#ffd166`,st:`shades`,sk:22},
+  muamar:{n:`Muamar « El Capitán » Reyes`,r:`Fixer · Santo Domingo`,c:`#ffd166`,st:`shades`,sk:22},
   faraday:{n:`Faraday`,r:`Fixer · Edgerunners`,c:`#ff9f1c`,st:`cap`,sk:24},
-  nancy:{n:`Nancy Hartley`,r:`Détective NCPD`,c:`#3b8bff`,st:`short`,sk:30},
+  nancy:{n:`Harold Han`,r:`Inspecteur NCPD`,c:`#3b8bff`,st:`short`,sk:30},
   river:{n:`River Ward`,r:`Détective NCPD · The Glen`,c:`#3b8bff`,st:`short`,sk:26},
 });
 FIXERS.push(`muamar`,`faraday`);
@@ -32,7 +32,7 @@ card({id:`pd_2`,who:`padre`,tag:`Padre · Dans le barrio`,once:true,w:7,cond:()=
 
 /* ---------- Muamar Reyes ---------- */
 card({id:`meet_muamar`,who:`muamar`,tag:`Rencontre · Muamar Reyes`,once:true,w:6,cond:()=>rel(`muamar`)<5&&G.cred>=14,
-  tx:`Un homme élégant t'aborde dans un bar de Westbrook, un cigare éteint aux lèvres. « Muamar Reyes. Fixer. On m'a parlé de toi. Je n'aime pas perdre mon temps, alors voici l'idée : un coffre dans un entrepôt de Pacifica, trois hommes dessus, et un client prêt à payer cher. »`,
+  tx:`Un homme élégant t'aborde dans un garage de Santo Domingo, un cigare éteint aux lèvres. « Muamar Reyes. Ici, on m'appelle El Capitán. Fixer. On m'a parlé de toi. Je n'aime pas perdre mon temps, alors voici l'idée : un coffre dans un entrepôt de Pacifica, trois hommes dessus, et un client prêt à payer cher. »`,
   ch:[
     {t:`Poser des questions`,s:`INTELLECT`,chk:{a:`int`,dc:7,ok:{rel:{muamar:14},cred:3,ed:600,msg:`Tu as pris le temps de comprendre. Il apprécie : « Prudent. J'aime ça. »`},ko:{rel:{muamar:6},msg:`Il s'impatiente. Mais t'a retenu(e).`}}},
     {t:`Dire oui tout de suite`,s:`Impulsif`,fx:{rel:{muamar:8},cred:2,ed:300,msg:`« Enthousiaste. Voyons si ça dure. »`}}
@@ -72,16 +72,16 @@ card({id:`faraday_gift`,who:`faraday`,tag:`Faraday · Reconnaissance`,once:true,
   ]});
 
 /* ---------- Détectives NCPD ---------- */
-card({id:`meet_nancy`,who:`nancy`,tag:`Rencontre · Nancy Hartley`,once:true,w:6,cond:()=>rel(`nancy`)<5&&G.cred>=10,
-  tx:`Une détective NCPD, manteau gris, café tiède, te fait signe depuis un banc : « Nancy Hartley. Je ne suis pas là pour t'arrêter. Je cherche quelqu'un qui connaît les rues. Quelqu'un qui parle, discrètement. »`,
+card({id:`meet_nancy`,who:`nancy`,tag:`Rencontre · Harold Han`,once:true,w:6,cond:()=>rel(`nancy`)<5&&G.cred>=10,
+  tx:`Un inspecteur NCPD, manteau gris, café tiède, te fait signe depuis un banc : « Harold Han. Je ne suis pas là pour t'arrêter. Je cherche quelqu'un qui connaît les rues. Quelqu'un qui parle, discrètement. »`,
   ch:[
-    {t:`Coopérer`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{rel:{nancy:14},bloc:{loi:6},ed:500,msg:`Quelques noms, un contexte. Elle note tout sans un mot.`},ko:{rel:{nancy:6},msg:`Tu bafouilles. Elle sourit, sans méchanceté.`}}},
-    {t:`Lui dire de te laisser tranquille`,s:`Rue +`,fx:{rel:{nancy:-4},bloc:{rue:4,loi:-4},msg:`Elle hausse les épaules. « On se reverra. »`}}
+    {t:`Coopérer`,s:`SANG-FROID`,chk:{a:`cool`,dc:7,ok:{rel:{nancy:14},bloc:{loi:6},ed:500,msg:`Quelques noms, un contexte. Il note tout sans un mot.`},ko:{rel:{nancy:6},msg:`Tu bafouilles. Il sourit, sans méchanceté.`}}},
+    {t:`Lui dire de te laisser tranquille`,s:`Rue +`,fx:{rel:{nancy:-4},bloc:{rue:4,loi:-4},msg:`Il hausse les épaules. « On se reverra. »`}}
   ]});
-card({id:`nancy_job`,who:`nancy`,tag:`Nancy · Une enquête`,once:true,w:7,cond:()=>rel(`nancy`)>=10,
-  tx:`Nancy étale des photos sur le capot de sa voiture : trois disparitions, un même point commun, une BD qui circule. « J'ai besoin d'un œil extérieur. Tu es mon seul recours. »`,
+card({id:`nancy_job`,who:`nancy`,tag:`Han · Une enquête`,once:true,w:7,cond:()=>rel(`nancy`)>=10,
+  tx:`Han étale des photos sur le capot de sa voiture : trois disparitions, un même point commun, une BD qui circule. « J'ai besoin d'un œil extérieur. Tu es mon seul recours. »`,
   ch:[
-    {t:`Enquêter sur le terrain`,s:`INTELLECT`,chk:{a:`int`,dc:8,ok:{ed:1500,cred:6,rel:{nancy:14},bloc:{loi:5},msg:`Tu relies les points. Nancy sourit en fermant son carnet.`},ko:{hp:-14,rel:{nancy:6},msg:`Une impasse, une menace. Tu reviens avec peu.`}}},
+    {t:`Enquêter sur le terrain`,s:`INTELLECT`,chk:{a:`int`,dc:8,ok:{ed:1500,cred:6,rel:{nancy:14},bloc:{loi:5},msg:`Tu relies les points. Han sourit en fermant son carnet.`},ko:{hp:-14,rel:{nancy:6},msg:`Une impasse, une menace. Tu reviens avec peu.`}}},
     {t:`Lui laisser faire`,fx:{rel:{nancy:-3}}}
   ]});
 card({id:`meet_river`,who:`river`,tag:`Rencontre · River Ward`,once:true,w:6,cond:()=>rel(`river`)<5&&G.cred>=12,
