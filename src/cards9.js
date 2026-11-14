@@ -25,6 +25,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
       o(`gear`,`Fouiller le marché noir`,`Armes, armures, véhicules, style`,`shop_gear`),
       o(`gig`,`Chercher un contrat`,`Un coup à jouer, des risques à prendre`,`gig_board`),
       o(`rest`,`Te reposer`,`Soins · thérapie · fête`,`rest_card`),
+      o(`trip`,`Prendre la route`,`Changer de quartier · rencontres locales`,`travel_card`),
       {t:`Repartir dans la rue`,s:G.hubLeft<2?`La soirée est finie`:`Rien aujourd'hui`,fx:{hubEnd:true,nav:true}}
     ];
   },ch:[]});
@@ -77,6 +78,7 @@ card({id:`rest_card`,quick:true,who:`narr`,tag:`🛏 Repos`,cond:()=>false,
       {t:`Dormir quelques heures`,s:`Gratuit · +15 Santé · +5 Humanité`,fx:{hp:15,hum:5,msg:`Tu dors d'un sommeil lourd. Les rêves sont étranges, mais tu t'en souviens à peine.`}},
       {t:`Faire la fête jusqu'à l'aube`,s:`−80 €$ · risqué`,chk:{a:`cool`,dc:6,ok:{ed:-80,hum:12,msg:`Les basses, les corps, les rires. Tu oublies tout ce que tu as fait.`},ko:{ed:-150,hp:-14,hum:-3,msg:`Ça dégénère. Tu rentres plus sale que tu n'es parti(e).`}}}
     ];
+    out.splice(2,0,{t:`Une nuit de luxe`,s:`${money(Math.round(1400*infl()))} · +Humanité · +Cred · poursuites −10`,req:()=>G.ed>=Math.round(1400*infl())?``:`${money(Math.round(1400*infl()))} requis`,fx:{ed:-Math.round(1400*infl()),hum:12,cred:2,hp:10,bloc:{loi:8,corpo:8},msg:`Suite avec vue sur la ville, champagne synthétique, un sommeil sans armes. Les gens parlent de toi — en bien.`}},{t:`Payer une tournée à tout le bar`,s:`${money(Math.round(450*infl()))} · un contact te remercie`,req:()=>G.ed>=Math.round(450*infl())?``:`${money(Math.round(450*infl()))} requis`,fx:{ed:-Math.round(450*infl()),cred:2,fn:`treat`,msg:`Les verres circulent. Quelqu'un te serre la main un peu plus longtemps que les autres.`}},{t:`Payer un avocat`,s:`${money(Math.round(1800*infl()))} · poursuite de la police −25`,req:()=>G.ed>=Math.round(1800*infl())?``:`${money(Math.round(1800*infl()))} requis`,fx:{ed:-Math.round(1800*infl()),bloc:{loi:25},msg:`Un cabinet discret, des dossiers qui se perdent. Ton nom disparaît de quelques écrans de patrouille.`}});
     out.splice(2,0,{t:`Faire profil bas`,s:`Gratuit · toutes les poursuites −12`,fx:{bloc:{loi:12,corpo:12,rue:12,nomad:12},msg:`Tu ne sors pas, tu ne réponds à personne. On parle un peu moins de toi.`}});
     if(!G.flags.trauma) out.splice(3,0,{t:`Souscrire à la Trauma Team`,s:`${money(tt)} · seconde vie (pas contre MaxTac)`,req:()=>G.ed>=tt?``:`${money(tt)} requis`,fx:{ed:-tt,flag:[`trauma`],msg:`Un badge, une puce de géolocalisation. Une équipe blindée viendra te chercher si tu tombes.`}});
     out.push(NOPE(`Repartir sans te reposer`,`Tu repars tel(le) que tu es arrivé(e).`)); return out;

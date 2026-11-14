@@ -471,3 +471,4 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 .bloc.heat span{white-space:nowrap}
 #hdate{color:var(--dim);font-size:inherit;letter-spacing:.08em;text-align:left;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pw{display:flex;flex-direction:column;gap:3px;border-top:1px dashed var(--line);padding-top:6px}.pw small{font-size:12.5px;line-height:1.3}
+.sub-hud{gap:6px}.sub-hud .role{max-width:32%}.hbtn{padding:2px 8px}#hdate{flex:1 1 0}

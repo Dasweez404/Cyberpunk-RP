@@ -120,7 +120,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.loc=G.loc||`kabuki`;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -201,7 +201,8 @@ function renderCreate(){
     if(CR.origin===`nomad`){ G.role.nomad=2; }
     if(CR.origin===`street`){ G.role.fixer=1; }
     G.log.unshift({d:dateStr(),m:`${nm} débute sa vie à Night City (${o.n}).`});
-    addEcho(`life_twist`,1);
+    G.loc={heywood:`wellsprings`,watson:`kabuki`,santo:`arroyo`,arasaka:`corpo`,militech:`corpo`,kangtao:`corpo`,biotechnica:`corpo`,aldecaldos:`badlands`,wraiths:`badlands`,solo:`badlands`}[CR.sub]||`kabuki`;
+    addEcho(`life_twist`,1); addEcho(`start_loc`,2);
     renderGame(); legacyStep(()=>startAct(()=>nextCard()));
   };
   if(CR.step===3){ $(`#rnd`).onclick=()=>{SFX.tap();$(`#nm`).value=randomName();CR.name=$(`#nm`).value}; setTimeout(()=>{const n=$(`#nm`);if(n&&!n.value)n.focus()},100); }
@@ -232,7 +233,7 @@ function renderGame(){
   document.querySelectorAll(`.dock button`).forEach(b=>b.onclick=()=>{SFX.tap();({prof:openProfile,empire:()=>openEmpire(),contacts:openContacts,more:openMore})[b.dataset.d]()});
   $(`#hbc`).onclick=()=>{SFX.tap();openContacts()};
   $(`#hdate`).onclick=()=>{SFX.tap();openAct()};
-  $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
+  $(`#hhub`).onclick=()=>{SFX.tap();const n=Math.max(1,((G.hp<35||G.ed<0)?4:7)-(G.sinceHub||0));toast(`L'Afterlife : une halte dans ${n} carte(s) — boutique, contrats, repos. Tu ne choisis pas le moment.`)};
   $(`#hrole`).onclick=()=>{SFX.tap();openEmpire(`fac`)};
   updateHud(true);
 }
@@ -257,7 +258,7 @@ function updateHud(init){
   document.body.classList.toggle(`lowhp`,G.hp<=30);
   tweenEd(v.ed); $(`#b-ed`).style.width=clamp(Math.log10(Math.max(1,v.ed))/5*100,2,100)+`%`;
   if(v.ed<0){$(`#v-ed`).style.color=`var(--m)`}else $(`#v-ed`).style.color=``;
-  $(`#hdate`).textContent=`${ROMAN[G.act||0]} · ${yr()} · ${G.age} ans`;
+  $(`#hdate`).textContent=`${ROMAN[G.act||0]} · 📍${locName()} · ${yr()} · ${G.age} ans`;
   { const pi=promoInfo(), hr=$(`#hrole`); hr.textContent=roleTitle()+(pi&&pi.jobs&&!pi.ready?` · ${Math.min(pi.jobs[0],pi.jobs[1])}/${pi.jobs[1]}`:pi&&pi.ready?` ⬆`:``); hr.classList.toggle(`ready`,!!(pi&&pi.ready)); }
   const cb=document.querySelector(`.dock [data-d=city]`); if(cb)cb.classList.toggle(`alert`,G.hp<45||G.hum<45);
   $(`#m-hp`).classList.toggle(`warn`,G.hp<=25);
@@ -269,7 +270,7 @@ function updateHud(init){
     });
   }
   renderBlocs();
-  $(`#hhn`).textContent=Math.max(1,((G.hp<35||G.ed<0)?3:5)-(G.sinceHub||0));
+  $(`#hhn`).textContent=Math.max(1,((G.hp<35||G.ed<0)?4:7)-(G.sinceHub||0));
   const nc=REL_NAMES.filter(i=>relv(i)>=5&&!(G.dead||{})[i]).length; $(`#hbn`).textContent=nc;
   const ad=adviceNow(), urgent=!!ad;
   $(`#advice`).innerHTML=urgent?`<button class="adv" id="advb">${ad.ic} ${ad.t} <b>›</b></button>`:``;
@@ -426,7 +427,8 @@ function afterCard(r){
     if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
   } else {
     if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); hubTick(); empireTick();
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); promoAuto(); hubTick(); empireTick(); if(G.stats.cards%9===0) driftLoc();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
@@ -448,6 +450,7 @@ function askFactionName(kind,done){
 }
 
 /* ---------- actes, ambitions, traits, héritage ---------- */
+function driftLoc(){ const ds=DIST.filter(d=>d.id!==G.loc&&(!d.lock||G.flags.dogtown)); const d=ds[rnd(0,ds.length-1)]; G.loc=d.id; G.forceEnc=true; toast(`📍 Tu passes à ${d.n}`); }
 function tierFx(t){ overlayFx(`lvlfx`,`<span>STREET CRED ${t[0]}</span><b class="hd" style="font-size:22px;line-height:1.2;padding:0 20px">${esc(t[1])}</b>`,2000); SFX.ok(); G.log.unshift({d:dateStr(),m:`Palier de Street Cred ${t[0]} : ${t[1]}.`}); }
 function startAct(cb){
   const a=G.act||0, A_=ACTS[a], er=rollEra();
@@ -751,7 +754,8 @@ function askMission(){
 }
 /* ----- CONTACTS ----- */
 function openContacts(){
-  const rows=REL_NAMES.map(id=>{
+  let unk=0; const vis=REL_NAMES.filter(id=>{ const k=relv(id)!==0||(G.dead||{})[id]; if(k) return true; return ++unk<=3; });
+  const rows=vis.map(id=>{
     const w=WHO[id], v=relv(id), dead=(G.dead||{})[id], known=v!==0||dead;
     const idle=G.stats.cards-((G.relT&&G.relT[id])||0);
     const next=REL_TIERS.find(t=>t[0]>v);
@@ -764,11 +768,12 @@ function openContacts(){
       <div class="cdet" id="cd-${id}" hidden>${G.mine&&crewOf().includes(id)?`<span style="color:var(--g)">✓ Membre de ${esc(G.mine.name)} · +120 €$/période · défense</span><br>`:``}${canRecruit(id)?`<button class="buy" data-rc="${id}" style="margin:4px 0">🤝 Recruter dans ${esc(G.mine.name)} (${relv(id)>=35?`assuré`:`jet de SANG-FROID`})</button><br>`:``}${esc(w.r)}<br>🎁 ${esc(CONTACTS[id])}${ally.length&&!dead?`<br>📞 Aide aux jets : ${ally.join(`, `)} (lien ≥ 25)`:``}${next&&!dead&&known?`<br>Prochain palier : ${next[1]} (${next[0]})`:``}${known&&!dead&&v>=10&&idle>=7?`<br><span style="color:var(--m)">⚠ Sans nouvelles depuis ${idle} périodes : il/elle s'éloigne</span>`:``}</div></div>`;
   }).join(``);
   const elig=G.mine?REL_NAMES.filter(canRecruit):[];
-  modal(`Contacts`,`${G.mine?`<div class="vstat"><span>🤝 ${esc(G.mine.name)} : ${crewOf().length} membre(s)</span>${elig.length?`<button class="buy" id="rcall">Recruter (${elig.length})</button>`:``}</div>`:``}<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
+  modal(`Contacts`,`${G.mine?`<div class="vstat"><span>🤝 ${esc(G.mine.name)} : ${crewOf().length} membre(s)</span>${elig.length?`<button class="buy" id="rcall">Recruter (${elig.length})</button>`:``}<button class="buy" id="rstr">+ Un inconnu · ${money(Math.round(400*infl()))}</button></div>`:``}<div class="log" style="color:var(--dim)">Entretiens tes liens : un allié (lien ≥ 25) peut t'aider dans un jet risqué (📞). Sans nouvelles, il s'éloigne. En danger, il peut mourir.</div><div class="cgrid">${rows}</div>`,{full:true});
   document.querySelectorAll(`[data-ct]`).forEach(b=>b.onclick=(e)=>{ if(e.target.closest(`[data-rc]`)) return; SFX.tap();const d=$(`#cd-`+b.dataset.ct);d.hidden=!d.hidden});
   const doRec=ids=>{ let n=0; ids.forEach(id=>{ const r=recruitAlly(id); if(r&&r.ok) n++; }); updateHud(); toast(n?`${n} recrue(s) dans ${G.mine.name} !`:`Personne n'a accepté…`); if(n){SFX.ok();burst(innerWidth/2,innerHeight*.4,[`#fcee0a`,`#05ffa1`],40);} openContacts(); };
   document.querySelectorAll(`[data-rc]`).forEach(b=>b.onclick=ev=>{ev.stopPropagation();doRec([b.dataset.rc])});
   const ra=$(`#rcall`); if(ra) ra.onclick=()=>doRec(elig);
+  const rs=$(`#rstr`); if(rs) rs.onclick=()=>{ const p=Math.round(400*infl()); if(G.ed<p){SFX.ko();toast(`${money(p)} requis`);return} G.ed-=p; CHIPS=[]; FN.recruit(); G.mine.power+=0; updateHud(); SFX.ok(); toast(`Une recrue rejoint ${G.mine.name}`); openContacts(); };
 }
 function openMore(){
   modal(`Plus`,`<div class="tiles">

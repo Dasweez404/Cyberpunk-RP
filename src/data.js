@@ -375,3 +375,9 @@ const TRAITS = {
   meneur:[`📯`,`Meneur`,`+1 action d'empire par période`], survie:[`➕`,`Instinct de survie`,`Soins reçus +50 %`],
   fantome:[`👻`,`Insaisissable`,`Les poursuites retombent plus vite`], mentor:[`📈`,`Autodidacte`,`+1 XP à chaque gain`]
 };
+
+Object.assign(CONTACTS,{
+  rebecca:`Edgerunner · gros calibres`, pilar:`Mécano de la crew · chrome à prix d'ami`, kiwi:`Netrunner de la crew · intel`,
+  dorio:`Solo de la crew · renfort au combat`, falco:`Pilote de la crew · fuite`, david:`Edgerunner · Sandevistan`, maine:`Chef de crew · gros contrats`
+});
+ALLY.body.push(`dorio`,`rebecca`,`maine`); ALLY.ref.push(`falco`,`david`); ALLY.int.push(`kiwi`); ALLY.tech.push(`pilar`);
