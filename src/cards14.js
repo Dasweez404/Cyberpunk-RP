@@ -12,7 +12,7 @@ card({id:`hub_fac`,quick:true,who:`@hub`,tag:`🛡 Afterlife · Factions & fixer
     if(G.mine||isLeader()) return `Tes hommes t'attendent à une table du fond. Les affaires de <strong>${G.mine?G.mine.name:FAC[G.member].n}</strong> n'attendent pas.`;
     return `L'Afterlife, c'est aussi le marché des loyautés. Des recruteurs de gangs, des fixers qui cherchent des mains. Qui veux-tu écouter ?`; },
   dyn:()=>{
-    const out=[], back={t:`Retourner au bar`,s:`Tu gardes ton tour`,fx:{nav:true,next:`afterlife_hub`}};
+    const out=[], back={t:`Retourner au bar`,s:`Tu gardes ton tour`,fx:{hubBack:true}};
     if(G.member&&!isLeader()){
       const f=FAC[G.member], r=G.rank;
       out.push({t:`Prendre les ordres de ${f.n}`,s:`Une mission · du poids pour ta promotion`,fx:{next:`fjob_${G.member}`,nav:true,hub:`fac`}});
@@ -135,3 +135,14 @@ const MQ = [
      [`La tempête retombe. Un chef de la famille t'offre une dette d'honneur. Que lui demandes-tu ?`,[[`Un pacte entre vos clans`,`cool`,null,8,`Une alliance scellée à la poussière.`],[`Un véhicule de leur convoi`,`cool`,null,7,`Un Thorton en excellent état. Tu l'acceptes.`]]]]},
 ];
 MQ.forEach(A=>chain(A,A.cond));
+
+/* ---------- fin de l'Afterlife : où va-t-on ? (ne coûte aucune action) ---------- */
+card({id:`hub_dest`,quick:true,who:`narr`,tag:`📍 En route`,cond:()=>false,
+  tx:()=>{ const d=DMAP[G.loc]; return `L'Afterlife se vide dans ton dos. La nuit est à toi, et Night City n'attend pas. Tu es passé(e) par <strong>${d?d.n:`ici`}</strong> en dernier. Où vas-tu ?`; },
+  dyn:()=>{
+    const seen=G.visited||{}, cur=G.loc;
+    const ds=shuffle(DIST.filter(d=>d.id!==cur&&(!d.lock||G.flags.dogtown))).sort((a,b)=>(seen[a.id]||0)-(seen[b.id]||0)+Math.random()*1.6).slice(0,3);
+    const tag=d=>{ const o=G.dist[d.id]; return o===`player`?`ton territoire`:FAC[o]?FAC[o].n:`zone neutre`; };
+    const out=ds.map(d=>({t:`Aller à ${d.n}`,s:`${d.w} · ${tag(d)}${(seen[d.id]||0)?``:` · jamais visité`}`,fx:{dest:d.id}}));
+    const c=DMAP[cur]; if(c) out.push({t:`Revenir à ${c.n}`,s:`Ton dernier quartier · ${tag(c)}`,fx:{dest:c.id}});
+    return out; },ch:[]});

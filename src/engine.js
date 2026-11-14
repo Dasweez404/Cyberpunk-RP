@@ -155,13 +155,13 @@ function empireTick(){
   if(isLeader()) ids.push(`leader_dispute`);
   if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
-function autoTravel(){
+function autoTravel(){ if(!G.queue.includes(`hub_dest`)) G.queue.unshift(`hub_dest`); }
+function travelTo(id){
   const seen=G.visited=G.visited||{}; seen[G.loc]=(seen[G.loc]||0)+1;
-  const ds=DIST.filter(d=>d.id!==G.loc&&(!d.lock||G.flags.dogtown)).sort((a,b)=>(seen[a.id]||0)-(seen[b.id]||0)+Math.random()*1.4);
-  const d=ds[rnd(0,Math.min(3,ds.length-1))]; G.loc=d.id; G.forceEnc=true; G.arrived=true;
-  toast(`📍 Tu quittes l'Afterlife pour ${d.n}`); G.log.unshift({d:dateStr(),m:`Tu changes de quartier : ${d.n}.`});
+  const d=DMAP[id]; if(!d) return; const same=d.id===G.loc; G.loc=d.id; G.forceEnc=true; G.arrived=!same;
+  toast(same?`📍 Tu retournes à ${d.n}`:`📍 Tu pars pour ${d.n}`); G.log.unshift({d:dateStr(),m:same?`Tu retournes à ${d.n}.`:`Tu changes de quartier : ${d.n}.`});
   if(!G.queue.includes(`fenc`)) G.queue.push(`fenc`);
-  if(!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
+  if(!same&&!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
 }
 function patronTick(){
   if(!G.patron||G.inHub||G.flags.q_active||G.queue.length) return;
@@ -353,8 +353,10 @@ function applyFx(fx){
   if(fx.gear){ const g=GEARMAP[fx.gear]; if(upGear(g)){ G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); } else if(G.member||G.mine){ const fid=G.member||(G.mine&&G.mine.fac); G.stats.gifts=(G.stats.gifts||0)+1; if(fid&&G.fac) G.fac[fid]=Math.min(100,(G.fac[fid]||0)+3); G.cred+=1; chip(`y`,`${g.n} offert à tes lieutenants · +3 ${fid&&FAC[fid]?FAC[fid].n:`famille`}`); G.log.unshift({d:dateStr(),m:`Tu donnes ${g.n} à tes lieutenants.`}); } else { const v=Math.max(250,Math.round((g.p||800)*.5/50)*50); G.ed+=v; chip(`i`,`Tu as mieux : ${g.n} revendu +${v} €$`); } }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
-  if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
+  if(fx.hubBack){ if(G.hubUsed&&G.hubLast) delete G.hubUsed[G.hubLast]; G.hubLeft=Math.min(2,(G.hubLeft||0)+1); }
+  if(fx.hub){ G.hubLast=fx.hub; G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
   if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; autoTravel(); }
+  if(fx.dest) travelTo(fx.dest);
   if(fx.patron){ G.patron=fx.patron; chip(`y`,`Patron : ${WHO[fx.patron].n}`); G.log.unshift({d:dateStr(),m:`Tu te mets au service de ${WHO[fx.patron].n}.`}); }
   if(fx.loc&&DMAP[fx.loc]){ G.loc=fx.loc; G.forceEnc=true; chip(`i`,`📍 ${DMAP[fx.loc].n}`); }
   if(fx.found) G.pendingFound = fx.found;

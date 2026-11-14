@@ -3110,7 +3110,7 @@ card({id:`hub_fac`,quick:true,who:`@hub`,tag:`🛡 Afterlife · Factions & fixer
     if(G.mine||isLeader()) return `Tes hommes t'attendent à une table du fond. Les affaires de <strong>${G.mine?G.mine.name:FAC[G.member].n}</strong> n'attendent pas.`;
     return `L'Afterlife, c'est aussi le marché des loyautés. Des recruteurs de gangs, des fixers qui cherchent des mains. Qui veux-tu écouter ?`; },
   dyn:()=>{
-    const out=[], back={t:`Retourner au bar`,s:`Tu gardes ton tour`,fx:{nav:true,next:`afterlife_hub`}};
+    const out=[], back={t:`Retourner au bar`,s:`Tu gardes ton tour`,fx:{hubBack:true}};
     if(G.member&&!isLeader()){
       const f=FAC[G.member], r=G.rank;
       out.push({t:`Prendre les ordres de ${f.n}`,s:`Une mission · du poids pour ta promotion`,fx:{next:`fjob_${G.member}`,nav:true,hub:`fac`}});
@@ -3233,6 +3233,17 @@ const MQ = [
      [`La tempête retombe. Un chef de la famille t'offre une dette d'honneur. Que lui demandes-tu ?`,[[`Un pacte entre vos clans`,`cool`,null,8,`Une alliance scellée à la poussière.`],[`Un véhicule de leur convoi`,`cool`,null,7,`Un Thorton en excellent état. Tu l'acceptes.`]]]]},
 ];
 MQ.forEach(A=>chain(A,A.cond));
+
+/* ---------- fin de l'Afterlife : où va-t-on ? (ne coûte aucune action) ---------- */
+card({id:`hub_dest`,quick:true,who:`narr`,tag:`📍 En route`,cond:()=>false,
+  tx:()=>{ const d=DMAP[G.loc]; return `L'Afterlife se vide dans ton dos. La nuit est à toi, et Night City n'attend pas. Tu es passé(e) par <strong>${d?d.n:`ici`}</strong> en dernier. Où vas-tu ?`; },
+  dyn:()=>{
+    const seen=G.visited||{}, cur=G.loc;
+    const ds=shuffle(DIST.filter(d=>d.id!==cur&&(!d.lock||G.flags.dogtown))).sort((a,b)=>(seen[a.id]||0)-(seen[b.id]||0)+Math.random()*1.6).slice(0,3);
+    const tag=d=>{ const o=G.dist[d.id]; return o===`player`?`ton territoire`:FAC[o]?FAC[o].n:`zone neutre`; };
+    const out=ds.map(d=>({t:`Aller à ${d.n}`,s:`${d.w} · ${tag(d)}${(seen[d.id]||0)?``:` · jamais visité`}`,fx:{dest:d.id}}));
+    const c=DMAP[cur]; if(c) out.push({t:`Revenir à ${c.n}`,s:`Ton dernier quartier · ${tag(c)}`,fx:{dest:c.id}});
+    return out; },ch:[]});
 /* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
@@ -3390,13 +3401,13 @@ function empireTick(){
   if(isLeader()) ids.push(`leader_dispute`);
   if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
-function autoTravel(){
+function autoTravel(){ if(!G.queue.includes(`hub_dest`)) G.queue.unshift(`hub_dest`); }
+function travelTo(id){
   const seen=G.visited=G.visited||{}; seen[G.loc]=(seen[G.loc]||0)+1;
-  const ds=DIST.filter(d=>d.id!==G.loc&&(!d.lock||G.flags.dogtown)).sort((a,b)=>(seen[a.id]||0)-(seen[b.id]||0)+Math.random()*1.4);
-  const d=ds[rnd(0,Math.min(3,ds.length-1))]; G.loc=d.id; G.forceEnc=true; G.arrived=true;
-  toast(`📍 Tu quittes l'Afterlife pour ${d.n}`); G.log.unshift({d:dateStr(),m:`Tu changes de quartier : ${d.n}.`});
+  const d=DMAP[id]; if(!d) return; const same=d.id===G.loc; G.loc=d.id; G.forceEnc=true; G.arrived=!same;
+  toast(same?`📍 Tu retournes à ${d.n}`:`📍 Tu pars pour ${d.n}`); G.log.unshift({d:dateStr(),m:same?`Tu retournes à ${d.n}.`:`Tu changes de quartier : ${d.n}.`});
   if(!G.queue.includes(`fenc`)) G.queue.push(`fenc`);
-  if(!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
+  if(!same&&!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
 }
 function patronTick(){
   if(!G.patron||G.inHub||G.flags.q_active||G.queue.length) return;
@@ -3588,8 +3599,10 @@ function applyFx(fx){
   if(fx.gear){ const g=GEARMAP[fx.gear]; if(upGear(g)){ G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); } else if(G.member||G.mine){ const fid=G.member||(G.mine&&G.mine.fac); G.stats.gifts=(G.stats.gifts||0)+1; if(fid&&G.fac) G.fac[fid]=Math.min(100,(G.fac[fid]||0)+3); G.cred+=1; chip(`y`,`${g.n} offert à tes lieutenants · +3 ${fid&&FAC[fid]?FAC[fid].n:`famille`}`); G.log.unshift({d:dateStr(),m:`Tu donnes ${g.n} à tes lieutenants.`}); } else { const v=Math.max(250,Math.round((g.p||800)*.5/50)*50); G.ed+=v; chip(`i`,`Tu as mieux : ${g.n} revendu +${v} €$`); } }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
-  if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
+  if(fx.hubBack){ if(G.hubUsed&&G.hubLast) delete G.hubUsed[G.hubLast]; G.hubLeft=Math.min(2,(G.hubLeft||0)+1); }
+  if(fx.hub){ G.hubLast=fx.hub; G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
   if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; autoTravel(); }
+  if(fx.dest) travelTo(fx.dest);
   if(fx.patron){ G.patron=fx.patron; chip(`y`,`Patron : ${WHO[fx.patron].n}`); G.log.unshift({d:dateStr(),m:`Tu te mets au service de ${WHO[fx.patron].n}.`}); }
   if(fx.loc&&DMAP[fx.loc]){ G.loc=fx.loc; G.forceEnc=true; chip(`i`,`📍 ${DMAP[fx.loc].n}`); }
   if(fx.found) G.pendingFound = fx.found;
