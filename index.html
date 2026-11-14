@@ -3567,7 +3567,7 @@ function applyFx(fx){
   if(fx.hack&&!G.hacks.includes(fx.hack)){ G.hacks.push(fx.hack); G.role.net+=1; chip(`y`,`Quickhack chargé`); }
   if(fx.cy){ const c=CY(fx.cy); if(upCy(c)||!G.cyber.some(i=>CY(i).slot===c.slot)){ installCy(fx.cy,true); chip(`y`,`Installé : ${c.n}`); } else { const v=Math.max(300,Math.round(c.p*.4/50)*50); G.ed+=v; chip(`i`,`Ton implant est meilleur : ${c.n} revendu +${v} €$`); } }
   if(fx.xp) Object.entries(fx.xp).forEach(([k,v])=>gainXp(k,v));
-  if(fx.gear){ const g=GEARMAP[fx.gear]; if(upGear(g)){ G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); } else { const v=Math.max(250,Math.round((g.p||800)*.5/50)*50); G.ed+=v; chip(`i`,`Tu as mieux : ${g.n} revendu +${v} €$`); } }
+  if(fx.gear){ const g=GEARMAP[fx.gear]; if(upGear(g)){ G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); } else if(G.member||G.mine){ const fid=G.member||(G.mine&&G.mine.fac); G.stats.gifts=(G.stats.gifts||0)+1; if(fid&&G.fac) G.fac[fid]=Math.min(100,(G.fac[fid]||0)+3); G.cred+=1; chip(`y`,`${g.n} offert à tes lieutenants · +3 ${fid&&FAC[fid]?FAC[fid].n:`famille`}`); G.log.unshift({d:dateStr(),m:`Tu donnes ${g.n} à tes lieutenants.`}); } else { const v=Math.max(250,Math.round((g.p||800)*.5/50)*50); G.ed+=v; chip(`i`,`Tu as mieux : ${g.n} revendu +${v} €$`); } }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
   if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
