@@ -22,7 +22,7 @@ byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
 CARDS.filter(c=>/^b[cp]_/.test(c.id)).forEach(c=>{ c.cond=()=>false; });
-const CD = {fenc:2,psy:4,crew_scene:4,debt_collect:3,sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {lq_1:1,hub_fac:1,patron_order:1,fenc:2,psy:4,crew_scene:4,debt_collect:3,sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -155,6 +155,18 @@ function empireTick(){
   if(isLeader()) ids.push(`leader_dispute`);
   if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
+function autoTravel(){
+  const seen=G.visited=G.visited||{}; seen[G.loc]=(seen[G.loc]||0)+1;
+  const ds=DIST.filter(d=>d.id!==G.loc&&(!d.lock||G.flags.dogtown)).sort((a,b)=>(seen[a.id]||0)-(seen[b.id]||0)+Math.random()*1.4);
+  const d=ds[rnd(0,Math.min(3,ds.length-1))]; G.loc=d.id; G.forceEnc=true; G.arrived=true;
+  toast(`📍 Tu quittes l'Afterlife pour ${d.n}`); G.log.unshift({d:dateStr(),m:`Tu changes de quartier : ${d.n}.`});
+  if(!G.queue.includes(`fenc`)) G.queue.push(`fenc`);
+  if(!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
+}
+function patronTick(){
+  if(!G.patron||G.inHub||G.flags.q_active||G.queue.length) return;
+  G.sincePat=(G.sincePat||0)+1; if(G.sincePat>=6){ G.sincePat=0; G.queue.push(`patron_order`); }
+}
 function promoAuto(){
   if(!G.member||isLeader()||G.inHub||G.flags.q_active) return;
   const p=promoInfo(); if(!p) return;
@@ -216,6 +228,7 @@ function heatMult(b){
   let m=(eraNow().heat||{})[b]||1;
   if(tr(`ombre`)) m*=.75;
   if(G.member){ const k=FAC[G.member].k;
+    if(b===`loi`) m*=.7;
     if(b===`loi`&&(k===`corp`||k===`trauma`)) m*=.6; if(b===`loi`&&k===`ncpd`) m*=.5;
     if(b===`rue`&&(k===`gang`||k===`mox`)) m*=.7; if(b===`nomad`&&k===`clan`) m*=.6; if(b===`corpo`&&k===`corp`) m*=.7; }
   return m;
@@ -232,7 +245,7 @@ function locOwner(){ return (G.dist||{})[G.loc]; }
 function locName(){ return DMAP[G.loc]?DMAP[G.loc].n:`Night City`; }
 function heatFromCheck(c,ok,fx){
   if(!c) return; const k=c.k; { const ob=BLOC[locOwner()]; if(ob&&!ok) addHeat(ob,3); }
-  if(k===`cmb`){ addHeat(`loi`,ok?12:16); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
+  if(k===`cmb`){ addHeat(`loi`,ok?6:9); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
   else if(ok&&fx&&fx.ed>=400) addHeat(c.a===`cool`?`corpo`:`rue`,5);
 }
 /* ---------- puissance d'un objet : on ne propose jamais plus faible que ce que tu as ---------- */
@@ -262,7 +275,8 @@ function heatTick(){
     Object.keys(add).forEach(b=>{ const v=add[b]*k; if(v>=.3) addHeat(b,v); }); }
   // recherché(e) : ils finissent par te tomber dessus
   const hb=hottestHeat(), hv=G.heat[hb]||0;
-  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=4&&Math.random()<(hv-18)/85){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
+  const gap=hb===`loi`?9:4, pr=(hv-18)/85*(hb===`loi`?.45:1);
+  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=gap&&Math.random()<pr){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
 }
 function hottestHeat(){ return Object.keys(BLOCS).sort((a,b)=>(G.heat[b]||0)-(G.heat[a]||0))[0]; }
 function blocFromFx(fx){
@@ -340,7 +354,8 @@ function applyFx(fx){
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
   if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
-  if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; }
+  if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; autoTravel(); }
+  if(fx.patron){ G.patron=fx.patron; chip(`y`,`Patron : ${WHO[fx.patron].n}`); G.log.unshift({d:dateStr(),m:`Tu te mets au service de ${WHO[fx.patron].n}.`}); }
   if(fx.loc&&DMAP[fx.loc]){ G.loc=fx.loc; G.forceEnc=true; chip(`i`,`📍 ${DMAP[fx.loc].n}`); }
   if(fx.found) G.pendingFound = fx.found;
   if(fx.echo) Object.entries(fx.echo).forEach(([id,d])=>addEcho(id,d));
@@ -433,6 +448,10 @@ const FN = {
   debtCut(){ if(G.ed<0){ const v=Math.round(-G.ed*.35); G.ed+=v; chip(`i`,`Dette −${v} €$`); } },
   treat(){ const ks=REL_NAMES.filter(i=>relv(i)>0&&relv(i)<80&&!(G.dead||{})[i]); if(ks.length){ const k=ks[rnd(0,ks.length-1)]; applyFx({rel:{[k]:8}}); } },
   recruit(){ if(G.mine){ G.mine.extra=(G.mine.extra||0)+1; G.mine.power++; chip(`y`,`Nouvelle recrue dans ${G.mine.name}`); } else { G.cred=clamp(G.cred+2,0,100); chip(`y`,`+2 Street Cred`); } },
+  facSrv(){ G.facSrvP=G.stats.cards; },
+  patronRefuse(){ G.refus=(G.refus||0)+1; if(G.refus>=3&&G.patron){ chip(`n`,`${WHO[G.patron].n} te lâche`); G.patron=null; G.refus=0; } },
+  lqWin(){ if(G.lq) G.lq.w=(G.lq.w||0)+1; G.arcW=(G.arcW||0)+1; },
+  lqEnd(){ G.stats.side=(G.stats.side||0)+2; G.lq=null; },
   siegeSet(){ if(G.siege) G.siege.scout=1; },
   arcWin(){ G.arcW=(G.arcW||0)+1; },
   arcEnd(){ G.stats.side=(G.stats.side||0)+2; G.arcW=0; },

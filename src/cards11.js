@@ -114,7 +114,7 @@ const SM_WAYS = [
 const SM_OK = [`Propre, rapide. Le client paie sans discuter.`,`Ça s'est joué à une seconde près, mais c'est fait.`,`Personne ne saura jamais comment tu t'y es pris(e).`,`Le client te regarde autrement. Ton nom va circuler.`];
 const SM_KO = [`Tout part de travers. Tu sauves ta peau, pas la mission.`,`Quelqu'un t'attendait. Tu repars les mains vides.`,`Un détail t'a échappé, et il a coûté cher.`];
 card({id:`sm`,who:`fix`,tag:`Mission secondaire`,w:45,cond:()=>!G.flags.q_active,
-  tx:()=>{ const d=DIST.filter(x=>!x.lock||G.flags.dogtown), dd=d[rnd(0,d.length-1)];
+  tx:()=>{ const d=DIST.filter(x=>!x.lock||G.flags.dogtown), dd=(DMAP[G.loc]&&Math.random()<.85)?DMAP[G.loc]:d[rnd(0,d.length-1)];
     G.tmp={g:rnd(0,SM_GOALS.length-1),tw:rnd(0,SM_TWISTS.length-1),d:dd.n};
     return `« J'ai besoin de quelqu'un pour <strong>${SM_GOALS[G.tmp.g]}</strong>, du côté de <em>${dd.n}</em>. » ${SM_TWISTS[G.tmp.tw]}`; },
   dyn:()=>{ const tier=G.cred>=60?3:G.cred>=30?2:G.cred>=10?1:0;

@@ -15,7 +15,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
     if(!G.inHub){ G.inHub=true; G.hubLeft=2; G.hubUsed={}; }
     const hurt=G.hp<50, broke=G.ed<300, first=G.hubLeft>=2;
     return first
-      ? `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as le temps de faire <strong>deux choses</strong> ce soir, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`
+      ? `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as le temps de faire <strong>deux choses</strong> ce soir, puis tu repartiras <strong>ailleurs</strong>.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`
       : `La nuit avance à l'<strong>Afterlife</strong>. Il te reste <strong>un dernier moment</strong> avant de repartir.`;
   },
   dyn:()=>{
@@ -25,7 +25,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
       o(`gear`,`Fouiller le marché noir`,`Armes, armures, véhicules, style`,`shop_gear`),
       o(`gig`,`Chercher un contrat`,`Un coup à jouer, des risques à prendre`,`gig_board`),
       o(`rest`,`Te reposer`,`Soins · thérapie · fête`,`rest_card`),
-      o(`trip`,`Prendre la route`,`Changer de quartier · rencontres locales`,`travel_card`),
+      o(`fac`,G.member?(isLeader()?`Tenir ta famille`:`Faire le point avec ${FAC[G.member].n}`):G.mine?`Passer voir tes troupes`:`Chercher une faction ou un patron`,G.member||G.mine?`Missions · services · ordres`:`Recruteurs, fixers, contrats`,`hub_fac`),
       {t:`Repartir dans la rue`,s:G.hubLeft<2?`La soirée est finie`:`Rien aujourd'hui`,fx:{hubEnd:true,nav:true}}
     ];
   },ch:[]});

@@ -120,7 +120,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.loc=G.loc||`kabuki`;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.visited=G.visited||{};G.loc=G.loc||`kabuki`;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -424,11 +424,11 @@ function afterCard(r){
   const cc=byId[G.cur.id], y0=yr();
   if(cc&&cc.quick){
     tick(2);
-    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else { G.inHub=false; autoTravel(); } }
   } else {
     if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
-    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); promoAuto(); hubTick(); empireTick(); if(G.stats.cards%9===0) driftLoc();
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else { G.inHub=false; autoTravel(); } }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); promoAuto(); patronTick(); hubTick(); empireTick();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
@@ -592,7 +592,7 @@ function relBlock(){
   return `<div class="sec">Relations</div>`+rs.map(([k,v])=>{const w=WHO[k];return `<div class="item"><div class="in"><b style="color:${w.c}">${esc(w.n)}${G.flags[`lover_`+k]?` ♥`:``}</b><small>${esc(w.r)}</small><div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};left:${v>=0?0:0}%;width:${Math.abs(v)}%"></i></div></div><b style="color:${v>=0?`var(--g)`:`var(--m)`}">${v}</b></div>`}).join(``);
 }
 /* ----- contrats : gains ----- */
-const gigPay=g=>Math.round(g.pay*1.6*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.6*(G.flags.dexvip?1.15:1)*(G.patron?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function goAdvice(go){
   if(go===`heat`) return openBloc(hottestHeat());
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);

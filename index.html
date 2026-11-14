@@ -2516,7 +2516,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
     if(!G.inHub){ G.inHub=true; G.hubLeft=2; G.hubUsed={}; }
     const hurt=G.hp<50, broke=G.ed<300, first=G.hubLeft>=2;
     return first
-      ? `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as le temps de faire <strong>deux choses</strong> ce soir, pas une de plus.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`
+      ? `Tu pousses la porte de l'<strong>Afterlife</strong>. Néons rouges, basses sourdes. Tu as le temps de faire <strong>deux choses</strong> ce soir, puis tu repartiras <strong>ailleurs</strong>.${hurt?` <em>Tu saignes encore.</em>`:``}${broke?` <em>Ton portefeuille est presque vide.</em>`:``}`
       : `La nuit avance à l'<strong>Afterlife</strong>. Il te reste <strong>un dernier moment</strong> avant de repartir.`;
   },
   dyn:()=>{
@@ -2526,7 +2526,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
       o(`gear`,`Fouiller le marché noir`,`Armes, armures, véhicules, style`,`shop_gear`),
       o(`gig`,`Chercher un contrat`,`Un coup à jouer, des risques à prendre`,`gig_board`),
       o(`rest`,`Te reposer`,`Soins · thérapie · fête`,`rest_card`),
-      o(`trip`,`Prendre la route`,`Changer de quartier · rencontres locales`,`travel_card`),
+      o(`fac`,G.member?(isLeader()?`Tenir ta famille`:`Faire le point avec ${FAC[G.member].n}`):G.mine?`Passer voir tes troupes`:`Chercher une faction ou un patron`,G.member||G.mine?`Missions · services · ordres`:`Recruteurs, fixers, contrats`,`hub_fac`),
       {t:`Repartir dans la rue`,s:G.hubLeft<2?`La soirée est finie`:`Rien aujourd'hui`,fx:{hubEnd:true,nav:true}}
     ];
   },ch:[]});
@@ -2746,7 +2746,7 @@ const SM_WAYS = [
 const SM_OK = [`Propre, rapide. Le client paie sans discuter.`,`Ça s'est joué à une seconde près, mais c'est fait.`,`Personne ne saura jamais comment tu t'y es pris(e).`,`Le client te regarde autrement. Ton nom va circuler.`];
 const SM_KO = [`Tout part de travers. Tu sauves ta peau, pas la mission.`,`Quelqu'un t'attendait. Tu repars les mains vides.`,`Un détail t'a échappé, et il a coûté cher.`];
 card({id:`sm`,who:`fix`,tag:`Mission secondaire`,w:45,cond:()=>!G.flags.q_active,
-  tx:()=>{ const d=DIST.filter(x=>!x.lock||G.flags.dogtown), dd=d[rnd(0,d.length-1)];
+  tx:()=>{ const d=DIST.filter(x=>!x.lock||G.flags.dogtown), dd=(DMAP[G.loc]&&Math.random()<.85)?DMAP[G.loc]:d[rnd(0,d.length-1)];
     G.tmp={g:rnd(0,SM_GOALS.length-1),tw:rnd(0,SM_TWISTS.length-1),d:dd.n};
     return `« J'ai besoin de quelqu'un pour <strong>${SM_GOALS[G.tmp.g]}</strong>, du côté de <em>${dd.n}</em>. » ${SM_TWISTS[G.tmp.tw]}`; },
   dyn:()=>{ const tier=G.cred>=60?3:G.cred>=30?2:G.cred>=10?1:0;
@@ -3079,6 +3079,143 @@ card({id:`travel_card`,who:`narr`,tag:`🛣 Prendre la route`,cond:()=>false,
     const out=c.map(d=>{ const own=G.dist[d.id], col=ownerName(own); return {t:`${d.n}`,s:`${d.w} · ${own===`player`?`ton territoire`:col}`,fx:{loc:d.id,next:`fenc`,nav:true,hub:`trip`}}; });
     out.push({t:`Rester où tu es`,s:locName(),fx:{nav:true,hub:`trip`}}); return out; },ch:[]});
 /* =====================================================================
+   CARTES 14 — l'Afterlife côté factions et fixers, ordres d'un patron,
+   quêtes locales en 3 étapes (selon le quartier où tu arrives),
+   trames de ta propre faction (netrunners, gang, fixers, nomades)
+   ===================================================================== */
+const SRV_OK = () => G.stats.cards-(G.facSrvP===undefined?-9:G.facSrvP)>=5?``:`Déjà sollicité récemment`;
+
+/* ---------- Hub : factions & fixers ---------- */
+card({id:`hub_fac`,quick:true,who:`@hub`,tag:`🛡 Afterlife · Factions & fixers`,cond:()=>false,
+  tx:()=>{
+    if(G.member&&!isLeader()) return `Dans un coin de l'Afterlife, quelqu'un de <strong>${FAC[G.member].n}</strong> te fait signe. « ${rankTitle()}. Tu es là. Parlons famille. »`;
+    if(G.mine||isLeader()) return `Tes hommes t'attendent à une table du fond. Les affaires de <strong>${G.mine?G.mine.name:FAC[G.member].n}</strong> n'attendent pas.`;
+    return `L'Afterlife, c'est aussi le marché des loyautés. Des recruteurs de gangs, des fixers qui cherchent des mains. Qui veux-tu écouter ?`; },
+  dyn:()=>{
+    const out=[], back={t:`Retourner au bar`,s:`Tu gardes ton tour`,fx:{nav:true,next:`afterlife_hub`}};
+    if(G.member&&!isLeader()){
+      const f=FAC[G.member], r=G.rank;
+      out.push({t:`Prendre les ordres de ${f.n}`,s:`Une mission · du poids pour ta promotion`,fx:{next:`fjob_${G.member}`,nav:true,hub:`fac`}});
+      out.push({t:`Demander des soins à tes frères`,s:`Rang 1 · +35 Santé · gratuit`,req:()=>r<1?`Rang 1 requis`:SRV_OK(),fx:{hp:35,hum:3,fn:`facSrv`,hub:`fac`,msg:`Un des tiens te recoud dans l'arrière-salle, sans poser de questions.`}});
+      out.push({t:`Demander qu'on t'oublie un peu`,s:`Rang 2 · toutes les poursuites −15`,req:()=>r<2?`Rang 2 requis`:SRV_OK(),fx:{bloc:{loi:18,corpo:18,rue:18,nomad:18},fn:`facSrv`,hub:`fac`,msg:`Quelques coups de fil, un dossier qui se perd. Tu sens la pression retomber.`}});
+      out.push({t:`Toucher ta part de la famille`,s:`Rang 3 · +1 500 €$`,req:()=>r<3?`Rang 3 requis`:SRV_OK(),fx:{ed:1500,fn:`facSrv`,hub:`fac`,msg:`Une enveloppe épaisse, glissée sous la table. « Pour ta loyauté. »`}});
+    } else if(G.mine||isLeader()){
+      if(typeof empireEligible===`function`&&empireEligible()) out.push({t:`Passer tes recrues en revue`,s:`Des candidats t'attendent`,fx:{next:`emp_recruit`,nav:true,hub:`fac`}});
+      if(typeof ownedList===`function`&&ownedList().length) out.push({t:`Faire la tournée de tes affaires`,s:`Racket, protection, tenue des quartiers`,fx:{next:`emp_collect`,nav:true,hub:`fac`}});
+      if(typeof empireEligible===`function`&&empireEligible()) out.push({t:`Préparer une opération`,s:`Un quartier mal gardé`,fx:{next:`emp_siege_1`,nav:true,hub:`fac`}});
+    } else {
+      shuffle(ENC_ORDER.filter(id=>FAC[id]&&canJoin(id))).slice(0,2).forEach(id=>{ const f=FAC[id];
+        out.push({t:`Écouter le recruteur de ${f.n}`,s:`${f.perk}`,heavy:`Tu prêtes serment à ${f.n}. Ses ennemis deviennent les tiens, et tu ne pourras plus fonder ta propre faction.`,fx:{join:id,cred:2,hub:`fac`,msg:`Une poignée de main, un regard long. Tu es des leurs.`}}); });
+      if(!G.patron){ const fx=FIXERS.filter(i=>WHO[i]); const id=fx[rnd(0,fx.length-1)];
+        out.push({t:`Te mettre au service de ${WHO[id].n}`,s:`Fixer · des ordres réguliers, des gains +15 %, un lien fort`,fx:{patron:id,rel:{[id]:12},cred:2,hub:`fac`,msg:`${WHO[id].n} sourit sans chaleur. « Maintenant, tu travailles pour moi. Les ordres arriveront. »`}}); }
+      else out.push({t:`Prendre les ordres de ${WHO[G.patron].n}`,s:`Ton patron a une tâche pour toi`,fx:{next:`patron_order`,nav:true,hub:`fac`}});
+      out.push({t:`Prendre un contrat en plusieurs temps`,s:`Un fixer te présente une affaire`,req:()=>QOK()?``:`Une quête est déjà en cours`,fx:{next:`fix_board`,nav:true,hub:`fac`}});
+    }
+    out.push(back); return out; },ch:[]});
+
+/* ---------- Ordres d'un patron fixer ---------- */
+const PO_WAYS = [{t:`Exécuter à la lettre`,a:`cool`,ko:10},{t:`Régler ça par la force`,a:`body`,k:`cmb`,ko:20},{t:`Ruser et contourner`,a:`int`,ko:12},{t:`Y aller discrètement`,a:`ref`,k:`stl`,ko:14}];
+card({id:`patron_order`,who:`fix`,tag:`📞 Ordres de ton patron`,cond:()=>false,
+  tx:()=>{ const id=G.patron; G.tmp={g:rnd(0,SM_GOALS.length-1)}; return `<strong>${id?WHO[id].n:`Ton patron`}</strong> n'a pas de temps à perdre : « J'ai un boulot. <strong>${SM_GOALS[G.tmp.g]}</strong>. Tu es mon exécutant, c'est le moment de le prouver. »`; },
+  dyn:()=>{ const pay=Math.round((650+G.cred*38)*1.15/50)*50, id=G.patron||`dex`;
+    const out=shuffle(PO_WAYS).slice(0,3).map(w=>({t:w.t,s:`${ATTRS[w.a].n} · ${money(pay)}`,chk:{a:w.a,k:w.k,dc:7+(G.cred>=40?1:0),
+      ok:{ed:pay,cred:3,rel:{[id]:6},fn:`sideDone`,loot:pay>=2000?1:0,msg:`Boulot fait. Ton patron te paie sans un mot, signe de respect.`},
+      ko:{hp:-w.ko,rel:{[id]:-3},cred:-1,msg:`Ça tourne mal. Ton patron te le fera payer.`}}}));
+    out.push({t:`Refuser`,s:`Ton patron ne l'oubliera pas`,heavy:`Refuser un ordre fâche ton patron. Trois refus, et il te lâche.`,fx:{rel:{[id]:-8},fn:`patronRefuse`,msg:`« Je m'en souviendrai. »`}});
+    return out; },ch:[]});
+
+/* ---------- Quêtes locales : chaque quartier a ses histoires ---------- */
+const LQT = {
+  gang:[
+    [`Dans {D}, les gens de {F} te remarquent. Un lieutenant te propose un test : une dette impayée à récupérer chez un commerçant têtu.`,[[`Lui faire peur sans le blesser`,`cool`,null,7,`Il paie, tremblant. Le lieutenant hoche la tête.`],[`Lui casser une vitrine, pour l'exemple`,`body`,`cmb`,7,`Tout le quartier entend. La dette est payée à midi.`]]],
+    [`Le lieutenant te présente à son supérieur. « Un rival nous vole des livraisons. Trouve qui. »`,[[`Surveiller les entrepôts`,`int`,null,8,`Une camionnette, un horaire, un nom.`],[`Corrompre un chauffeur`,`cool`,null,8,`Un billet, un nom, une adresse.`]]],
+    [`Tu tiens le voleur : un jeune de ton âge, terrifié, mais avec des amis armés. {F} attend ton verdict.`,[[`Le régler dans la rue`,`body`,`cmb`,9,`Un duel court. {F} te tape sur l'épaule.`],[`Négocier une trêve`,`cool`,null,8,`Une poignée de main devant témoins. {F} te doit une faveur.`]]]],
+  net:[
+    [`Dans {D}, un netrunner de {F} t'aborde discrètement : « Un serveur local contient une clé qu'on veut. Tu as l'air capable. »`,[[`Analyser le serveur`,`int`,`hck`,7,`Un point faible dans le pare-feu.`],[`Observer les gardes physiques`,`ref`,`stl`,7,`Le planning des rondes est clair.`]]],
+    [`Le serveur est protégé par une IA de défense. Elle te parle, poliment : « Tu es perdu(e) ? »`,[[`Lui faire croire que tu es un admin`,`cool`,null,8,`Elle s'excuse et te laisse passer.`],[`Lui injecter un virus`,`int`,`hck`,8,`Elle hurle en binaire, puis se tait.`]]],
+    [`La clé est entre tes mains. {F} te propose de la leur remettre... ou de la garder pour toi.`,[[`La remettre à {F}`,`cool`,null,7,`Ils te rendent hommage devant tout le Net.`],[`La copier avant de la rendre`,`int`,`hck`,9,`Une copie secrète. Qui sait ce qu'elle ouvre ?`]]]],
+  mox:[
+    [`Dans {D}, une des {F} te prend à part : « Un client violent harcèle une de nos filles. On ne peut pas appeler la police. Tu peux nous aider ? »`,[[`Le trouver et lui parler`,`cool`,null,7,`Il comprend vite que tu n'es pas seul(e).`],[`Le filer jusqu'à sa planque`,`ref`,`stl`,7,`Tu sais où il dort.`]]],
+    [`Il a des amis : trois types, un bar, une bande qui se sent protégée. Les {F} comptent sur toi pour les convaincre.`,[[`Les affronter`,`body`,`cmb`,8,`Tu ne leur laisses pas une chance de rire.`],[`Les piéger par la parole`,`cool`,null,8,`Tu leur fais dire ce qu'il ne fallait pas.`]]],
+    [`La fille est en sécurité. Susie Q veut remercier ceux qui se sont battus pour elles. Tu es invité(e) à la fête.`,[[`Raconter ce qui s'est passé`,`cool`,null,6,`La salle s'éclaire. Tu fais partie du décor.`],[`Offrir ton aide pour la suite`,`int`,null,7,`Tu es désormais un allié des {F}.`]]]],
+  clan:[
+    [`Dans {D}, un convoi de {F} est bloqué par une panne. Un ancien t'appelle : « Un coup de main, étranger ? »`,[[`Réparer le moteur`,`tech`,null,7,`Le camion rugit. L'ancien te sourit.`],[`Remorquer avec ton véhicule`,`ref`,`drv`,7,`Une chaîne, un coup d'accélérateur : ça tire.`]]],
+    [`Le convoi repart. Une embuscade de pillards t'attend sur la crête. {F} compte sur toi.`,[[`Briser l'embuscade au volant`,`ref`,`drv`,8,`Tu passes entre deux camions, ils se bousculent.`],[`Les prendre à revers`,`body`,`cmb`,8,`Une rafale, un cri : ils s'enfuient.`]]],
+    [`Au camp, l'ancien t'offre un siège près du feu. « Un chef de {F} te cherchait. Tu veux savoir pourquoi ? »`,[[`Écouter jusqu'au bout`,`cool`,null,6,`Un grand chef parle de toi à voix basse.`],[`Offrir ton aide pour la prochaine route`,`tech`,null,7,`Ils t'invitent au prochain convoi.`]]]],
+  corp:[
+    [`Dans {D}, un cadre de {F} te repère. « Une mission, un pourcentage, aucune trace. Intéressé(e) ? »`,[[`Écouter les détails`,`cool`,null,7,`Un dossier à récupérer, rien de plus.`],[`Vérifier sa fiche en douce`,`int`,`hck`,8,`Il est réglo. Pour une corpo.`]]],
+    [`Le dossier est dans un coffre, au quarantième étage. La sécurité est stricte.`,[[`Entrer comme un employé`,`cool`,null,8,`Un badge, un sourire, un ascenseur.`],[`Pirater le coffre`,`int`,`hck`,8,`Il s'ouvre sans un bip.`]]],
+    [`Tu as le dossier. Il contient des preuves contre un autre cadre de {F}. Qui veux-tu servir ?`,[[`Remettre le dossier tel quel`,`cool`,null,6,`Le cadre te paie, satisfait.`],[`Le revendre à un rival`,`int`,null,8,`Un virement, un frisson : tu viens de changer d'camp.`]]]],
+  scav:[
+    [`Dans {D}, un gamin des rues te prévient : des {F} rôdent autour d'une clinique de fortune. « Ils veulent prendre des organes. »`,[[`Aller voir sur place`,`ref`,`stl`,7,`Une camionnette blanche, deux silhouettes en blouse.`],[`Prévenir le docteur`,`cool`,null,6,`Il barricade les portes avec des chaises.`]]],
+    [`Les {F} arrivent en force. Le docteur est paniqué. Tu as quelques minutes.`,[[`Tenir la porte`,`body`,`cmb`,8,`Ils reculent sous les coups.`],[`Piéger l'entrée`,`tech`,null,8,`Un câble, un seau d'huile : le premier tombe.`]]],
+    [`Les charognards ont fui. Le docteur te regarde, bouleversé. Un de ses patients est blessé gravement.`,[[`L'aider à opérer`,`tech`,null,8,`Une heure de sueur. Le patient vit.`],[`Le transporter à la clinique de Vik`,`ref`,`drv`,8,`Une course, des feux brûlés, un patient sauvé.`]]]],
+  law:[
+    [`Dans {D}, un agent de {F} te fait signe : « Un trafic d'armes passe par ici. Tu connais les gens. Aide-nous. »`,[[`Repérer le dépôt`,`int`,null,7,`Une porte de garage, des horaires.`],[`Interroger un indic`,`cool`,null,7,`Il parle contre un verre.`]]],
+    [`Le dépôt est gardé. L'agent veut un témoin discret, pas une fusillade.`,[[`Entrer en douce`,`ref`,`stl`,8,`Tu photographies chaque caisse.`],[`Faire diversion`,`cool`,null,8,`Un faux incendie, les gardes courent.`]]],
+    [`L'arrestation tourne mal : un des gardes s'enfuit avec une valise. L'agent te regarde.`,[[`Le poursuivre`,`ref`,`drv`,8,`Une course, un tonneau : il est à terre.`],[`Le piéger par radio`,`int`,`hck`,8,`Ses portes se verrouillent, il est coincé.`]]]],
+};
+const LQF = (t,F,D) => t.replace(/\{F\}/g,F).replace(/\{D\}/g,D);
+card({id:`lq_1`,who:`@enemy`,tag:`📍 Quêtes du quartier (1/3)`,cond:()=>false,
+  tx:()=>{ const own=locOwner(); let fid=SCN[own]?own:pickR(ENC_ORDER); const kind=ARCH[fid]||`gang`, d=DMAP[G.loc]||DMAP.kabuki;
+    G.lq={fid,kind,d:d.n,w:0}; G.tmp={fid}; return `<strong>${entName(fid)} · ${d.n}</strong><br>${LQF(LQT[kind][0][0],entName(fid),d.n)}`; },
+  dyn:()=>{ const q=G.lq||{kind:`gang`,fid:`valentinos`,d:`ici`}; return LQT[q.kind][0][1].map(o=>({t:LQF(o[0],entName(q.fid),q.d),s:`${ATTRS[o[1]].n}${o[2]?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[o[2]]}`:``}`,
+    chk:{a:o[1],k:o[2],dc:o[3],ok:{flag:[`q_active`],next:`lq_2`,fn:`lqWin`,msg:LQF(o[4],entName(q.fid),q.d)},ko:{flag:[`q_active`],hp:-10,next:`lq_2`,msg:KO[o[1]]}}})); },ch:[]});
+card({id:`lq_2`,who:`@enemy`,tag:`📍 Quêtes du quartier (2/3)`,cond:()=>false,
+  tx:()=>{ const q=G.lq; G.tmp={fid:q.fid}; return LQF(LQT[q.kind][1][0],entName(q.fid),q.d); },
+  dyn:()=>{ const q=G.lq; return LQT[q.kind][1][1].map(o=>({t:LQF(o[0],entName(q.fid),q.d),s:`${ATTRS[o[1]].n}${o[2]?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[o[2]]}`:``}`,
+    chk:{a:o[1],k:o[2],dc:o[3]+1,ok:{next:`lq_3`,fn:`lqWin`,msg:LQF(o[4],entName(q.fid),q.d)},ko:{hp:-14,next:`lq_3`,msg:KO[o[1]]}}})); },ch:[]});
+card({id:`lq_3`,who:`@enemy`,tag:`📍 Quêtes du quartier (3/3)`,cond:()=>false,
+  tx:()=>{ const q=G.lq; G.tmp={fid:q.fid}; return LQF(LQT[q.kind][2][0],entName(q.fid),q.d); },
+  dyn:()=>{ const q=G.lq, pay=Math.round((900+G.cred*30)*(1+(q.w||0)*.15)/50)*50; return LQT[q.kind][2][1].map(o=>({t:LQF(o[0],entName(q.fid),q.d),s:`${ATTRS[o[1]].n}${o[2]?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[o[2]]}`:``} · ${money(pay)} · réputation +`,
+    chk:{a:o[1],k:o[2],dc:o[3]+1,ok:{unflag:[`q_active`],fn:`lqEnd`,ed:pay,cred:6,loot:2,fac:{[q.fid]:16},msg:LQF(o[4],entName(q.fid),q.d)},ko:{unflag:[`q_active`],hp:-18,ed:Math.round(pay/6),fac:{[q.fid]:4},msg:KO[o[1]]+` Mais ${entName(q.fid)} a vu que tu avais essayé.`}}})); },ch:[]});
+
+/* ---------- Trames de ta propre faction ---------- */
+function chain(A,condFn){
+  const lab=o=>`${ATTRS[o[1]].n}${o[2]?` · ${{cmb:`combat`,stl:`furtivité`,hck:`hack`,drv:`conduite`}[o[2]]}`:``}`;
+  card({id:`${A.id}_0`,who:A.who,tag:`Trame · ${A.t} (1/3)`,once:true,w:10,cond:()=>condFn()&&!G.flags.q_active&&G.stats.cards>=4,tx:A.s[0][0],
+    ch:A.s[0][1].map(o=>({t:o[0],s:lab(o),chk:{a:o[1],k:o[2],dc:o[3],ok:{flag:[`q_active`],fn:`arcWin`,next:`${A.id}_1`,msg:o[4]},ko:{flag:[`q_active`],hp:-10,next:`${A.id}_1`,msg:KO[o[1]]}}}))});
+  card({id:`${A.id}_1`,who:A.who,tag:`Trame · ${A.t} (2/3)`,once:true,cond:()=>false,tx:A.s[1][0],
+    ch:A.s[1][1].map(o=>({t:o[0],s:lab(o),chk:{a:o[1],k:o[2],dc:o[3],ok:{fn:`arcWin`,next:`${A.id}_2`,msg:o[4]},ko:{hp:-14,next:`${A.id}_2`,msg:KO[o[1]]}}}))});
+  card({id:`${A.id}_2`,who:A.who,tag:`Trame · ${A.t} (3/3)`,once:true,cond:()=>false,tx:A.s[2][0],
+    ch:A.s[2][1].map(o=>({t:o[0],s:`${lab(o)} · ${A.pay.toLocaleString(`fr`)} €$`,chk:{a:o[1],k:o[2],dc:o[3],ok:{unflag:[`q_active`],fn:`arcEnd`,ed:A.pay,cred:8,loot:2,msg:o[4]},ko:{unflag:[`q_active`],hp:-20,ed:Math.round(A.pay/6),cred:2,msg:KO[o[1]]+` L'affaire se termine, sans gloire.`}}}))});
+}
+const MQ = [
+ {id:`mq_run1`,t:`Le réseau fantôme`,who:`kiwi`,pay:4400,cond:()=>G.mine&&G.mine.type===`runners`,
+  s:[[`Un de tes netrunners signale un trafic de données anormal sur ton réseau : quelqu'un te surveille depuis l'intérieur.`,[[`Tracer l'intrus`,`int`,`hck`,7,`Un signal remonte jusqu'à un terminal de ton propre QG.`],[`Couper le réseau le temps de purger`,`tech`,null,7,`Les écrans s'éteignent. L'intrus se trahit en clignant.`]]],
+     [`L'intrus est un agent NetWatch infiltré dans ton collectif depuis des mois. Il ne sait pas que tu le sais.`,[[`Le retourner contre eux`,`cool`,null,8,`Il pâlit, puis parle. Il sera ton espion.`],[`L'éliminer du Net`,`int`,`hck`,8,`Son identité se dissout. Plus aucune trace.`]]],
+     [`NetWatch lance un raid sur ton QG : serveurs, serveurs, serveurs. Tes hackers attendent ton ordre.`,[[`Défendre le QG avec tes hackers`,`int`,`hck`,9,`Une muraille de code. NetWatch recule, humilié.`],[`Évacuer les serveurs par la route`,`tech`,null,8,`Trois camions, quatre nuits, zéro perte. Ton réseau survit ailleurs.`]]]]},
+ {id:`mq_run2`,t:`Le contrat du Blackwall`,who:`rache`,pay:5200,cond:()=>G.mine&&G.mine.type===`runners`&&G.cred>=30,
+  s:[[`Un client anonyme propose un contrat énorme à ton collectif : pénétrer un serveur adossé au Blackwall. Tes hackers hésitent.`,[[`Analyser le risque`,`int`,null,8,`Un contrat piégé ? Peut-être. Mais l'argent est réel.`],[`Rassurer tes hommes`,`cool`,null,7,`« Je plonge avec vous. » Ils se rassurent.`]]],
+     [`Au bord du Blackwall, une voix résonne : « Vous êtes nombreux. Vous êtes courageux. Et vous êtes dans ma maison. »`,[[`Lui répondre avec respect`,`cool`,null,9,`La voix s'adoucit. Elle te laisse passer.`],[`Brouiller son signal`,`int`,`hck`,9,`Tu coupes l'écho. Elle gronde, puis se tait.`]]],
+     [`Au cœur du serveur : une archive d'avant le DataKrash, intacte. Tes hackers te regardent. Qu'en fais-tu ?`,[[`La copier et la revendre`,`int`,`hck`,8,`Une fortune. Ton collectif devient légende.`],[`La détruire, par prudence`,`tech`,null,8,`Un feu de données. Personne ne saura jamais ce qu'elle contenait.`]]]]},
+ {id:`mq_gang1`,t:`La guerre des rues`,who:`fix`,pay:4000,cond:()=>G.mine&&G.mine.type===`gang`,
+  s:[[`Une bande rivale pille tes commerçants. Tes lieutenants réclament vengeance. Le quartier te regarde.`,[[`Envoyer une patrouille`,`body`,`cmb`,7,`Trois pillards arrêtés. Le quartier respire.`],[`Poser une embuscade`,`ref`,`stl`,7,`Une nuit, un piège, un chef rival surpris.`]]],
+     [`Le chef rival propose un face-à-face : un cercle de voitures, un duel. Ou une trêve à ses conditions.`,[[`Accepter le duel`,`body`,`cmb`,9,`Un duel brutal. Tu gagnes le droit de parler.`],[`Négocier la trêve`,`cool`,null,8,`Une trêve, un partage. Pour l'instant.`]]],
+     [`La trêve est rompue : des traîtres de ta propre bande ont tout manigancé. Qui te trahit ?`,[[`Débusquer les traîtres`,`int`,null,8,`Deux noms, une confession. Le règlement est brutal.`],[`Pardonner, avec un test`,`cool`,null,8,`Ils jurent fidélité. Tu surveilles leurs mains.`]]]]},
+ {id:`mq_gang2`,t:`Le dépôt perdu`,who:`fix`,pay:3800,cond:()=>G.mine&&G.mine.type===`gang`&&crewN()>=1,
+  s:[[`Des armes disparaissent de ton dépôt. Quelqu'un te vole, de l'intérieur.`,[[`Poster des guetteurs`,`ref`,`stl`,7,`Un pistolet disparaît sous tes yeux.`],[`Faire parler tes hommes`,`cool`,null,7,`Un regard fuyant : tu tiens un nom.`]]],
+     [`Le voleur est un proche, un frère d'armes. Il avoue : il avait besoin d'argent pour sa sœur malade.`,[[`Le comprendre`,`cool`,null,7,`Il fond en larmes. Tu paies les soins.`],[`Le punir, pour l'exemple`,`body`,`cmb`,8,`Le message est clair. Tes hommes se redressent.`]]],
+     [`Les armes volées sont chez un revendeur rival, qui exige une rançon.`,[[`Les reprendre par la force`,`body`,`cmb`,9,`Une fusillade courte. Ton dépôt est de retour.`],[`Les racheter en le piégeant`,`int`,null,8,`Une transaction truquée, une cargaison volée à son tour.`]]]]},
+ {id:`mq_fix1`,t:`Le grand contrat`,who:`dino`,pay:4600,cond:()=>G.mine&&G.mine.type===`fixers`,
+  s:[[`Un client veut trois solos pour un seul coup : une corpo, une nuit, un butin énorme. Ton réseau est sollicité.`,[[`Recruter les meilleurs mercs`,`cool`,null,7,`Trois noms, trois accords. Le coup est monté.`],[`Faire ta propre enquête sur le client`,`int`,null,8,`Il est réglo. Pour un client.`]]],
+     [`Le soir du coup, un des solos manque. Il faut le remplacer, vite, ou annuler.`,[[`Prendre sa place`,`body`,`cmb`,8,`Tu enfiles son gilet. Le coup passe.`],[`Appeler un contact en renfort`,`cool`,null,8,`Un vieil ami débarque en dix minutes.`]]],
+     [`Le coup réussit, mais le client refuse de payer la totalité. Ton réseau te regarde.`,[[`Le menacer poliment`,`cool`,null,8,`Il pâlit. Le virement arrive.`],[`Faire exploser son contrat`,`int`,null,9,`Une fuite à la presse. Il paie, et plus encore.`]]]]},
+ {id:`mq_fix2`,t:`Un client impossible`,who:`dino`,pay:4000,cond:()=>G.mine&&G.mine.type===`fixers`&&G.cred>=25,
+  s:[[`Un client exige une exclusivité : tous tes mercs, pour lui seul. Il paie le double. Mais il est dangereux.`,[[`Tester sa solidité`,`int`,null,8,`Ses comptes sont d'une propreté suspecte.`],[`Lui imposer tes règles`,`cool`,null,8,`Il hésite, puis cède.`]]],
+     [`Le client te donne un premier ordre : éliminer un rival gênant. Tes mercs attendent ta décision.`,[[`Refuser net`,`cool`,null,9,`Il sourit, froid. « Intéressant. »`],[`Accepter, puis saboter`,`int`,null,9,`Tu envoies un piège à la place d'un tueur.`]]],
+     [`Le client découvre ton jeu. Il t'invite à dîner. Un dîner, ou une exécution ?`,[[`Y aller avec une escorte`,`body`,`cmb`,9,`Il comprend qu'il a perdu. Tu repars.`],[`Y aller seul(e), en parlant`,`cool`,null,9,`Une heure de silence, puis un accord.`]]]]},
+ {id:`mq_nom1`,t:`Le convoi des Anciens`,who:`dakota`,pay:4000,cond:()=>G.mine&&G.mine.type===`nomads`,
+  s:[[`Ton clan doit traverser les Badlands avec ses familles. Un vieux nomade te prévient : la route habituelle est piégée.`,[[`Explorer une route alternative`,`ref`,`drv`,7,`Une piste secrète. Tu l'ouvres pour le clan.`],[`Consulter les anciens`,`cool`,null,7,`Un vieux croque une carte qui n'existe pas.`]]],
+     [`Le convoi se met en route. Une tempête de sable se lève, aveuglante. Les familles paniquent.`,[[`Guider à l'instinct`,`ref`,`drv`,8,`Tu sens la route sous tes roues.`],[`Organiser un abri`,`tech`,null,8,`Des bâches, des camions en cercle : la tempête passe.`]]],
+     [`Au sortir de la tempête, un clan rival bloque le chemin : « Un tribut, ou un combat. »`,[[`Négocier un partage`,`cool`,null,8,`Ils acceptent un tribut modeste.`],[`Les défier à la course`,`ref`,`drv`,9,`Tu gagnes. Ils s'écartent, impressionnés.`]]]]},
+ {id:`mq_nom2`,t:`La tempête rouge`,who:`dakota`,pay:3800,cond:()=>G.mine&&G.mine.type===`nomads`&&G.cred>=25,
+  s:[[`Une tempête rouge s'annonce : trois jours de vent, de sable, de silence. Ton clan doit se mettre à l'abri.`,[[`Trouver un site protégé`,`int`,null,7,`Une grotte, un canyon, un abri sûr.`],[`Renforcer les camions`,`tech`,null,7,`Des plaques, des câbles, du ciment improvisé.`]]],
+     [`Au deuxième jour, une famille d'un autre clan frappe à tes portes. Ils meurent de soif.`,[[`Les accueillir`,`cool`,null,7,`Ton clan partage ses vivres. Ils pleurent.`],[`Partager l'eau, mais pas l'abri`,`cool`,null,8,`Un compromis dur, mais ils survivent.`]]],
+     [`La tempête retombe. Un chef de la famille t'offre une dette d'honneur. Que lui demandes-tu ?`,[[`Un pacte entre vos clans`,`cool`,null,8,`Une alliance scellée à la poussière.`],[`Un véhicule de leur convoi`,`cool`,null,7,`Un Thorton en excellent état. Tu l'acceptes.`]]]]},
+];
+MQ.forEach(A=>chain(A,A.cond));
+/* =====================================================================
    MOTEUR — état, règles, effets
    ===================================================================== */
 let G = null;
@@ -3102,7 +3239,7 @@ byId.st_intro.cond = ()=>G.origin===`street`;
 byId.co_intro.cond = ()=>G.origin===`corpo`;
 byId.no_intro.cond = ()=>G.origin===`nomad`;
 CARDS.filter(c=>/^b[cp]_/.test(c.id)).forEach(c=>{ c.cond=()=>false; });
-const CD = {fenc:2,psy:4,crew_scene:4,debt_collect:3,sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
+const CD = {lq_1:1,hub_fac:1,patron_order:1,fenc:2,psy:4,crew_scene:4,debt_collect:3,sm:2,ht_loi:4,ht_corpo:4,ht_rue:4,ht_nomad:4,fac_revenge:5,fac_clash:5,ally_call:8,ally_gift:12,big_chance:10,lg_hit:10,lg_rival:10,lg_coalition:10,hunt_1:1,fix_board:10,duty_tribute:8,leader_dispute:99,q2_1:99,q3_1:99,q5_1:99,q6_1:99,friend_danger:12,bp_rue_hi:8,bp_rue_lo:8,bp_corpo_hi:8,bp_corpo_lo:8,bp_loi_hi:8,bp_loi_lo:8,bp_nomad_hi:8,bp_nomad_lo:8,hum_warn:3,maxtac:2,loan_shark:3,fac_promo:1,mine_raid:5,legend:99};
 
 /* ---------- état ---------- */
 function newState(o){
@@ -3235,6 +3372,18 @@ function empireTick(){
   if(isLeader()) ids.push(`leader_dispute`);
   if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
+function autoTravel(){
+  const seen=G.visited=G.visited||{}; seen[G.loc]=(seen[G.loc]||0)+1;
+  const ds=DIST.filter(d=>d.id!==G.loc&&(!d.lock||G.flags.dogtown)).sort((a,b)=>(seen[a.id]||0)-(seen[b.id]||0)+Math.random()*1.4);
+  const d=ds[rnd(0,Math.min(3,ds.length-1))]; G.loc=d.id; G.forceEnc=true; G.arrived=true;
+  toast(`📍 Tu quittes l'Afterlife pour ${d.n}`); G.log.unshift({d:dateStr(),m:`Tu changes de quartier : ${d.n}.`});
+  if(!G.queue.includes(`fenc`)) G.queue.push(`fenc`);
+  if(!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
+}
+function patronTick(){
+  if(!G.patron||G.inHub||G.flags.q_active||G.queue.length) return;
+  G.sincePat=(G.sincePat||0)+1; if(G.sincePat>=6){ G.sincePat=0; G.queue.push(`patron_order`); }
+}
 function promoAuto(){
   if(!G.member||isLeader()||G.inHub||G.flags.q_active) return;
   const p=promoInfo(); if(!p) return;
@@ -3296,6 +3445,7 @@ function heatMult(b){
   let m=(eraNow().heat||{})[b]||1;
   if(tr(`ombre`)) m*=.75;
   if(G.member){ const k=FAC[G.member].k;
+    if(b===`loi`) m*=.7;
     if(b===`loi`&&(k===`corp`||k===`trauma`)) m*=.6; if(b===`loi`&&k===`ncpd`) m*=.5;
     if(b===`rue`&&(k===`gang`||k===`mox`)) m*=.7; if(b===`nomad`&&k===`clan`) m*=.6; if(b===`corpo`&&k===`corp`) m*=.7; }
   return m;
@@ -3312,7 +3462,7 @@ function locOwner(){ return (G.dist||{})[G.loc]; }
 function locName(){ return DMAP[G.loc]?DMAP[G.loc].n:`Night City`; }
 function heatFromCheck(c,ok,fx){
   if(!c) return; const k=c.k; { const ob=BLOC[locOwner()]; if(ob&&!ok) addHeat(ob,3); }
-  if(k===`cmb`){ addHeat(`loi`,ok?12:16); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
+  if(k===`cmb`){ addHeat(`loi`,ok?6:9); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
   else if(ok&&fx&&fx.ed>=400) addHeat(c.a===`cool`?`corpo`:`rue`,5);
 }
 /* ---------- puissance d'un objet : on ne propose jamais plus faible que ce que tu as ---------- */
@@ -3342,7 +3492,8 @@ function heatTick(){
     Object.keys(add).forEach(b=>{ const v=add[b]*k; if(v>=.3) addHeat(b,v); }); }
   // recherché(e) : ils finissent par te tomber dessus
   const hb=hottestHeat(), hv=G.heat[hb]||0;
-  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=4&&Math.random()<(hv-18)/85){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
+  const gap=hb===`loi`?9:4, pr=(hv-18)/85*(hb===`loi`?.45:1);
+  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=gap&&Math.random()<pr){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
 }
 function hottestHeat(){ return Object.keys(BLOCS).sort((a,b)=>(G.heat[b]||0)-(G.heat[a]||0))[0]; }
 function blocFromFx(fx){
@@ -3420,7 +3571,8 @@ function applyFx(fx){
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
   if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
-  if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; }
+  if(fx.hubEnd){ G.inHub=false; G.hubLeft=0; autoTravel(); }
+  if(fx.patron){ G.patron=fx.patron; chip(`y`,`Patron : ${WHO[fx.patron].n}`); G.log.unshift({d:dateStr(),m:`Tu te mets au service de ${WHO[fx.patron].n}.`}); }
   if(fx.loc&&DMAP[fx.loc]){ G.loc=fx.loc; G.forceEnc=true; chip(`i`,`📍 ${DMAP[fx.loc].n}`); }
   if(fx.found) G.pendingFound = fx.found;
   if(fx.echo) Object.entries(fx.echo).forEach(([id,d])=>addEcho(id,d));
@@ -3513,6 +3665,10 @@ const FN = {
   debtCut(){ if(G.ed<0){ const v=Math.round(-G.ed*.35); G.ed+=v; chip(`i`,`Dette −${v} €$`); } },
   treat(){ const ks=REL_NAMES.filter(i=>relv(i)>0&&relv(i)<80&&!(G.dead||{})[i]); if(ks.length){ const k=ks[rnd(0,ks.length-1)]; applyFx({rel:{[k]:8}}); } },
   recruit(){ if(G.mine){ G.mine.extra=(G.mine.extra||0)+1; G.mine.power++; chip(`y`,`Nouvelle recrue dans ${G.mine.name}`); } else { G.cred=clamp(G.cred+2,0,100); chip(`y`,`+2 Street Cred`); } },
+  facSrv(){ G.facSrvP=G.stats.cards; },
+  patronRefuse(){ G.refus=(G.refus||0)+1; if(G.refus>=3&&G.patron){ chip(`n`,`${WHO[G.patron].n} te lâche`); G.patron=null; G.refus=0; } },
+  lqWin(){ if(G.lq) G.lq.w=(G.lq.w||0)+1; G.arcW=(G.arcW||0)+1; },
+  lqEnd(){ G.stats.side=(G.stats.side||0)+2; G.lq=null; },
   siegeSet(){ if(G.siege) G.siege.scout=1; },
   arcWin(){ G.arcW=(G.arcW||0)+1; },
   arcEnd(){ G.stats.side=(G.stats.side||0)+2; G.arcW=0; },
@@ -3903,7 +4059,7 @@ function showTitle(){
    ${best.length?`<div class="brk" style="max-width:420px;margin-top:6px"><div class="sec" style="border:0">Hall of Fame</div>${best.slice(0,4).map(b=>`<div><span>${esc(b.name)} · ${esc(b.end)}</span><b>${b.score.toLocaleString(`fr`)}</b></div>`).join(``)}</div>`:``}
    </div>`;
   $(`#bnew`).onclick=()=>{SFX.tap();showCreate()};
-  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.loc=G.loc||`kabuki`;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
+  if(save) $(`#bcont`).onclick=()=>{SFX.tap();G=save;G.visited=G.visited||{};G.loc=G.loc||`kabuki`;G.heat=G.heat||{rue:0,corpo:0,loi:0,nomad:0};G.traits=G.traits||[];G.skip=G.skip||{};G.act=G.act===undefined?actOf(G.age):G.act;G.allies=G.allies||{};G.echo=G.echo||[];G.ctl=G.ctl||{};G.hold=G.hold||{};G.ops=G.ops||{left:2};G.rel=G.rel||{};G.relT=G.relT||{};G.dead=G.dead||{};G.flags.basichack=true;G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};G.bloc=G.bloc||{rue:50,corpo:50,loi:50,nomad:50};renderGame();nextOrResume(true)};
   $(`#bhow`).onclick=()=>{SFX.tap();showHow()};
   $(`#bmute`).onclick=()=>{muted=!muted;store.set(`ncl_mute`,muted);showTitle()};
 }
@@ -4207,11 +4363,11 @@ function afterCard(r){
   const cc=byId[G.cur.id], y0=yr();
   if(cc&&cc.quick){
     tick(2);
-    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else { G.inHub=false; autoTravel(); } }
   } else {
     if(G.cred>60){ G.cred-=(G.cred>85?2:1); }
-    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else G.inHub=false; }
-    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); promoAuto(); hubTick(); empireTick(); if(G.stats.cards%9===0) driftLoc();
+    if(G.inHub){ if(G.hubLeft>0) G.queue.unshift(`afterlife_hub`); else { G.inHub=false; autoTravel(); } }
+    const net=tick(STEP); G.stats.cards++; relDecay(); warTick(); echoTick(); ageTick(); heatTick(); debtTick(); promoAuto(); patronTick(); hubTick(); empireTick();
     if(net>=600) toast(`Revenus passifs : +${net} €$`);
     else if(net<=-250) toast(`Loyer & dettes : ${net} €$`);
   }
@@ -4375,7 +4531,7 @@ function relBlock(){
   return `<div class="sec">Relations</div>`+rs.map(([k,v])=>{const w=WHO[k];return `<div class="item"><div class="in"><b style="color:${w.c}">${esc(w.n)}${G.flags[`lover_`+k]?` ♥`:``}</b><small>${esc(w.r)}</small><div class="bigbar"><i style="background:${v>=0?`var(--g)`:`var(--m)`};left:${v>=0?0:0}%;width:${Math.abs(v)}%"></i></div></div><b style="color:${v>=0?`var(--g)`:`var(--m)`}">${v}</b></div>`}).join(``);
 }
 /* ----- contrats : gains ----- */
-const gigPay=g=>Math.round(g.pay*1.6*(G.flags.dexvip?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
+const gigPay=g=>Math.round(g.pay*1.6*(G.flags.dexvip?1.15:1)*(G.patron?1.15:1)*bm().gig/50)*50, gigCr=g=>Math.ceil(g.cr*0.8);
 function goAdvice(go){
   if(go===`heat`) return openBloc(hottestHeat());
   toast(`L'Afterlife approche : tu pourras te soigner là-bas.`);
