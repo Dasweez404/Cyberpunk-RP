@@ -537,11 +537,13 @@ const holdOf=id=>{ if(!G.hold) G.hold={}; return G.hold[id]===undefined?65:G.hol
 function warDc(d,base){ return base - 1.5 + ownedList().length*.7 + Math.floor((yr()-START_YEAR)/6) - Math.min(3,Math.floor(crewN()/2)); }
 function conquestChoices(d){
   const o=[];
-  o.push({k:`assault`,t:`Assaut armé`,s:`${ATTRS.body.n} + combat · +28 influence`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
-  o.push({k:`hack`,t:`Piratage des systèmes`,s:`${ATTRS.int.n} + hack · +24 influence`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Hack avancé requis (deck ou formation)`});
-  o.push({k:`talk`,t:`Diplomatie & pression`,s:`${ATTRS.cool.n} · +20 influence · sans risque physique`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
+  const prev=G.dist[d.id], ally=Object.keys(G.allies||{}).find(a=>FAC[a]&&(FAC[a].foes||[]).includes(prev));
+  if(ally&&!(G.allyUsed||{})[ally]) o.push({k:`ally`,ally,t:`Appeler ${FAC[ally].n} en renfort`,s:`Gratuit · ${FAC[ally].n} frappe ${FAC[prev]?FAC[prev].n:`l'ennemi`} avec toi · +40`});
+  o.push({k:`assault`,t:`Par la force`,s:`${ATTRS.body.n} + combat · +55`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
+  o.push({k:`hack`,t:`Par le Net`,s:`${ATTRS.int.n} + hack · +50`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Cyberdeck ou formation au hack`});
+  o.push({k:`talk`,t:`Par la parole`,s:`${ATTRS.cool.n} · +45 · sans danger`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
   const price=d.def*1000;
-  o.push({k:`buy`,t:`Corrompre & financer`,s:`${price} €$ · +35 influence, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
+  o.push({k:`buy`,t:`Par l'argent`,s:`${price} €$ · +70, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
   return o;
 }
 function canConquer(d){
@@ -557,12 +559,13 @@ function canConquer(d){
 function doOperation(d,opt){
   CHIPS=[]; G.ctl=G.ctl||{}; G.hold=G.hold||{}; opsLeft(); G.ops.left--;
   const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
-  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=45; }
+  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=70; }
+  else if(opt.k===`ally`){ G.allyUsed=G.allyUsed||{}; G.allyUsed[opt.ally]=true; G.fac[opt.ally]=clamp((G.fac[opt.ally]||0)+3,-100,100); chip(`y`,`${FAC[opt.ally].n} combat à tes côtés`); gain=40; }
   else {
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0) - (Object.keys(G.allies||{}).some(a=>FAC[a].foes.includes(prev))?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
-    gain = ok ? ({assault:36,hack:32,talk:28}[opt.k]+(roll===10?16:0)) : -6;
+    gain = ok ? ({assault:55,hack:50,talk:45}[opt.k]+(roll===10?20:0)) : -5;
   }
   const before=G.ctl[d.id]||0; G.ctl[d.id]=clamp(before+gain,0,100);
   chip(gain>0?`y`:`n`,`${sgn(G.ctl[d.id]-before)} influence`);
@@ -588,9 +591,24 @@ function reinforce(d){
   const price=d.def*350; if(G.ed<price) return false;
   G.ed-=price; G.hold=G.hold||{}; G.hold[d.id]=clamp(holdOf(d.id)+35,0,100); return price;
 }
+function gangWars(){
+  const G_=Object.keys(FAC).filter(k=>[`gang`,`clan`].includes(FAC[k].k)&&facStr(k)>0&&k!==G.member);
+  if(!G_.length) return;
+  const n=Math.random()<.5?1:2;
+  for(let i=0;i<n;i++){
+    const a=G_[rnd(0,G_.length-1)], foes=(FAC[a].foes||[]).filter(f=>FAC[f]);
+    const targets=DIST.filter(d=>!d.lock&&G.dist[d.id]!==a&&G.dist[d.id]!==`player`&&(G.dist[d.id]===`neutral`||foes.includes(G.dist[d.id])));
+    if(!targets.length||Math.random()<.25) continue;
+    const t=targets[rnd(0,targets.length-1)], old=G.dist[t.id];
+    if(old!==`neutral`&&facStr(old)<=1) continue;
+    G.dist[t.id]=a; if(G.ctl) delete G.ctl[t.id];
+    toast(`⚔ ${FAC[a].n} prend ${t.n}${FAC[old]?` à ${FAC[old].n}`:``}`);
+    G.log.unshift({d:dateStr(),m:`Guerre des gangs : ${FAC[a].n} prend ${t.n}${FAC[old]?` à ${FAC[old].n}`:``}.`});
+  }
+}
 function warTick(){
-  G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
-  Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-60&&ownedList().length&&Math.random()<.35){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
+  G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.allyUsed={}; gangWars(); G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-20&&[`gang`,`clan`].includes(FAC[k].k)&&ownedList().length&&Math.random()<((G.fac[k]||0)<=-60?.4:.2)){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
     const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewN()/2);

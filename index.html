@@ -225,14 +225,14 @@ input.txt:focus{border-color:var(--c);box-shadow:0 0 12px #00f0ff44}
 .buy{flex:none;padding:9px 14px;font-weight:700;border:1px solid var(--g);color:var(--g);background:#05ffa114;white-space:nowrap;transition:.12s}
 .buy:active{transform:scale(.94)}.buy.no{border-color:var(--line);color:var(--dim);background:none}
 .own-t{color:var(--g);font-size:12px;letter-spacing:.12em}
-.mappanel{position:sticky;bottom:-20px;z-index:3;background:#10102a;padding:8px 0 12px;display:flex;flex-direction:column;gap:8px}
+.mappanel{background:#10102a;padding:8px 0 12px;display:flex;flex-direction:column;gap:8px}
 .why{text-align:center;color:var(--m);padding:8px}
 .map g:hover rect{filter:brightness(1.4)}
 #cont{width:100%;animation:pop .3s}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
 .choice{min-height:56px}
 .map{flex:none;width:100%;height:auto;aspect-ratio:400/395}
-.fchips.wrap{flex-wrap:nowrap;overflow-x:auto}
+.fchips.wrap{flex-wrap:wrap;overflow:visible}
 .fchips{flex:none}.bloc{font-size:10px}.bloc .bb{height:5px;margin-top:3px}
 
 /* ---- v3 ---- */
@@ -483,6 +483,9 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 #hdate{color:var(--dim);font-size:inherit;letter-spacing:.08em;text-align:left;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pw{display:flex;flex-direction:column;gap:3px;border-top:1px dashed var(--line);padding-top:6px}.pw small{font-size:12.5px;line-height:1.3}
 .sub-hud{gap:6px}.sub-hud .role{max-width:32%}.hbtn{padding:2px 8px}#hdate{flex:1 1 0}
+
+.mrow{display:flex;justify-content:space-between;gap:8px;font-size:14px;align-items:baseline}.mrow span{color:var(--dim)}.mtx{color:var(--dim);font-size:13px;line-height:1.35}
+.bigbar{margin:6px 0}
 </style></head><body><div id="root"><div style="color:#fcee0a;font:700 18px sans-serif;text-align:center;margin:40vh auto 0;letter-spacing:.2em">NIGHT CITY…<noscript><br>JavaScript requis</noscript></div></div><script>
 /* =====================================================================
    NIGHT CITY LEGEND — données du jeu (lore Cyberpunk 2077 / 2020 / RED)
@@ -645,8 +648,8 @@ const DIST = [
   {id:`corpo`,n:`Corpo Plaza`,w:`City Center`,o:`arasaka`,def:5,inc:200,x:115,y:156,wd:100,h:56,d:`Les tours d'Arasaka, de Militech, de Kang Tao… le cœur de l'empire.`},
   {id:`downtown`,n:`Downtown`,w:`City Center`,o:`militech`,def:4,inc:140,x:220,y:156,wd:170,h:56,d:`Bureaux, Trauma Team, NCPD, Afterlife… tout converge ici.`},
   {id:`wellsprings`,n:`Wellsprings`,w:`Heywood`,o:`valentinos`,def:3,inc:70,x:115,y:217,wd:85,h:58,d:`Cœur du barrio Valentino : églises, fresques, bars.`},
-  {id:`glen`,n:`The Glen`,w:`Heywood`,o:`neutral`,def:3,inc:100,x:205,y:217,wd:85,h:58,d:`Quartier résidentiel aisé, sous l'œil de la police.`},
-  {id:`vista`,n:`Vista del Rey`,w:`Heywood`,o:`neutral`,def:2,inc:60,x:295,y:217,wd:95,h:58,d:`Classes moyennes, tours HLM, Coyote Cojo.`},
+  {id:`glen`,n:`The Glen`,w:`Heywood`,o:`valentinos`,def:3,inc:100,x:205,y:217,wd:85,h:58,d:`Quartier résidentiel aisé, sous l'œil de la police.`},
+  {id:`vista`,n:`Vista del Rey`,w:`Heywood`,o:`sixth`,def:2,inc:60,x:295,y:217,wd:95,h:58,d:`Classes moyennes, tours HLM, Coyote Cojo.`},
   {id:`coastview`,n:`Coastview`,w:`Pacifica`,o:`voodoo`,def:4,inc:90,x:10,y:156,wd:100,h:56,d:`Les ruines du Grand Imperial Mall. Fief des Voodoo Boys.`},
   {id:`westwind`,n:`West Wind Estate`,w:`Pacifica`,o:`neutral`,def:3,inc:100,x:10,y:217,wd:100,h:58,d:`Gated communities en bord de mer.`},
   {id:`dogtown`,n:`Dogtown`,w:`Pacifica`,o:`barghest`,def:5,inc:150,x:10,y:280,wd:100,h:55,d:`Ancienne enclave militaire, ceinturée par les Barghest.`,lock:2077},
@@ -3754,11 +3757,13 @@ const holdOf=id=>{ if(!G.hold) G.hold={}; return G.hold[id]===undefined?65:G.hol
 function warDc(d,base){ return base - 1.5 + ownedList().length*.7 + Math.floor((yr()-START_YEAR)/6) - Math.min(3,Math.floor(crewN()/2)); }
 function conquestChoices(d){
   const o=[];
-  o.push({k:`assault`,t:`Assaut armé`,s:`${ATTRS.body.n} + combat · +28 influence`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
-  o.push({k:`hack`,t:`Piratage des systèmes`,s:`${ATTRS.int.n} + hack · +24 influence`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Hack avancé requis (deck ou formation)`});
-  o.push({k:`talk`,t:`Diplomatie & pression`,s:`${ATTRS.cool.n} · +20 influence · sans risque physique`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
+  const prev=G.dist[d.id], ally=Object.keys(G.allies||{}).find(a=>FAC[a]&&(FAC[a].foes||[]).includes(prev));
+  if(ally&&!(G.allyUsed||{})[ally]) o.push({k:`ally`,ally,t:`Appeler ${FAC[ally].n} en renfort`,s:`Gratuit · ${FAC[ally].n} frappe ${FAC[prev]?FAC[prev].n:`l'ennemi`} avec toi · +40`});
+  o.push({k:`assault`,t:`Par la force`,s:`${ATTRS.body.n} + combat · +55`,a:`body`,sk:`cmb`,dc:warDc(d,4+d.def*1.5)});
+  o.push({k:`hack`,t:`Par le Net`,s:`${ATTRS.int.n} + hack · +50`,a:`int`,sk:`hck`,dc:warDc(d,5+d.def*1.5),req:(hasDeck()||G.flags.hackmentor)?``:`Cyberdeck ou formation au hack`});
+  o.push({k:`talk`,t:`Par la parole`,s:`${ATTRS.cool.n} · +45 · sans danger`,a:`cool`,sk:null,dc:warDc(d,5.5+d.def*1.5)});
   const price=d.def*1000;
-  o.push({k:`buy`,t:`Corrompre & financer`,s:`${price} €$ · +35 influence, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
+  o.push({k:`buy`,t:`Par l'argent`,s:`${price} €$ · +70, sans jet`,price,req:G.ed>=price?``:`${price} €$ requis`});
   return o;
 }
 function canConquer(d){
@@ -3774,12 +3779,13 @@ function canConquer(d){
 function doOperation(d,opt){
   CHIPS=[]; G.ctl=G.ctl||{}; G.hold=G.hold||{}; opsLeft(); G.ops.left--;
   const prev=G.dist[d.id]; let ok=true, info=null, gain=0;
-  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=45; }
+  if(opt.k===`buy`){ G.ed-=opt.price; chip(`n`,`−${opt.price} €$`); gain=70; }
+  else if(opt.k===`ally`){ G.allyUsed=G.allyUsed||{}; G.allyUsed[opt.ally]=true; G.fac[opt.ally]=clamp((G.fac[opt.ally]||0)+3,-100,100); chip(`y`,`${FAC[opt.ally].n} combat à tes côtés`); gain=40; }
   else {
     const c={a:opt.a,k:opt.sk,dc:opt.dc - (G.member&&FAC[G.member].foes.includes(prev)?2:0) - (Object.keys(G.allies||{}).some(a=>FAC[a].foes.includes(prev))?2:0)};
     const ri=rollInfo(c); const roll=rnd(1,10);
     ok = roll===10||(roll!==1&&roll>=ri.need); info={roll,...ri,ok}; gainXp(opt.a,ok?3:1);
-    gain = ok ? ({assault:36,hack:32,talk:28}[opt.k]+(roll===10?16:0)) : -6;
+    gain = ok ? ({assault:55,hack:50,talk:45}[opt.k]+(roll===10?20:0)) : -5;
   }
   const before=G.ctl[d.id]||0; G.ctl[d.id]=clamp(before+gain,0,100);
   chip(gain>0?`y`:`n`,`${sgn(G.ctl[d.id]-before)} influence`);
@@ -3805,9 +3811,24 @@ function reinforce(d){
   const price=d.def*350; if(G.ed<price) return false;
   G.ed-=price; G.hold=G.hold||{}; G.hold[d.id]=clamp(holdOf(d.id)+35,0,100); return price;
 }
+function gangWars(){
+  const G_=Object.keys(FAC).filter(k=>[`gang`,`clan`].includes(FAC[k].k)&&facStr(k)>0&&k!==G.member);
+  if(!G_.length) return;
+  const n=Math.random()<.5?1:2;
+  for(let i=0;i<n;i++){
+    const a=G_[rnd(0,G_.length-1)], foes=(FAC[a].foes||[]).filter(f=>FAC[f]);
+    const targets=DIST.filter(d=>!d.lock&&G.dist[d.id]!==a&&G.dist[d.id]!==`player`&&(G.dist[d.id]===`neutral`||foes.includes(G.dist[d.id])));
+    if(!targets.length||Math.random()<.25) continue;
+    const t=targets[rnd(0,targets.length-1)], old=G.dist[t.id];
+    if(old!==`neutral`&&facStr(old)<=1) continue;
+    G.dist[t.id]=a; if(G.ctl) delete G.ctl[t.id];
+    toast(`⚔ ${FAC[a].n} prend ${t.n}${FAC[old]?` à ${FAC[old].n}`:``}`);
+    G.log.unshift({d:dateStr(),m:`Guerre des gangs : ${FAC[a].n} prend ${t.n}${FAC[old]?` à ${FAC[old].n}`:``}.`});
+  }
+}
 function warTick(){
-  G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.ctl=G.ctl||{}; G.hold=G.hold||{};
-  Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-60&&ownedList().length&&Math.random()<.35){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
+  G.ops={left:OPS_PER+(tr(`meneur`)?1:0)+((G.member&&G.rank>=3)?1:0)}; G.allyUsed={}; gangWars(); G.ctl=G.ctl||{}; G.hold=G.hold||{};
+  Object.keys(FAC).forEach(k=>{ if((G.fac[k]||0)<=-20&&[`gang`,`clan`].includes(FAC[k].k)&&ownedList().length&&Math.random()<((G.fac[k]||0)<=-60?.4:.2)){ const t=ownedList()[rnd(0,ownedList().length-1)]; G.hold[t.id]=clamp(holdOf(t.id)-12,0,100); toast(`⚔ ${FAC[k].n} attaque ${t.n} (−12 tenue)`); } });
   Object.keys(G.ctl).forEach(id=>{ G.ctl[id]=Math.max(0,G.ctl[id]-6); if(!G.ctl[id]) delete G.ctl[id]; });
   ownedList().forEach(d=>{
     const dec=rnd(4,9)+(d.def>=4?2:0)-Math.floor((G.mine?G.mine.power:0)/2)-Math.floor(crewN()/2);
@@ -4577,18 +4598,19 @@ function renderDistrictPanel(id){
   if(mine){ const price=d.def*350; act=`<div class="vstat"><span>Tenue</span><b style="color:${hold<=25?`var(--m)`:`var(--g)`}">${hold}/100</b></div><div class="bigbar"><i style="background:${hold<=25?`var(--m)`:`var(--y)`};width:${hold}%"></i></div>
     <button class="btn pri" id="goreinf" ${G.ed<price||hold>=100?`disabled`:``}>🛡 Renforcer · ${money(price)} (+35 tenue)</button><div class="log" style="color:var(--dim)">La tenue baisse à chaque période. À 0, le quartier t'échappe. Revenu : ${Math.round(d.inc*3*(.4+.6*hold/100))} €$ / période.</div>`; }
   else if(why) act=`<div class="why">${why===`Verrouillé`?`🔒 Verrouillé`:`🔒 ${why}`}</div>`;
-  else act=`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
-    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Mener une opération (${left} restante${left>1?`s`:``})`:`Plus d'opération cette période`}</button><div class="log" style="color:var(--dim)">Atteins 100 d'influence pour prendre le quartier. L'influence retombe de 6 par période, et l'ennemi riposte.</div>`;
-  $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)}"><div class="in"><b>${d.n} <small style="display:inline;color:var(--dim)">· ${d.w}</small></b><small>${d.d}</small>
-    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</small></div></div>${act}`;
+  else act=`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
+    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Attaquer ce quartier`:`Plus d'action pour l'instant`}</button><div class="log" style="color:var(--dim)">Deux opérations réussies suffisent en général. Ta progression retombe un peu à chaque période.</div>`;
+  const rival=FAC[o]?`<div class="mrow"><span>Gang en place</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div>`:``;
+  $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)};flex-direction:column;align-items:stretch;gap:4px"><b style="font-size:17px">${d.n} <span style="color:var(--dim);font-size:13px;font-weight:500">· ${d.w}</span></b><span class="mtx">${d.d}</span>
+    <div class="mrow"><span>Contrôle</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div><div class="mrow"><span>Défense</span><b>${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</b></div></div>${act}`;
   const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
   const rf=$(`#goreinf`); if(rf) rf.onclick=()=>{ const p=reinforce(d); if(p){SFX.buy();toast(`${d.n} renforcé`);updateHud();openMap(true)} };
   const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
 }
 function openConquest(d){
   const prev=G.dist[d.id], ctl=(G.ctl&&G.ctl[d.id])||0;
-  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
-   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Une opération par action : choisis ta méthode.</div>`+
+  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
+   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Choisis ta méthode.</div>`+
    conquestChoices(d).map((c,i)=>{ const ch=c.a?rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance:0; return `<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${ch>=.7?`hi`:ch<=.35?`lo`:``}">${Math.round(ch*100)}%</span>`:``}</button>`; }).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
     const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req||!opsLeft()){SFX.ko();return}

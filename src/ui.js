@@ -638,18 +638,19 @@ function renderDistrictPanel(id){
   if(mine){ const price=d.def*350; act=`<div class="vstat"><span>Tenue</span><b style="color:${hold<=25?`var(--m)`:`var(--g)`}">${hold}/100</b></div><div class="bigbar"><i style="background:${hold<=25?`var(--m)`:`var(--y)`};width:${hold}%"></i></div>
     <button class="btn pri" id="goreinf" ${G.ed<price||hold>=100?`disabled`:``}>🛡 Renforcer · ${money(price)} (+35 tenue)</button><div class="log" style="color:var(--dim)">La tenue baisse à chaque période. À 0, le quartier t'échappe. Revenu : ${Math.round(d.inc*3*(.4+.6*hold/100))} €$ / période.</div>`; }
   else if(why) act=`<div class="why">${why===`Verrouillé`?`🔒 Verrouillé`:`🔒 ${why}`}</div>`;
-  else act=`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
-    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Mener une opération (${left} restante${left>1?`s`:``})`:`Plus d'opération cette période`}</button><div class="log" style="color:var(--dim)">Atteins 100 d'influence pour prendre le quartier. L'influence retombe de 6 par période, et l'ennemi riposte.</div>`;
-  $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)}"><div class="in"><b>${d.n} <small style="display:inline;color:var(--dim)">· ${d.w}</small></b><small>${d.d}</small>
-    <small>Contrôle : <b style="color:${ownerColor(o)}">${ownerName(o)}</b> · Défense ${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</small></div></div>${act}`;
+  else act=`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar"><i style="background:var(--c);width:${ctl}%"></i></div>
+    <button class="btn pri" id="goq" ${left?``:`disabled`}>${left?`⚔ Attaquer ce quartier`:`Plus d'action pour l'instant`}</button><div class="log" style="color:var(--dim)">Deux opérations réussies suffisent en général. Ta progression retombe un peu à chaque période.</div>`;
+  const rival=FAC[o]?`<div class="mrow"><span>Gang en place</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div>`:``;
+  $(`#mpanel`).innerHTML=`<div class="item" style="border-color:${ownerColor(o)};flex-direction:column;align-items:stretch;gap:4px"><b style="font-size:17px">${d.n} <span style="color:var(--dim);font-size:13px;font-weight:500">· ${d.w}</span></b><span class="mtx">${d.d}</span>
+    <div class="mrow"><span>Contrôle</span><b style="color:${ownerColor(o)}">${ownerName(o)}</b></div><div class="mrow"><span>Défense</span><b>${`●`.repeat(d.def)}${`○`.repeat(5-d.def)}</b></div></div>${act}`;
   const g=$(`#goq`); if(g) g.onclick=()=>{SFX.tap();openConquest(d)};
   const rf=$(`#goreinf`); if(rf) rf.onclick=()=>{ const p=reinforce(d); if(p){SFX.buy();toast(`${d.n} renforcé`);updateHud();openMap(true)} };
   const mp=$(`#mpanel`); setTimeout(()=>mp.scrollIntoView({behavior:`smooth`,block:`nearest`}),50);
 }
 function openConquest(d){
   const prev=G.dist[d.id], ctl=(G.ctl&&G.ctl[d.id])||0;
-  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Influence</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
-   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Une opération par action : choisis ta méthode.</div>`+
+  modal(`Opération · ${d.n}`,`<div class="vstat"><span>Progression de la conquête</span><b style="color:var(--c)">${ctl}/100</b></div><div class="bigbar" style="margin-bottom:6px"><i style="background:var(--c);width:${ctl}%"></i></div>
+   <div class="log">Tenu par <b style="color:${ownerColor(prev)}">${ownerName(prev)}</b> · Défense ${d.def}/5. Choisis ta méthode.</div>`+
    conquestChoices(d).map((c,i)=>{ const ch=c.a?rollInfo({a:c.a,k:c.sk,dc:c.dc}).chance:0; return `<button class="btn choice ${c.req?`lock`:``}" data-q="${i}"><span class="tt"><b>${c.t}</b><small>${c.req?`🔒 ${c.req}`:c.s}</small></span>${c.a?`<span class="bd ${ch>=.7?`hi`:ch<=.35?`lo`:``}">${Math.round(ch*100)}%</span>`:``}</button>`; }).join(``),{back:()=>openMap(true)});
   document.querySelectorAll(`[data-q]`).forEach(b=>b.onclick=()=>{
     const opt=conquestChoices(d)[+b.dataset.q]; if(opt.req||!opsLeft()){SFX.ko();return}
