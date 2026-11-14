@@ -33,7 +33,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
 card({id:`shop_chrome`,quick:true,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
   tx:()=>`« Je ne reste jamais longtemps au même endroit. J'ai ça aujourd'hui. Tu choisis, tu paies, je te le pose ici même. Aucun remboursement. Et gare à ton humanité, gamin(e). »`,
   dyn:()=>{
-    const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
+    const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&upCy(c)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
     const aff=pool.find(c=>cyPrice(c)<=G.ed); const rest=pool.filter(c=>c!==aff); const picks=(aff?[aff,...rest]:rest).slice(0,hasDeck()?2:3);
     const out=picks.map(c=>{ const price=cyPrice(c), cur=G.cyber.find(i=>CY(i).slot===c.slot&&i!==c.id);
       return {t:c.n,s:`${money(price)} · −${c.h} Humanité · ${effTxt(c)||c.d}${cur?` · remplace ${CY(cur).n}`:``}`,req:()=>G.ed>=price?``:`${money(price)} requis`,
@@ -46,7 +46,7 @@ card({id:`shop_chrome`,quick:true,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond
 card({id:`shop_gear`,quick:true,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
   tx:()=>`Un vendeur ambulant ouvre sa valise sous un néon qui grésille : « Armes, armures, bagnoles. Tout est volé, rien n'est tracé. Les prix ? Non négociables. »`,
   dyn:()=>{
-    const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
+    const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&upGear(g)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
     const aff=pool.find(g=>gearPrice(g)<=G.ed); const ordered=aff?[aff,...pool.filter(g=>g!==aff)]:pool;
     const seen=new Set(), picks=[]; ordered.forEach(g=>{ if(picks.length<3&&!seen.has(g.t)){ seen.add(g.t); picks.push(g); } });
     const out=picks.map(g=>{ const price=gearPrice(g), cur=G.gear.find(i=>GEARMAP[i].t===g.t);

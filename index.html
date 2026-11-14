@@ -2534,7 +2534,7 @@ card({id:`afterlife_hub`,who:`@hub`,tag:`🍸 Afterlife · Une halte`,cond:()=>f
 card({id:`shop_chrome`,quick:true,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond:()=>false,
   tx:()=>`« Je ne reste jamais longtemps au même endroit. J'ai ça aujourd'hui. Tu choisis, tu paies, je te le pose ici même. Aucun remboursement. Et gare à ton humanité, gamin(e). »`,
   dyn:()=>{
-    const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
+    const pool=shuffle(CYBER.filter(c=>!hasCy(c.id)&&upCy(c)&&(!c.cred||G.cred>=c.cred)&&c.p<=Math.max(2500,G.ed*3)));
     const aff=pool.find(c=>cyPrice(c)<=G.ed); const rest=pool.filter(c=>c!==aff); const picks=(aff?[aff,...rest]:rest).slice(0,hasDeck()?2:3);
     const out=picks.map(c=>{ const price=cyPrice(c), cur=G.cyber.find(i=>CY(i).slot===c.slot&&i!==c.id);
       return {t:c.n,s:`${money(price)} · −${c.h} Humanité · ${effTxt(c)||c.d}${cur?` · remplace ${CY(cur).n}`:``}`,req:()=>G.ed>=price?``:`${money(price)} requis`,
@@ -2547,7 +2547,7 @@ card({id:`shop_chrome`,quick:true,who:`doc`,tag:`🦾 Ripperdoc de passage`,cond
 card({id:`shop_gear`,quick:true,who:`fix`,tag:`🔫 Marché noir`,cond:()=>false,
   tx:()=>`Un vendeur ambulant ouvre sa valise sous un néon qui grésille : « Armes, armures, bagnoles. Tout est volé, rien n'est tracé. Les prix ? Non négociables. »`,
   dyn:()=>{
-    const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
+    const pool=shuffle(GEAR.filter(g=>!g.loot&&!G.gear.includes(g.id)&&upGear(g)&&(!g.cred||G.cred>=g.cred)&&g.p<=Math.max(2500,G.ed*3)));
     const aff=pool.find(g=>gearPrice(g)<=G.ed); const ordered=aff?[aff,...pool.filter(g=>g!==aff)]:pool;
     const seen=new Set(), picks=[]; ordered.forEach(g=>{ if(picks.length<3&&!seen.has(g.t)){ seen.add(g.t); picks.push(g); } });
     const out=picks.map(g=>{ const price=gearPrice(g), cur=G.gear.find(i=>GEARMAP[i].t===g.t);
@@ -3315,12 +3315,34 @@ function heatFromCheck(c,ok,fx){
   if(k===`cmb`){ addHeat(`loi`,ok?12:16); addHeat(`rue`,ok?6:3); } else if(k===`hck`) addHeat(`corpo`,ok?10:15); else if(k===`stl`) addHeat(`loi`,ok?3:9); else if(k===`drv`) addHeat(`nomad`,ok?3:7);
   else if(ok&&fx&&fx.ed>=400) addHeat(c.a===`cool`?`corpo`:`rue`,5);
 }
+/* ---------- puissance d'un objet : on ne propose jamais plus faible que ce que tu as ---------- */
+const KW = {cmb:2,drv:2,hck:2,soc:1.2,stl:1.2};
+const itemScore = o => Object.entries(o.k||{}).reduce((a,[k,v])=>a+v*(KW[k]||1),0)+(o.mit||0)*20+Object.values(o.at||{}).reduce((a,v)=>a+v,0)*2+(o.regen||0)*.5+(o.deck||0)*1.5+(o.fame?1:0);
+function upGear(g){
+  const cur=G.gear.map(i=>GEARMAP[i]).find(x=>x.t===g.t); if(!cur) return true;
+  const a=itemScore(g), b=itemScore(cur); if(a>b) return true;
+  const ownK=new Set(Object.keys(cur.k||{}).concat(cur.mit?[`mit`]:[])), newK=Object.keys(g.k||{}).concat(g.mit?[`mit`]:[]);
+  return newK.some(k=>!ownK.has(k)) && a>=b*.8;   // une autre logique, à peine plus faible
+}
+function upCy(c){
+  const cur=G.cyber.map(i=>CY(i)).find(x=>x.slot===c.slot&&x.id!==c.id); if(!cur) return true;
+  const a=itemScore(c), b=itemScore(cur); if(a>b) return true;
+  const ownK=new Set(Object.keys(cur.k||{}).concat(Object.keys(cur.at||{}))), newK=Object.keys(c.k||{}).concat(Object.keys(c.at||{}));
+  return newK.some(k=>!ownK.has(k)) && a>=b*.8;
+}
 function heatTick(){
   const base=(G.cred<20?2:G.cred<50?1:(G.stats.cards%2?1:0))+(tr(`fantome`)?2:0);
-  Object.keys(BLOCS).forEach(b=>{ let dcy=base; if(G.member&&G.rank>=2&&BLOC[G.member]===b) dcy+=2; G.heat[b]=clamp((G.heat[b]||0)-dcy,0,100); });
+  Object.keys(BLOCS).forEach(b=>{ let dcy=base+(G.heat[b]||0)*.07; if(G.member&&G.rank>=2&&BLOC[G.member]===b) dcy+=2; G.heat[b]=clamp((G.heat[b]||0)-dcy,0,100); });
+  // ta présence, ta fortune et ta notoriété attirent l'attention de chacun
+  { const own=locOwner(), ob=BLOC[own], k=1+Math.floor(G.stats.cards/90)*.5;
+    const add={rue:G.cred/60+(G.ed>3000?.5:0), corpo:G.ed/9000+(hasDeck()?.5:0), loi:G.cyber.length*.25+(G.cred>=30?.5:0), nomad:(G.gear.some(i=>GEARMAP[i].t===`véhicule`)?.5:0)};
+    if(ob&&!((G.member&&BLOC[G.member]===ob)||(G.allies&&G.allies[own]))) add[ob]=(add[ob]||0)+1.3;
+    if(own===`neutral`) add.loi+=.8;
+    Object.keys(FAC).forEach(f=>{ const r=G.fac[f]||0; if(r<=-20&&BLOC[f]) add[BLOC[f]]=(add[BLOC[f]]||0)+Math.min(1.5,-r/50); });
+    Object.keys(add).forEach(b=>{ const v=add[b]*k; if(v>=.3) addHeat(b,v); }); }
   // recherché(e) : ils finissent par te tomber dessus
   const hb=hottestHeat(), hv=G.heat[hb]||0;
-  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=2&&Math.random()<(hv-18)/85){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
+  if(hv>=40&&!G.inHub&&!G.flags.q_active&&G.stats.cards-(G.lastHt||-9)>=4&&Math.random()<(hv-18)/85){ G.lastHt=G.stats.cards; if(!G.queue.includes(`ht_`+hb)) G.queue.push(`ht_`+hb); }
 }
 function hottestHeat(){ return Object.keys(BLOCS).sort((a,b)=>(G.heat[b]||0)-(G.heat[a]||0))[0]; }
 function blocFromFx(fx){
@@ -3345,7 +3367,7 @@ function makeLoot(t){
   if(cands.length){ const c=cands[rnd(0,cands.length-1)];
     pool.push({k:`rel`,ic:`🤝`,t:`Faveur`,d:`+${8+3*t} lien · ${WHO[c].n}`,ap:()=>applyFx({rel:{[c]:8+3*t}})}); }
   { const hb=hottestHeat(), hv=Math.round(G.heat[hb]||0); if(hv>=25) pool.push({k:`bal`,ic:`🕶`,t:`Profil bas`,d:`${BLOCS[hb].ic} ${BLOCS[hb].n} −${12+5*t} (poursuite)`,w:3,ap:()=>addHeat(hb,-(12+5*t))}); }
-  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&(x.loot?(t>=3&&Math.random()<.25):x.p<=2000+2200*t)&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
+  if(t>=2){ const g=GEAR.filter(x=>!G.gear.includes(x.id)&&upGear(x)&&(x.loot?(t>=3&&Math.random()<.25):x.p<=2000+2200*t)&&(!x.cred||G.cred>=x.cred)); if(g.length){ const x=g[rnd(0,g.length-1)];
     pool.push({k:`gear`,ic:`🎁`,t:`Butin`,d:`${x.n} (${x.t})`,w:2,ap:()=>{G.gear=G.gear.filter(i=>GEARMAP[i].t!==x.t);G.gear.push(x.id);chip(`y`,`Obtenu : ${x.n}`)}}); } }
   if(t>=2&&hasDeck()){ const h=HACKS.filter(x=>!G.hacks.includes(x.id)&&A(`int`)>=x.int); if(h.length&&G.hacks.length<deckSlots()){ const x=h[rnd(0,h.length-1)];
     pool.push({k:`hack`,ic:`💾`,t:`Quickhack`,d:`${x.n} (gratuit)`,w:2,ap:()=>{G.hacks.push(x.id);chip(`y`,`Chargé : ${x.n}`)}}); } }
@@ -3392,9 +3414,9 @@ function applyFx(fx){
   if(fx.unonce) delete G.done[fx.unonce];
   if(fx.loot) G.pendingLoot=Math.max(G.pendingLoot||0,fx.loot);
   if(fx.hack&&!G.hacks.includes(fx.hack)){ G.hacks.push(fx.hack); G.role.net+=1; chip(`y`,`Quickhack chargé`); }
-  if(fx.cy){ installCy(fx.cy,true); chip(`y`,`Installé : ${CY(fx.cy).n}`); }
+  if(fx.cy){ const c=CY(fx.cy); if(upCy(c)||!G.cyber.some(i=>CY(i).slot===c.slot)){ installCy(fx.cy,true); chip(`y`,`Installé : ${c.n}`); } else { const v=Math.max(300,Math.round(c.p*.4/50)*50); G.ed+=v; chip(`i`,`Ton implant est meilleur : ${c.n} revendu +${v} €$`); } }
   if(fx.xp) Object.entries(fx.xp).forEach(([k,v])=>gainXp(k,v));
-  if(fx.gear){ const g=GEARMAP[fx.gear]; G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); }
+  if(fx.gear){ const g=GEARMAP[fx.gear]; if(upGear(g)){ G.gear=G.gear.filter(i=>GEARMAP[i].t!==g.t); G.gear.push(g.id); chip(`y`,`Obtenu : ${g.n}`); } else { const v=Math.max(250,Math.round((g.p||800)*.5/50)*50); G.ed+=v; chip(`i`,`Tu as mieux : ${g.n} revendu +${v} €$`); } }
   if(fx.join) joinFac(fx.join);
   if(fx.fn && FN[fx.fn]) FN[fx.fn]();
   if(fx.hub){ G.hubUsed=G.hubUsed||{}; G.hubUsed[fx.hub]=1; G.hubLeft=Math.max(0,(G.hubLeft||0)-1); }
