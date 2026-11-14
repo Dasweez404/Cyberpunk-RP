@@ -299,12 +299,19 @@ const REL_TIERS = [[0,`Inconnu`],[5,`Connaissance`],[20,`Ami`],[40,`Allié`],[65
 /* ---------- titres de chef & générateur de personnages ---------- */
 const LEADER = {gang:`Chef`,corp:`PDG`,clan:`Chef de clan`,ncpd:`Commissaire`,mox:`Voix des Mox`,trauma:`Directeur général`};
 const RANK_PERKS = [`Missions de faction mieux payées`,`Arcs de faction & salaire accru`,`Obligations de la famille · prise de pouvoir possible`];
-const NAMES = {
-  m:[`Rook`,`Kiko`,`Dante`,`Mateo`,`Ravi`,`Jonas`,`Tariq`,`Luca`,`Kenji`,`Andrei`,`Bao`,`Idris`,`Silas`,`Marek`,`Teo`,`Gaspard`,`Omar`,`Yuri`],
-  f:[`Nadja`,`Imani`,`Yuki`,`Carmen`,`Zhen`,`Anouk`,`Dalia`,`Mireille`,`Sana`,`Reva`,`Ingrid`,`Ayo`,`Lena`,`Soraya`,`Mei`,`Paloma`,`Noor`,`Vera`],
-  s:[`Reyes`,`Tanaka`,`Okoye`,`Volkov`,`Delacroix`,`Chen`,`Haddad`,`Morales`,`Kowalski`,`Nakamura`,`Silva`,`Ito`,`Brandt`,`Mbeki`,`Vargas`,`Park`,`Lindqvist`,`Moreau`],
-  n:[`Chrome`,`Gato`,`Vipère`,`Ombre`,`Spark`,`Bitume`,`Ghost`,`Néon`,`Rasoir`,`Corbeau`]
+const CULT = {
+  lat:{m:[`Mateo`,`Rafael`,`Joaquín`,`Esteban`,`Hector`,`Diego`,`Tomás`,`Emilio`,`Santiago`,`Mauricio`,`Ignacio`,`Rodrigo`,`Chuy`,`Beto`,`Nacho`,`Cristóbal`],f:[`Carmen`,`Paloma`,`Lupe`,`Marisol`,`Ximena`,`Rocío`,`Inés`,`Dolores`,`Catalina`,`Esperanza`,`Valeria`,`Yesenia`],s:[`Reyes`,`Morales`,`Vargas`,`Ortega`,`Cruz`,`Mendoza`,`Salazar`,`Castillo`,`Herrera`,`Domínguez`,`Peña`,`Aguilar`,`Rojas`,`Quintero`]},
+  jp:{m:[`Kenji`,`Daichi`,`Haruto`,`Ryota`,`Takeshi`,`Jun`,`Kaito`,`Shinji`,`Akira`,`Goro`,`Hideo`,`Satoshi`,`Ren`,`Toshiro`],f:[`Yuki`,`Mei`,`Sakura`,`Aiko`,`Hana`,`Rin`,`Mika`,`Noriko`,`Reiko`,`Emi`,`Chiyo`,`Yumi`],s:[`Tanaka`,`Nakamura`,`Ito`,`Kobayashi`,`Saito`,`Mori`,`Hayashi`,`Ishikawa`,`Yamada`,`Okada`,`Matsuda`,`Fujita`,`Shimizu`,`Arai`]},
+  cn:{m:[`Wei`,`Jian`,`Bao`,`Lei`,`Hao`,`Zhen`,`Tao`,`Feng`,`Long`,`Ming`,`Yong`,`Kai`],f:[`Mei`,`Lian`,`Xiu`,`Fang`,`Ling`,`Yan`,`Zhen`,`Qing`,`Hua`,`Jia`],s:[`Chen`,`Wang`,`Liu`,`Zhao`,`Huang`,`Zhou`,`Wu`,`Xu`,`Sun`,`Ma`,`Lin`,`Tang`]},
+  ht:{m:[`Jean-Baptiste`,`Wyclef`,`Emmanuel`,`Toussaint`,`Dieudonné`,`Mackenzy`,`Lucien`,`Fabrice`,`Samuel`,`Moïse`],f:[`Marie-Ange`,`Fabienne`,`Yvrose`,`Nadège`,`Mireille`,`Rosemène`,`Carline`,`Danielle`],s:[`Pierre`,`Jean-Louis`,`Désir`,`Laguerre`,`Beauvoir`,`Célestin`,`Duvalier`,`Joseph`,`Saintil`,`Estimé`]},
+  anglo:{m:[`Jake`,`Cole`,`Wade`,`Hank`,`Boone`,`Clay`,`Rhett`,`Dallas`,`Tucker`,`Abel`,`Seth`,`Rusty`,`Cody`,`Lyle`],f:[`Jolene`,`Tess`,`Cassidy`,`Mae`,`Dakota`,`Maggie`,`Roxanne`,`Sadie`,`Wren`,`Josie`,`Lacey`,`Hattie`],s:[`Walker`,`Cutter`,`Brandt`,`Ford`,`Hollis`,`Calloway`,`Dawson`,`Whitaker`,`Boyd`,`Mercer`,`Rutledge`,`Slade`,`Pryor`,`Hale`]},
+  slav:{m:[`Andrei`,`Yuri`,`Dmitri`,`Marek`,`Vlad`,`Stanislav`,`Anton`,`Gleb`,`Roman`,`Kirill`,`Igor`,`Lev`],f:[`Nadja`,`Vera`,`Ingrid`,`Katya`,`Irina`,`Sasha`,`Oksana`,`Zoya`,`Lena`,`Mila`],s:[`Volkov`,`Kowalski`,`Brandt`,`Petrov`,`Novak`,`Sokolov`,`Morozov`,`Lindqvist`,`Orlov`,`Zielinski`,`Baranov`,`Kuznetsov`]},
+  mix:{m:[`Rook`,`Dante`,`Ravi`,`Jonas`,`Tariq`,`Luca`,`Andrei`,`Idris`,`Silas`,`Teo`,`Gaspard`,`Omar`,`Samir`,`Elias`,`Malik`,`Noé`,`Axel`,`Bastien`],f:[`Imani`,`Anouk`,`Dalia`,`Mireille`,`Sana`,`Reva`,`Ayo`,`Soraya`,`Noor`,`Léa`,`Amara`,`Salomé`,`Thandiwe`,`Yasmine`,`Jade`,`Elodie`],s:[`Okoye`,`Delacroix`,`Haddad`,`Mbeki`,`Park`,`Moreau`,`Silva`,`Ito`,`Brandt`,`Nkosi`,`Benali`,`Laurent`,`Costa`,`Dubois`,`Mansour`,`Adeyemi`]}
 };
+const NAMES = Object.assign({},CULT.mix,{n:[`Chrome`,`Gato`,`Vipère`,`Ombre`,`Spark`,`Bitume`,`Ghost`,`Néon`,`Rasoir`,`Corbeau`,`Cendre`,`Mazout`,`Verglas`,`Pixel`,`Cobra`,`Fêlure`,`Larsen`,`Tesson`,`Kamikaze`,`Moineau`,`Plomb`,`Sirène`,`Boomer`,`Écorche`,`Tôle`,`Limace`,`Faucheur`,`Lumière`,`Rouille`,`Mamba`,`Dynamo`,`Cinq-Doigts`,`Gamin`,`Matriochka`,`Sucre`,`Judas`,`Bobine`,`Scalpel`,`Marée`,`Fumée`]});
+const FCULT = {valentinos:`lat`,tygers:`jp`,arasaka:`jp`,kangtao:`cn`,voodoo:`ht`,aldecaldos:`anglo`,wraiths:`anglo`,sixth:`anglo`,militech:`anglo`,barghest:`anglo`,animals:`anglo`,maelstrom:`slav`};
+const QUIRKS = [`mâche un cure-dent en permanence`,`cicatrice nette sur la joue`,`ne retire jamais ses lunettes`,`tousse comme un moteur fatigué`,`parle très bas, on se penche pour entendre`,`bague en forme de crâne`,`sourit trop souvent`,`un œil cybernétique qui bourdonne`,`sent le tabac et le métal chaud`,`tatouage de dragon sur la nuque`,`compte tout à voix haute`,`ne s'assoit jamais dos à la porte`,`un bras chromé mal assorti`,`cite toujours un proverbe`,`rit à contretemps`,`mains toujours gantées`,`ongles laqués, sang sous la laque`,`ne dit jamais son vrai nom`,`une photo d'enfant au poignet`,`gilet trop grand, héritage d'un mort`,`chante en silence`,`mâchonne du chewing-gum pour ne pas fumer`,`dents en or`,`boite légèrement, ne l'avoue pas`,`collectionne les cartes mémoire`,`prie avant chaque marché`,`s'excuse avant de menacer`,`dort debout, dit-on`,`porte du parfum de luxe sur un manteau rapiécé`,`ne cligne presque jamais des yeux`];
+const QUIPS = [`« On se connaît ? Non ? Alors sois poli(e). »`,`« Dans cette ville, la mémoire coûte cher. »`,`« Fais pas cette tête. La mort, ça se négocie. »`,`« J'ai vu mieux. J'ai vu pire. Surtout pire. »`];
 const GENT = {
   fix:{r:`Contact de la rue`,st:[`hood`,`shades`,`cap`,`short`],c:`#00f0ff`},
   corpo:{r:`Cadre corpo`,st:[`shades`,`short`,`long`],c:`#05ffa1`},
@@ -321,11 +328,19 @@ const GENT = {
   trauma:{r:`Paramedic Trauma Team`,st:[`helmet`,`short`],c:`#ff2a6d`}
 };
 const pickR = a => a[Math.floor(Math.random()*a.length)];
-function genNpc(type,color,role){
-  const t=GENT[type]||GENT.fix, g=Math.random()<.5?`m`:`f`;
-  let n=`${pickR(NAMES[g])} ${pickR(NAMES.s)}`;
-  if(Math.random()<.3) n=`${pickR(NAMES[g])} « ${pickR(NAMES.n)} » ${pickR(NAMES.s)}`;
-  return {n,r:role||t.r,c:color||t.c,st:pickR(t.st),sk:14+Math.floor(Math.random()*22),gen:1};
+function genNpc(type,color,role,fid){
+  const t=GENT[type]||GENT.fix, cu=CULT[FCULT[fid]]||(type===`claws`?CULT.jp:type===`sixth`||type===`nomad`?CULT.anglo:CULT.mix), g=Math.random()<.5?`m`:`f`;
+  const fn=pickR(cu[g]), sn=pickR(cu.s), nick=pickR(NAMES.n), r=Math.random();
+  const sober=[`corp`,`corpo`,`ncpd`,`trauma`,`doc`].includes(type);
+  const n= sober?(r<.85?`${fn} ${sn}`:`${fn} ${sn.slice(0,1)}. ${pickR(cu.s)}`) : r<.38?`${fn} ${sn}` : r<.62?`${fn} « ${nick} » ${sn}` : r<.8?`${nick}` : r<.92?`${fn} « ${nick} »` : `${fn} ${sn.slice(0,1)}., dit ${nick}`;
+  return {n,r:role||t.r,c:color||t.c,st:pickR(t.st),sk:14+Math.floor(Math.random()*22),gen:1,q:pickR(QUIRKS),g};
+}
+/* un personnage récurrent par faction et par vie : on le recroise */
+function facNpc(fid,role){
+  const f=FAC[fid]; if(!f) return genNpc(`gang`);
+  G.cast=G.cast||{}; let n=G.cast[fid];
+  if(!n){ n=genNpc(f.k,f.c,role||f.n,fid); n.fid=fid; n.seen=0; G.cast[fid]=n; }
+  n.seen=(n.seen||0)+1; n.r=role||n.r; return Object.assign({},n);
 }
 const GENERIC_WHO = {fix:`fix`,corpo:`corpo`,scav:`scav`,doc:`doc`,ncpd:`ncpd`,nomad:`nomad`,claws:`claws`,sixth:`sixth`};
 const FIXERS = [`dex`,`wakako`,`regina`,`padre`,`hands`];

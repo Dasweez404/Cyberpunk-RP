@@ -313,7 +313,7 @@ function nextCard(){
 function showCardView(){
   const c=byId[G.cur.id], w=whoCur(c);
   const stage=$(`#stage`), chs=$(`#choices`);
-  stage.innerHTML=`<div class="speaker">${w.scene?`<div class="portrait scene">${w.ic}</div>`:portrait(w)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}</div></div></div>
+  stage.innerHTML=`<div class="speaker">${w.scene?`<div class="portrait scene">${w.ic}</div>`:portrait(w)}<div><div class="nm" style="color:${w.c}">${esc(w.n)}</div><div class="rl">${esc(w.r)}${w.seen>1?` · ↺ déjà croisé(e)`:``}</div>${w.q?`<div class="rl" style="font-style:italic;opacity:.8">${esc(w.q)}</div>`:``}</div></div>
     <div class="cardwrap" id="cw"><div class="card" id="card" style="--ac:${w.c}">
       <div class="tag">${esc(c.tag||``)}</div><div class="tx">${G.cur.text}</div></div></div>`;
   chs.innerHTML=visChoices(c).map(({h,i},pos)=>{
@@ -332,6 +332,7 @@ function showCardView(){
   });
   revealText($(`.card .tx`)); showTip();
   if(c.id===`afterlife_hub`&&G.hubLeft>=2) neonFx(`AFTERLIFE`);
+  if(G.arrived&&c.id!==`afterlife_hub`){ G.arrived=false; const dd=DMAP[G.loc]; if(dd) neonFx(`📍 ${dd.n.toUpperCase()}`); }
   if(G.empNext){ G.empNext=false; neonFx(`EMPIRE`); }
   SFX.swoosh();
 }
