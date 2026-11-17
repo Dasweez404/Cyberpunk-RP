@@ -322,6 +322,7 @@ function showCardView(){
     let help=``; if(h.chk&&!lock){ const al=bestAlly(h.chk.a)||facBackup(h.chk.a), r0=rollInfo(h.chk); if(al&&r0.chance<.7){ const an=al===`@fac`?`Renfort`:WHO[al].n.split(` `)[0]; help=`<button class="help" data-h="${i}" data-al="${al}" title="${esc(an)}">${al===`@fac`?`🛡`:`📞`}<small>${esc(an)}</small><b>${Math.round(rollInfo(h.chk,3).chance*100)}%</b></button>`; } }
     return `<div class="crow"><button class="btn choice ${lock?`lock`:``} ${h.exp?`exp`:``}" data-i="${i}"><span class="k">${pos+1}</span><span class="tt"><b>${h.t}</b>${(h.s||lock)?`<small>${lock?`🔒 ${lock}`:h.s}</small>`:``}</span>${badge}</button>${help}</div>`;
   }).join(``);
+  chs.classList.toggle(`many`,chs.children.length>=5); document.body.classList.toggle(`manyc`,chs.children.length>=5);
   chs.querySelectorAll(`.help`).forEach(b=>b.onclick=()=>pick(+b.dataset.h,0,b.dataset.al));
   chs.querySelectorAll(`.choice`).forEach(b=>{
     const i=+b.dataset.i;

@@ -475,3 +475,8 @@ body.lowhp #vig::after{content:'';position:absolute;inset:0;background:radial-gr
 
 .mrow{display:flex;justify-content:space-between;gap:8px;font-size:14px;align-items:baseline}.mrow span{color:var(--dim)}.mtx{color:var(--dim);font-size:13px;line-height:1.35}
 .bigbar{margin:6px 0}
+
+.choices.many{gap:5px;padding-top:4px}.choices.many .choice{padding:6px 12px 6px 10px}.choices.many .choice .tt b{font-size:15.5px}.choices.many .choice .tt small{font-size:12px;line-height:1.2}
+.card{overflow-y:auto;scrollbar-width:none}.card::-webkit-scrollbar{display:none}
+body.manyc .speaker .rl+.rl{display:none}
+body.manyc .card{padding:10px 14px}body.manyc .card .tx{font-size:16.5px;line-height:1.3}body.manyc .card .tag{margin-bottom:3px}

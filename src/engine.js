@@ -151,8 +151,8 @@ function empireEligible(){ return !!(G.mine||isLeader()||(G.member&&G.rank>=2));
 function empireTick(){
   if(!empireEligible()||G.inHub||G.flags.q_active) return;
   G.sinceEmp=(G.sinceEmp||0)+1; if(G.sinceEmp<4||G.queue.length) return;
-  const ids=[`emp_collect`,`emp_recruit`,`emp_siege_1`,`emp_siege_1`,`emp_summit`,`emp_party`,`mine_raid`,`mine_recruit`,`p_boss`,`duty_tribute`,`lg_coalition`,`mine_traitor`,`fac_clash`,`ally_call`,`crew_favor`,`emp_offer`].filter(id=>byId[id]&&safe(byId[id].cond,false));
-  if(isLeader()) ids.push(`leader_dispute`);
+  const ids=[`emp_collect`,`emp_recruit`,`emp_siege_1`,`emp_siege_1`,`emp_summit`,`emp_party`,`mine_raid`,`mine_recruit`,`p_boss`,`duty_tribute`,`lg_coalition`,`mine_traitor`,`fac_clash`,`ally_call`,`crew_favor`,`emp_offer`,`conseil`,`conseil`].filter(id=>byId[id]&&safe(byId[id].cond,false));
+
   if(!ids.length) return; G.sinceEmp=0; G.queue.push(ids[rnd(0,ids.length-1)]); G.empNext=true;
 }
 function autoTravel(){ if(!G.queue.includes(`hub_dest`)) G.queue.unshift(`hub_dest`); }
@@ -729,3 +729,12 @@ function checkEnd(){
   if(G.age>=RETIRE_AGE&&!G.flags.retireAsked){ G.flags.retireAsked=true; G.queue.unshift(`retire_offer`); }
   return false;
 }
+
+/* ---------- conseil : effets sur tes lieutenants ---------- */
+(function(){
+  const m=(a,b)=>()=>{ const t=G.tmp||{}; const i={A:t.ia,B:t.ib,C:t.ic}; if(a) ltMove(i[a[0]],a[1]==='u'?1:-1); if(b) ltMove(i[b[0]],b[1]==='u'?1:-1); };
+  [`A`,`B`,`C`].forEach(k=>{ FN[`lt${k}up`]=m([k,'u']); FN[`lt${k}dn`]=m([k,'d']); });
+  FN.ltAup_Bdn=m(['A','u'],['B','d']); FN.ltBup_Adn=m(['B','u'],['A','d']);
+  FN.ltAup_Bup=m(['A','u'],['B','u']); FN.ltAdn_Bdn=m(['A','d'],['B','d']);
+  FN.ltOutB=()=>ltOut((G.tmp||{}).ib,`est écarté(e)`); FN.ltOutC=()=>ltOut((G.tmp||{}).ic,`part en retraite`);
+})();
