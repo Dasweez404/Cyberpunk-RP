@@ -527,10 +527,10 @@ function confirmHeavy(ch,onYes){
   $(`#hno`).onclick=()=>{SFX.tap();closeModal()}; $(`#hyes`).onclick=()=>{closeModal();onYes()};
 }
 /* ---------- entraînement imposé ---------- */
-const trainDue=()=>G.stats.cards-(G.trainLast||0)>=4;
+const trainDue=()=>G.trainedV!==(G.visit||0)&&G.stats.cards-(G.trainLast||0)>=4;   // une séance par escale
 function showTrainPicker(cb){
-  G.trainLast=G.stats.cards; G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
-  modal(`📈 Entraînement`,`<div class="log" style="color:var(--dim)">Tes dernières épreuves t'ont appris quelque chose. Choisis l'attribut que tu travailles : <b>+3 XP</b>. Quand la barre est pleine, l'attribut monte tout seul.</div>`+
+  G.trainLast=G.stats.cards; G.trainedV=G.visit||0; G.xp=G.xp||{body:0,ref:0,tech:0,int:0,cool:0};
+  modal(`📈 Entraînement`,`<div class="log" style="color:var(--dim)">Tes dernières épreuves t'ont appris quelque chose. Une séance par escale : choisis l'attribut que tu travailles, <b>+3 XP</b>. Quand la barre est pleine, l'attribut monte tout seul.</div>`+
    Object.keys(ATTRS).map(k=>{ const lv=G.at[k], max=lv>=9, need=xpNeed(lv), x=G.xp[k]||0, m=relv(MENTOR[k]), bonus=3+(m>=15?2:0);
      return `<button class="tile" data-tr="${k}" ${max?`disabled`:``} style="flex-direction:row;align-items:center;gap:12px;min-height:auto"><span style="flex:1"><b style="display:block">${ATTRS[k].n} · niveau ${lv}</b><small style="display:block">${max?`Niveau max`:`${x} / ${need} XP`}${m>=15?` · mentor ${WHO[MENTOR[k]].n.split(` `)[0]} +2`:``}</small><div class="bigbar" style="margin-top:6px"><i style="background:var(--y);width:${max?100:Math.round(x/need*100)}%"></i></div></span><b style="color:var(--g)">+${bonus}</b></button>`; }).join(``),{lock:true});
   document.querySelectorAll(`[data-tr]`).forEach(b=>b.onclick=()=>{

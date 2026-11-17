@@ -158,7 +158,7 @@ function empireTick(){
 function autoTravel(){ if(!G.queue.includes(`hub_dest`)) G.queue.unshift(`hub_dest`); }
 function travelTo(id){
   const seen=G.visited=G.visited||{}; seen[G.loc]=(seen[G.loc]||0)+1;
-  const d=DMAP[id]; if(!d) return; const same=d.id===G.loc; G.loc=d.id; G.forceEnc=true; G.arrived=!same;
+  const d=DMAP[id]; if(!d) return; const same=d.id===G.loc; G.visit=(G.visit||0)+1; G.loc=d.id; G.forceEnc=true; G.arrived=!same;
   toast(same?`📍 Tu retournes à ${d.n}`:`📍 Tu pars pour ${d.n}`); G.log.unshift({d:dateStr(),m:same?`Tu retournes à ${d.n}.`:`Tu changes de quartier : ${d.n}.`});
   if(!G.queue.includes(`fenc`)) G.queue.push(`fenc`);
   if(!same&&!G.flags.q_active){ const r=Math.random(); if(r<.55) G.queue.push(`lq_1`); else if(r<.8) G.queue.push(`sm`); }
